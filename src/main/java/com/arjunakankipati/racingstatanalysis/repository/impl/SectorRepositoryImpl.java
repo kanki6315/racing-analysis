@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Sector;
 import com.arjunakankipati.racingstatanalysis.repository.SectorRepository;
 import org.jooq.DSLContext;
@@ -7,11 +8,9 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the SectorRepository interface using JOOQ.
@@ -36,15 +35,16 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
             return null;
         }
 
+        var secRec = record.into(Tables.SECTORS);
         return new Sector(
-                record.get(field("id", Long.class)),
-                record.get(field("lap_id", Long.class)),
-                record.get(field("sector_number", Integer.class)),
-                record.get(field("sector_time_seconds", BigDecimal.class)),
-                record.get(field("is_personal_best", Boolean.class)),
-                record.get(field("is_session_best", Boolean.class)),
-                record.get(field("is_valid", Boolean.class)),
-                record.get(field("invalidation_reason", String.class))
+                secRec.getId(),
+                secRec.getLapId(),
+                secRec.getSectorNumber(),
+                secRec.getSectorTimeSeconds(),
+                secRec.getIsPersonalBest(),
+                secRec.getIsSessionBest(),
+                secRec.getIsValid(),
+                secRec.getInvalidationReason()
         );
     }
 
@@ -52,13 +52,13 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     protected Sector insert(Sector sector) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("lap_id"),
-                        field("sector_number"),
-                        field("sector_time_seconds"),
-                        field("is_personal_best"),
-                        field("is_session_best"),
-                        field("is_valid"),
-                        field("invalidation_reason")
+                        Tables.SECTORS.LAP_ID,
+                        Tables.SECTORS.SECTOR_NUMBER,
+                        Tables.SECTORS.SECTOR_TIME_SECONDS,
+                        Tables.SECTORS.IS_PERSONAL_BEST,
+                        Tables.SECTORS.IS_SESSION_BEST,
+                        Tables.SECTORS.IS_VALID,
+                        Tables.SECTORS.INVALIDATION_REASON
                 )
                 .values(
                         sector.getLapId(),
@@ -69,16 +69,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                         sector.getIsValid(),
                         sector.getInvalidationReason()
                 )
-                .returningResult(
-                        field("id"),
-                        field("lap_id"),
-                        field("sector_number"),
-                        field("sector_time_seconds"),
-                        field("is_personal_best"),
-                        field("is_session_best"),
-                        field("is_valid"),
-                        field("invalidation_reason")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -87,13 +78,13 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     @Override
     protected void update(Sector sector) {
         dsl.update(table)
-                .set(field("lap_id"), sector.getLapId())
-                .set(field("sector_number"), sector.getSectorNumber())
-                .set(field("sector_time_seconds"), sector.getSectorTimeSeconds())
-                .set(field("is_personal_best"), sector.getIsPersonalBest())
-                .set(field("is_session_best"), sector.getIsSessionBest())
-                .set(field("is_valid"), sector.getIsValid())
-                .set(field("invalidation_reason"), sector.getInvalidationReason())
+                .set(Tables.SECTORS.LAP_ID, sector.getLapId())
+                .set(Tables.SECTORS.SECTOR_NUMBER, sector.getSectorNumber())
+                .set(Tables.SECTORS.SECTOR_TIME_SECONDS, sector.getSectorTimeSeconds())
+                .set(Tables.SECTORS.IS_PERSONAL_BEST, sector.getIsPersonalBest())
+                .set(Tables.SECTORS.IS_SESSION_BEST, sector.getIsSessionBest())
+                .set(Tables.SECTORS.IS_VALID, sector.getIsValid())
+                .set(Tables.SECTORS.INVALIDATION_REASON, sector.getInvalidationReason())
                 .where(idField.eq(sector.getId()))
                 .execute();
     }
@@ -102,7 +93,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     public List<Sector> findByLapId(Long lapId) {
         return dsl.select()
                 .from(table)
-                .where(field("lap_id").eq(lapId))
+                .where(Tables.SECTORS.LAP_ID.eq(lapId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -111,8 +102,8 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     public Optional<Sector> findByLapIdAndSectorNumber(Long lapId, Integer sectorNumber) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("lap_id").eq(lapId))
-                .and(field("sector_number").eq(sectorNumber))
+                .where(Tables.SECTORS.LAP_ID.eq(lapId))
+                .and(Tables.SECTORS.SECTOR_NUMBER.eq(sectorNumber))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -123,8 +114,8 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     public List<Sector> findByLapIdAndIsPersonalBestTrue(Long lapId) {
         return dsl.select()
                 .from(table)
-                .where(field("lap_id").eq(lapId))
-                .and(field("is_personal_best").eq(true))
+                .where(Tables.SECTORS.LAP_ID.eq(lapId))
+                .and(Tables.SECTORS.IS_PERSONAL_BEST.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -133,8 +124,8 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     public List<Sector> findByLapIdAndIsSessionBestTrue(Long lapId) {
         return dsl.select()
                 .from(table)
-                .where(field("lap_id").eq(lapId))
-                .and(field("is_session_best").eq(true))
+                .where(Tables.SECTORS.LAP_ID.eq(lapId))
+                .and(Tables.SECTORS.IS_SESSION_BEST.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -143,8 +134,8 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
     public List<Sector> findTopSectorsByLapId(Long lapId, int limit) {
         return dsl.select()
                 .from(table)
-                .where(field("lap_id").eq(lapId))
-                .orderBy(field("sector_time_seconds").asc())
+                .where(Tables.SECTORS.LAP_ID.eq(lapId))
+                .orderBy(Tables.SECTORS.SECTOR_TIME_SECONDS.asc())
                 .limit(limit)
                 .fetch()
                 .map(this::mapToEntity);

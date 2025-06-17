@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Circuit;
 import com.arjunakankipati.racingstatanalysis.repository.CircuitRepository;
 import org.jooq.DSLContext;
@@ -7,11 +8,8 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the CircuitRepository interface using JOOQ.
@@ -36,13 +34,14 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
             return null;
         }
 
+        var circuitRec = record.into(Tables.CIRCUITS);
         return new Circuit(
-                record.get(field("id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("length_meters", BigDecimal.class)),
-                record.get(field("country", String.class)),
-                record.get(field("location", String.class)),
-                record.get(field("description", String.class))
+                circuitRec.getId(),
+                circuitRec.getName(),
+                circuitRec.getLengthMeters(),
+                circuitRec.getCountry(),
+                circuitRec.getLocation(),
+                circuitRec.getDescription()
         );
     }
 
@@ -50,11 +49,11 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     protected Circuit insert(Circuit circuit) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("name"),
-                        field("length_meters"),
-                        field("country"),
-                        field("location"),
-                        field("description")
+                        Tables.CIRCUITS.NAME,
+                        Tables.CIRCUITS.LENGTH_METERS,
+                        Tables.CIRCUITS.COUNTRY,
+                        Tables.CIRCUITS.LOCATION,
+                        Tables.CIRCUITS.DESCRIPTION
                 )
                 .values(
                         circuit.getName(),
@@ -63,14 +62,7 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
                         circuit.getLocation(),
                         circuit.getDescription()
                 )
-                .returningResult(
-                        field("id"),
-                        field("name"),
-                        field("length_meters"),
-                        field("country"),
-                        field("location"),
-                        field("description")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -79,11 +71,11 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     @Override
     protected void update(Circuit circuit) {
         dsl.update(table)
-                .set(field("name"), circuit.getName())
-                .set(field("length_meters"), circuit.getLengthMeters())
-                .set(field("country"), circuit.getCountry())
-                .set(field("location"), circuit.getLocation())
-                .set(field("description"), circuit.getDescription())
+                .set(Tables.CIRCUITS.NAME, circuit.getName())
+                .set(Tables.CIRCUITS.LENGTH_METERS, circuit.getLengthMeters())
+                .set(Tables.CIRCUITS.COUNTRY, circuit.getCountry())
+                .set(Tables.CIRCUITS.LOCATION, circuit.getLocation())
+                .set(Tables.CIRCUITS.DESCRIPTION, circuit.getDescription())
                 .where(idField.eq(circuit.getId()))
                 .execute();
     }
@@ -92,7 +84,7 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     public Optional<Circuit> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
+                .where(Tables.CIRCUITS.NAME.eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -103,7 +95,7 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     public List<Circuit> findByCountry(String country) {
         return dsl.select()
                 .from(table)
-                .where(field("country").eq(country))
+                .where(Tables.CIRCUITS.COUNTRY.eq(country))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -112,7 +104,7 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     public List<Circuit> findByNameContaining(String nameContains) {
         return dsl.select()
                 .from(table)
-                .where(field("name").like("%" + nameContains + "%"))
+                .where(Tables.CIRCUITS.NAME.like("%" + nameContains + "%"))
                 .fetch()
                 .map(this::mapToEntity);
     }

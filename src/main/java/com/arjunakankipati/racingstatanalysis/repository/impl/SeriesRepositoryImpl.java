@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Series;
 import com.arjunakankipati.racingstatanalysis.repository.SeriesRepository;
 import org.jooq.DSLContext;
@@ -45,19 +46,20 @@ public class SeriesRepositoryImpl extends BaseRepositoryImpl<Series, Long> imple
             return null;
         }
 
+        var seriesRec = record.into(Tables.SERIES);
         return new Series(
-                record.get(field("id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("description", String.class))
+                seriesRec.getId(),
+                seriesRec.getName(),
+                seriesRec.getDescription()
         );
     }
 
     @Override
     protected Series insert(Series series) {
         Record record = dsl.insertInto(table)
-                .columns(field("name"), field("description"))
+                .columns(Tables.SERIES.NAME, Tables.SERIES.DESCRIPTION)
                 .values(series.getName(), series.getDescription())
-                .returningResult(field("id"), field("name"), field("description"))
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -66,8 +68,8 @@ public class SeriesRepositoryImpl extends BaseRepositoryImpl<Series, Long> imple
     @Override
     protected void update(Series series) {
         dsl.update(table)
-                .set(field("name"), series.getName())
-                .set(field("description"), series.getDescription())
+                .set(Tables.SERIES.NAME, series.getName())
+                .set(Tables.SERIES.DESCRIPTION, series.getDescription())
                 .where(idField.eq(series.getId()))
                 .execute();
     }

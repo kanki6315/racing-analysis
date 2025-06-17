@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Event;
 import com.arjunakankipati.racingstatanalysis.repository.EventRepository;
 import org.jooq.DSLContext;
@@ -7,12 +8,9 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the EventRepository interface using JOOQ.
@@ -37,27 +35,27 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
             return null;
         }
 
+        var eventRec = record.into(Tables.EVENTS);
         return new Event(
-                record.get(field("id", Long.class)),
-                record.get(field("series_id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("year", Integer.class)),
-                record.get(field("start_date", Date.class)).toLocalDate(),
-                record.get(field("end_date", Date.class)).toLocalDate(),
-                record.get(field("description", String.class))
-        );
+                eventRec.getId(),
+                eventRec.getSeriesId(),
+                eventRec.getName(),
+                eventRec.getYear(),
+                eventRec.getStartDate(),
+                eventRec.getEndDate(),
+                eventRec.getDescription());
     }
 
     @Override
     protected Event insert(Event event) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("series_id"),
-                        field("name"),
-                        field("year"),
-                        field("start_date"),
-                        field("end_date"),
-                        field("description")
+                        Tables.EVENTS.SERIES_ID,
+                        Tables.EVENTS.NAME,
+                        Tables.EVENTS.YEAR,
+                        Tables.EVENTS.START_DATE,
+                        Tables.EVENTS.END_DATE,
+                        Tables.EVENTS.DESCRIPTION
                 )
                 .values(
                         event.getSeriesId(),
@@ -67,15 +65,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
                         event.getEndDate(),
                         event.getDescription()
                 )
-                .returningResult(
-                        field("id"),
-                        field("series_id"),
-                        field("name"),
-                        field("year"),
-                        field("start_date"),
-                        field("end_date"),
-                        field("description")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -84,12 +74,12 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
     @Override
     protected void update(Event event) {
         dsl.update(table)
-                .set(field("series_id"), event.getSeriesId())
-                .set(field("name"), event.getName())
-                .set(field("year"), event.getYear())
-                .set(field("start_date"), event.getStartDate())
-                .set(field("end_date"), event.getEndDate())
-                .set(field("description"), event.getDescription())
+                .set(Tables.EVENTS.SERIES_ID, event.getSeriesId())
+                .set(Tables.EVENTS.NAME, event.getName())
+                .set(Tables.EVENTS.YEAR, event.getYear())
+                .set(Tables.EVENTS.START_DATE, event.getStartDate())
+                .set(Tables.EVENTS.END_DATE, event.getEndDate())
+                .set(Tables.EVENTS.DESCRIPTION, event.getDescription())
                 .where(idField.eq(event.getId()))
                 .execute();
     }
@@ -98,7 +88,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
     public List<Event> findBySeriesId(Long seriesId) {
         return dsl.select()
                 .from(table)
-                .where(field("series_id").eq(seriesId))
+                .where(Tables.EVENTS.SERIES_ID.eq(seriesId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -107,8 +97,8 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
     public List<Event> findBySeriesIdAndYear(Long seriesId, Integer year) {
         return dsl.select()
                 .from(table)
-                .where(field("series_id").eq(seriesId))
-                .and(field("year").eq(year))
+                .where(Tables.EVENTS.SERIES_ID.eq(seriesId))
+                .and(Tables.EVENTS.YEAR.eq(year))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -117,8 +107,8 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
     public Optional<Event> findByNameAndYear(String name, Integer year) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
-                .and(field("year").eq(year))
+                .where(Tables.EVENTS.NAME.eq(name))
+                .and(Tables.EVENTS.YEAR.eq(year))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -127,10 +117,10 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
 
     @Override
     public List<Integer> findYearsBySeriesId(Long seriesId) {
-        return dsl.selectDistinct(field("year", Integer.class))
+        return dsl.selectDistinct(Tables.EVENTS.YEAR)
                 .from(table)
-                .where(field("series_id").eq(seriesId))
-                .orderBy(field("year").desc())
-                .fetch(field("year", Integer.class));
+                .where(Tables.EVENTS.SERIES_ID.eq(seriesId))
+                .orderBy(Tables.EVENTS.YEAR.desc())
+                .fetch(Tables.EVENTS.YEAR);
     }
 }

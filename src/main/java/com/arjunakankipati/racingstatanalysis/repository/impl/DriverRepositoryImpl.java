@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Driver;
 import com.arjunakankipati.racingstatanalysis.repository.DriverRepository;
 import org.jooq.DSLContext;
@@ -35,14 +36,15 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
             return null;
         }
 
+        var driverRec = record.into(Tables.DRIVERS);
         return new Driver(
-                record.get(field("id", Long.class)),
-                record.get(field("first_name", String.class)),
-                record.get(field("last_name", String.class)),
-                record.get(field("nationality", String.class)),
-                record.get(field("hometown", String.class)),
-                record.get(field("license_type", String.class)),
-                record.get(field("external_id", String.class))
+                driverRec.getId(),
+                driverRec.getFirstName(),
+                driverRec.getLastName(),
+                driverRec.getNationality(),
+                driverRec.getHometown(),
+                driverRec.getLicenseType(),
+                driverRec.getExternalId()
         );
     }
 
@@ -50,12 +52,12 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
     protected Driver insert(Driver driver) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("first_name"),
-                        field("last_name"),
-                        field("nationality"),
-                        field("hometown"),
-                        field("license_type"),
-                        field("external_id")
+                        Tables.DRIVERS.FIRST_NAME,
+                        Tables.DRIVERS.LAST_NAME,
+                        Tables.DRIVERS.NATIONALITY,
+                        Tables.DRIVERS.HOMETOWN,
+                        Tables.DRIVERS.LICENSE_TYPE,
+                        Tables.DRIVERS.EXTERNAL_ID
                 )
                 .values(
                         driver.getFirstName(),
@@ -65,15 +67,7 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
                         driver.getLicenseType(),
                         driver.getExternalId()
                 )
-                .returningResult(
-                        field("id"),
-                        field("first_name"),
-                        field("last_name"),
-                        field("nationality"),
-                        field("hometown"),
-                        field("license_type"),
-                        field("external_id")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -82,12 +76,12 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
     @Override
     protected void update(Driver driver) {
         dsl.update(table)
-                .set(field("first_name"), driver.getFirstName())
-                .set(field("last_name"), driver.getLastName())
-                .set(field("nationality"), driver.getNationality())
-                .set(field("hometown"), driver.getHometown())
-                .set(field("license_type"), driver.getLicenseType())
-                .set(field("external_id"), driver.getExternalId())
+                .set(Tables.DRIVERS.FIRST_NAME, driver.getFirstName())
+                .set(Tables.DRIVERS.LAST_NAME, driver.getLastName())
+                .set(Tables.DRIVERS.NATIONALITY, driver.getNationality())
+                .set(Tables.DRIVERS.HOMETOWN, driver.getHometown())
+                .set(Tables.DRIVERS.LICENSE_TYPE, driver.getLicenseType())
+                .set(Tables.DRIVERS.EXTERNAL_ID, driver.getExternalId())
                 .where(idField.eq(driver.getId()))
                 .execute();
     }
@@ -96,8 +90,8 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
     public Optional<Driver> findByFirstNameAndLastName(String firstName, String lastName) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("first_name").eq(firstName))
-                .and(field("last_name").eq(lastName))
+                .where(Tables.DRIVERS.FIRST_NAME.eq(firstName))
+                .and(Tables.DRIVERS.LAST_NAME.eq(lastName))
                 .fetchOne();
 
         return Optional.ofNullable(record)

@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Manufacturer;
 import com.arjunakankipati.racingstatanalysis.repository.ManufacturerRepository;
 import org.jooq.DSLContext;
@@ -9,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the ManufacturerRepository interface using JOOQ.
@@ -35,29 +34,25 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
             return null;
         }
 
+        var manRec = record.into(Tables.MANUFACTURERS);
         return new Manufacturer(
-                record.get(field("id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("country", String.class))
-        );
+                manRec.getId(),
+                manRec.getName(),
+                manRec.getCountry());
     }
 
     @Override
     protected Manufacturer insert(Manufacturer manufacturer) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("name"),
-                        field("country")
+                        Tables.MANUFACTURERS.NAME,
+                        Tables.MANUFACTURERS.COUNTRY
                 )
                 .values(
                         manufacturer.getName(),
                         manufacturer.getCountry()
                 )
-                .returningResult(
-                        field("id"),
-                        field("name"),
-                        field("country")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -66,8 +61,8 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
     @Override
     protected void update(Manufacturer manufacturer) {
         dsl.update(table)
-                .set(field("name"), manufacturer.getName())
-                .set(field("country"), manufacturer.getCountry())
+                .set(Tables.MANUFACTURERS.NAME, manufacturer.getName())
+                .set(Tables.MANUFACTURERS.COUNTRY, manufacturer.getCountry())
                 .where(idField.eq(manufacturer.getId()))
                 .execute();
     }
@@ -76,7 +71,7 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
     public Optional<Manufacturer> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
+                .where(Tables.MANUFACTURERS.NAME.eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -87,7 +82,7 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
     public List<Manufacturer> findByCountry(String country) {
         return dsl.select()
                 .from(table)
-                .where(field("country").eq(country))
+                .where(Tables.MANUFACTURERS.COUNTRY.eq(country))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -96,7 +91,7 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
     public List<Manufacturer> findByNameContaining(String nameContains) {
         return dsl.select()
                 .from(table)
-                .where(field("name").like("%" + nameContains + "%"))
+                .where(Tables.MANUFACTURERS.NAME.like("%" + nameContains + "%"))
                 .fetch()
                 .map(this::mapToEntity);
     }

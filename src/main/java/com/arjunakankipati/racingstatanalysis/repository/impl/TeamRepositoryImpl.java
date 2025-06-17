@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Team;
 import com.arjunakankipati.racingstatanalysis.repository.TeamRepository;
 import org.jooq.DSLContext;
@@ -9,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the TeamRepository interface using JOOQ.
@@ -35,10 +34,11 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
             return null;
         }
 
+        var teamRec = record.into(Tables.TEAMS);
         return new Team(
-                record.get(field("id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("description", String.class))
+                teamRec.getId(),
+                teamRec.getName(),
+                teamRec.getDescription()
         );
     }
 
@@ -46,28 +46,23 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
     protected Team insert(Team team) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("name"),
-                        field("description")
+                        Tables.TEAMS.NAME,
+                        Tables.TEAMS.DESCRIPTION
                 )
                 .values(
                         team.getName(),
                         team.getDescription()
                 )
-                .returningResult(
-                        field("id"),
-                        field("name"),
-                        field("description")
-                )
+                .returning()
                 .fetchOne();
-
         return mapToEntity(record);
     }
 
     @Override
     protected void update(Team team) {
         dsl.update(table)
-                .set(field("name"), team.getName())
-                .set(field("description"), team.getDescription())
+                .set(Tables.TEAMS.NAME, team.getName())
+                .set(Tables.TEAMS.DESCRIPTION, team.getDescription())
                 .where(idField.eq(team.getId()))
                 .execute();
     }
@@ -76,7 +71,7 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
     public Optional<Team> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
+                .where(Tables.TEAMS.NAME.eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -87,7 +82,7 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
     public List<Team> findByNameContaining(String nameContains) {
         return dsl.select()
                 .from(table)
-                .where(field("name").like("%" + nameContains + "%"))
+                .where(Tables.TEAMS.NAME.like("%" + nameContains + "%"))
                 .fetch()
                 .map(this::mapToEntity);
     }

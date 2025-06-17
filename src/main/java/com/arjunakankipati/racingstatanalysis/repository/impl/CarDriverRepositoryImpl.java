@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.CarDriver;
 import com.arjunakankipati.racingstatanalysis.repository.CarDriverRepository;
 import org.jooq.DSLContext;
@@ -9,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the CarDriverRepository interface using JOOQ.
@@ -35,11 +34,12 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
             return null;
         }
 
+        var carDriverRec = record.into(Tables.CAR_DRIVERS);
         return new CarDriver(
-                record.get(field("id", Long.class)),
-                record.get(field("car_id", Long.class)),
-                record.get(field("driver_id", Long.class)),
-                record.get(field("driver_number", Integer.class))
+                carDriverRec.getId(),
+                carDriverRec.getCarId(),
+                carDriverRec.getDriverId(),
+                carDriverRec.getDriverNumber()
         );
     }
 
@@ -47,21 +47,16 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     protected CarDriver insert(CarDriver carDriver) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("car_id"),
-                        field("driver_id"),
-                        field("driver_number")
+                        Tables.CAR_DRIVERS.CAR_ID,
+                        Tables.CAR_DRIVERS.DRIVER_ID,
+                        Tables.CAR_DRIVERS.DRIVER_NUMBER
                 )
                 .values(
                         carDriver.getCarId(),
                         carDriver.getDriverId(),
                         carDriver.getDriverNumber()
                 )
-                .returningResult(
-                        field("id"),
-                        field("car_id"),
-                        field("driver_id"),
-                        field("driver_number")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -70,9 +65,9 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     @Override
     protected void update(CarDriver carDriver) {
         dsl.update(table)
-                .set(field("car_id"), carDriver.getCarId())
-                .set(field("driver_id"), carDriver.getDriverId())
-                .set(field("driver_number"), carDriver.getDriverNumber())
+                .set(Tables.CAR_DRIVERS.CAR_ID, carDriver.getCarId())
+                .set(Tables.CAR_DRIVERS.DRIVER_ID, carDriver.getDriverId())
+                .set(Tables.CAR_DRIVERS.DRIVER_NUMBER, carDriver.getDriverNumber())
                 .where(idField.eq(carDriver.getId()))
                 .execute();
     }
@@ -81,7 +76,7 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     public List<CarDriver> findByCarId(Long carId) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
+                .where(Tables.CAR_DRIVERS.CAR_ID.eq(carId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -90,7 +85,7 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     public List<CarDriver> findByDriverId(Long driverId) {
         return dsl.select()
                 .from(table)
-                .where(field("driver_id").eq(driverId))
+                .where(Tables.CAR_DRIVERS.DRIVER_ID.eq(driverId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -99,8 +94,8 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     public Optional<CarDriver> findByCarIdAndDriverId(Long carId, Long driverId) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("driver_id").eq(driverId))
+                .where(Tables.CAR_DRIVERS.CAR_ID.eq(carId))
+                .and(Tables.CAR_DRIVERS.DRIVER_ID.eq(driverId))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -111,7 +106,7 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     public List<CarDriver> findByDriverNumber(Integer driverNumber) {
         return dsl.select()
                 .from(table)
-                .where(field("driver_number").eq(driverNumber))
+                .where(Tables.CAR_DRIVERS.DRIVER_NUMBER.eq(driverNumber))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -120,8 +115,8 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     public Optional<CarDriver> findByCarIdAndDriverNumber(Long carId, Integer driverNumber) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("driver_number").eq(driverNumber))
+                .where(Tables.CAR_DRIVERS.CAR_ID.eq(carId))
+                .and(Tables.CAR_DRIVERS.DRIVER_NUMBER.eq(driverNumber))
                 .fetchOne();
 
         return Optional.ofNullable(record)

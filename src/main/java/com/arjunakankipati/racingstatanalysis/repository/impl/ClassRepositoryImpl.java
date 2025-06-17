@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Class;
 import com.arjunakankipati.racingstatanalysis.repository.ClassRepository;
 import org.jooq.DSLContext;
@@ -9,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
 
 /**
  * Implementation of the ClassRepository interface using JOOQ.
@@ -35,11 +34,12 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
             return null;
         }
 
+        var classRec = record.into(Tables.CLASSES);
         return new Class(
-                record.get(field("id", Long.class)),
-                record.get(field("series_id", Long.class)),
-                record.get(field("name", String.class)),
-                record.get(field("description", String.class))
+                classRec.getId(),
+                classRec.getSeriesId(),
+                classRec.getName(),
+                classRec.getDescription()
         );
     }
 
@@ -47,21 +47,16 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     protected Class insert(Class clazz) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("series_id"),
-                        field("name"),
-                        field("description")
+                        Tables.CLASSES.SERIES_ID,
+                        Tables.CLASSES.NAME,
+                        Tables.CLASSES.DESCRIPTION
                 )
                 .values(
                         clazz.getSeriesId(),
                         clazz.getName(),
                         clazz.getDescription()
                 )
-                .returningResult(
-                        field("id"),
-                        field("series_id"),
-                        field("name"),
-                        field("description")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -70,9 +65,9 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     @Override
     protected void update(Class clazz) {
         dsl.update(table)
-                .set(field("series_id"), clazz.getSeriesId())
-                .set(field("name"), clazz.getName())
-                .set(field("description"), clazz.getDescription())
+                .set(Tables.CLASSES.SERIES_ID, clazz.getSeriesId())
+                .set(Tables.CLASSES.NAME, clazz.getName())
+                .set(Tables.CLASSES.DESCRIPTION, clazz.getDescription())
                 .where(idField.eq(clazz.getId()))
                 .execute();
     }
@@ -81,7 +76,7 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     public Optional<Class> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
+                .where(Tables.CLASSES.NAME.eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -92,7 +87,7 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     public List<Class> findBySeriesId(Long seriesId) {
         return dsl.select()
                 .from(table)
-                .where(field("series_id").eq(seriesId))
+                .where(Tables.CLASSES.SERIES_ID.eq(seriesId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -101,8 +96,8 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     public Optional<Class> findBySeriesIdAndName(Long seriesId, String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("series_id").eq(seriesId))
-                .and(field("name").eq(name))
+                .where(Tables.CLASSES.SERIES_ID.eq(seriesId))
+                .and(Tables.CLASSES.NAME.eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -113,7 +108,7 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     public List<Class> findByNameContaining(String nameContains) {
         return dsl.select()
                 .from(table)
-                .where(field("name").like("%" + nameContains + "%"))
+                .where(Tables.CLASSES.NAME.like("%" + nameContains + "%"))
                 .fetch()
                 .map(this::mapToEntity);
     }
