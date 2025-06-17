@@ -25,7 +25,7 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
      */
     @Autowired
     public CircuitRepositoryImpl(DSLContext dsl) {
-        super(dsl, "circuits", "id", Long.class);
+        super(dsl, Tables.CIRCUITS, Tables.CIRCUITS.ID);
     }
 
     @Override

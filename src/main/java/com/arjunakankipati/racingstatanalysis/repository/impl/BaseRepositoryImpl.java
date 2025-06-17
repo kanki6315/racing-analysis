@@ -2,17 +2,11 @@ package com.arjunakankipati.racingstatanalysis.repository.impl;
 
 import com.arjunakankipati.racingstatanalysis.model.BaseEntity;
 import com.arjunakankipati.racingstatanalysis.repository.BaseRepository;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.Result;
-import org.jooq.Table;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
 
 /**
  * Base implementation of the BaseRepository interface using JOOQ.
@@ -26,21 +20,11 @@ public abstract class BaseRepositoryImpl<T extends BaseEntity<ID>, ID> implement
     protected final DSLContext dsl;
     protected final Table<?> table;
     protected final Field<ID> idField;
-    protected final Class<ID> idType;
 
-    /**
-     * Constructor with DSLContext dependency injection.
-     *
-     * @param dsl the JOOQ DSL context
-     * @param tableName the name of the database table
-     * @param idFieldName the name of the ID field
-     * @param idType the class of the ID type
-     */
-    protected BaseRepositoryImpl(DSLContext dsl, String tableName, String idFieldName, Class<ID> idType) {
+    protected BaseRepositoryImpl(DSLContext dsl, Table<?> table, Field<ID> idField) {
         this.dsl = dsl;
-        this.table = table(tableName);
-        this.idField = field(idFieldName, idType);
-        this.idType = idType;
+        this.table = table;
+        this.idField = idField;
     }
 
     @Override

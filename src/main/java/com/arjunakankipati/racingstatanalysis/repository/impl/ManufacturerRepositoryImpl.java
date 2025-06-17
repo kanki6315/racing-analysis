@@ -25,7 +25,7 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
      */
     @Autowired
     public ManufacturerRepositoryImpl(DSLContext dsl) {
-        super(dsl, "manufacturers", "id", Long.class);
+        super(dsl, Tables.MANUFACTURERS, Tables.MANUFACTURERS.ID);
     }
 
     @Override

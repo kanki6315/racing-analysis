@@ -25,7 +25,7 @@ public class CarRepositoryImpl extends BaseRepositoryImpl<Car, Long> implements 
      */
     @Autowired
     public CarRepositoryImpl(DSLContext dsl) {
-        super(dsl, "cars", "id", Long.class);
+        super(dsl, Tables.CARS, Tables.CARS.ID);
     }
 
     @Override

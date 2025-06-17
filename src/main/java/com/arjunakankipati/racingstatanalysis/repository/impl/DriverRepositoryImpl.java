@@ -27,7 +27,7 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
      */
     @Autowired
     public DriverRepositoryImpl(DSLContext dsl) {
-        super(dsl, "drivers", "id", Long.class);
+        super(dsl, Tables.DRIVERS, Tables.DRIVERS.ID);
     }
 
     @Override

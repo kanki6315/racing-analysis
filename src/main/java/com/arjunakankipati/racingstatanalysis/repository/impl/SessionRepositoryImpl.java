@@ -26,7 +26,7 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
      */
     @Autowired
     public SessionRepositoryImpl(DSLContext dsl) {
-        super(dsl, "sessions", "id", Long.class);
+        super(dsl, Tables.SESSIONS, Tables.SESSIONS.ID);
     }
 
     @Override

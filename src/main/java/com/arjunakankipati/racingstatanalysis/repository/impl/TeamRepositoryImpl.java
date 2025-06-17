@@ -25,7 +25,7 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
      */
     @Autowired
     public TeamRepositoryImpl(DSLContext dsl) {
-        super(dsl, "teams", "id", Long.class);
+        super(dsl, Tables.TEAMS, Tables.TEAMS.ID);
     }
 
     @Override

@@ -26,7 +26,7 @@ public class SeriesRepositoryImpl extends BaseRepositoryImpl<Series, Long> imple
      */
     @Autowired
     public SeriesRepositoryImpl(DSLContext dsl) {
-        super(dsl, "series", "id", Long.class);
+        super(dsl, Tables.SERIES, Tables.SERIES.ID);
     }
 
     @Override

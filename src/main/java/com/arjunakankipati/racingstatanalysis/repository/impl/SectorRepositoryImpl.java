@@ -26,7 +26,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
      */
     @Autowired
     public SectorRepositoryImpl(DSLContext dsl) {
-        super(dsl, "sectors", "id", Long.class);
+        super(dsl, Tables.SECTORS, Tables.SECTORS.ID);
     }
 
     @Override

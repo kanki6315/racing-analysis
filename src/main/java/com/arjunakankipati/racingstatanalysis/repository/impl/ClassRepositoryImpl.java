@@ -25,7 +25,7 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
      */
     @Autowired
     public ClassRepositoryImpl(DSLContext dsl) {
-        super(dsl, "classes", "id", Long.class);
+        super(dsl, Tables.CLASSES, Tables.CLASSES.ID);
     }
 
     @Override

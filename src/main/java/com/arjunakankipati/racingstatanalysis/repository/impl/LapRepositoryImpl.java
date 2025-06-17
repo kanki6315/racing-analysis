@@ -26,7 +26,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
      */
     @Autowired
     public LapRepositoryImpl(DSLContext dsl) {
-        super(dsl, "laps", "id", Long.class);
+        super(dsl, Tables.LAPS, Tables.LAPS.ID);
     }
 
     @Override

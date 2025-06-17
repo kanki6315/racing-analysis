@@ -26,7 +26,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
      */
     @Autowired
     public EventRepositoryImpl(DSLContext dsl) {
-        super(dsl, "events", "id", Long.class);
+        super(dsl, Tables.EVENTS, Tables.EVENTS.ID);
     }
 
     @Override
