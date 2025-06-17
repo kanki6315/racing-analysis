@@ -112,6 +112,7 @@ public class ImportServiceImpl implements ImportService {
      */
     @Override
     public ImportResponseDTO importFromUrl(ImportRequestDTO request) {
+        long startTimeMillis = System.currentTimeMillis();
         try {
             // Validate request
             if (request == null) {
@@ -133,21 +134,24 @@ public class ImportServiceImpl implements ImportService {
             // Process and store the data
             processData(jsonData, request.getUrl());
 
+            long endTimeMillis = System.currentTimeMillis();
+
             // Return response
             return new ImportResponseDTO(
                     importId,
                     "completed",
-                    LocalDateTime.now()
+                    (endTimeMillis - startTimeMillis) / 1000
             );
         } catch (Exception e) {
             // Log the error
             e.printStackTrace();
 
+            long endTimeMillis = System.currentTimeMillis();
             // Return error response
             return new ImportResponseDTO(
                     UUID.randomUUID().toString(),
                     "failed: " + e.getMessage(),
-                    LocalDateTime.now()
+                    (endTimeMillis - startTimeMillis) / 1000
             );
         }
     }

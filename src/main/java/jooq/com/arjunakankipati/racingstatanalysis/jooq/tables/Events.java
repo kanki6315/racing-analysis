@@ -133,11 +133,9 @@ public class Events extends TableImpl<EventsRecord> {
     public static class EventsPath extends Events implements Path<EventsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> EventsPath(Table<O> path, ForeignKey<O, EventsRecord> childPath, InverseForeignKey<O, EventsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private EventsPath(Name alias, Table<EventsRecord> aliased) {
             super(alias, aliased);
         }

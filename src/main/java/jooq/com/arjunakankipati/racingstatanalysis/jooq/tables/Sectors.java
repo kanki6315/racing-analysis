@@ -139,11 +139,9 @@ public class Sectors extends TableImpl<SectorsRecord> {
     public static class SectorsPath extends Sectors implements Path<SectorsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> SectorsPath(Table<O> path, ForeignKey<O, SectorsRecord> childPath, InverseForeignKey<O, SectorsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private SectorsPath(Name alias, Table<SectorsRecord> aliased) {
             super(alias, aliased);
         }

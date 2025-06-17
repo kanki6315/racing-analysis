@@ -110,11 +110,9 @@ public class Series extends TableImpl<SeriesRecord> {
     public static class SeriesPath extends Series implements Path<SeriesRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> SeriesPath(Table<O> path, ForeignKey<O, SeriesRecord> childPath, InverseForeignKey<O, SeriesRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private SeriesPath(Name alias, Table<SeriesRecord> aliased) {
             super(alias, aliased);
         }

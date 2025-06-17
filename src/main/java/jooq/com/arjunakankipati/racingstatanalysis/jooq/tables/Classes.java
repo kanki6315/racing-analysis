@@ -117,11 +117,9 @@ public class Classes extends TableImpl<ClassesRecord> {
     public static class ClassesPath extends Classes implements Path<ClassesRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> ClassesPath(Table<O> path, ForeignKey<O, ClassesRecord> childPath, InverseForeignKey<O, ClassesRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private ClassesPath(Name alias, Table<ClassesRecord> aliased) {
             super(alias, aliased);
         }

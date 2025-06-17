@@ -160,11 +160,9 @@ public class Laps extends TableImpl<LapsRecord> {
     public static class LapsPath extends Laps implements Path<LapsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> LapsPath(Table<O> path, ForeignKey<O, LapsRecord> childPath, InverseForeignKey<O, LapsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private LapsPath(Name alias, Table<LapsRecord> aliased) {
             super(alias, aliased);
         }

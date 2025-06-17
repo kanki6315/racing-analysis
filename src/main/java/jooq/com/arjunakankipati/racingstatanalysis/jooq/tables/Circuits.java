@@ -125,11 +125,9 @@ public class Circuits extends TableImpl<CircuitsRecord> {
     public static class CircuitsPath extends Circuits implements Path<CircuitsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> CircuitsPath(Table<O> path, ForeignKey<O, CircuitsRecord> childPath, InverseForeignKey<O, CircuitsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private CircuitsPath(Name alias, Table<CircuitsRecord> aliased) {
             super(alias, aliased);
         }

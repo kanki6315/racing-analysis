@@ -109,11 +109,9 @@ public class Manufacturers extends TableImpl<ManufacturersRecord> {
     public static class ManufacturersPath extends Manufacturers implements Path<ManufacturersRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> ManufacturersPath(Table<O> path, ForeignKey<O, ManufacturersRecord> childPath, InverseForeignKey<O, ManufacturersRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private ManufacturersPath(Name alias, Table<ManufacturersRecord> aliased) {
             super(alias, aliased);
         }

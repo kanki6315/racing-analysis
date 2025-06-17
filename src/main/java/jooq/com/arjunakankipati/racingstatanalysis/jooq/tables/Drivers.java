@@ -130,11 +130,9 @@ public class Drivers extends TableImpl<DriversRecord> {
     public static class DriversPath extends Drivers implements Path<DriversRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> DriversPath(Table<O> path, ForeignKey<O, DriversRecord> childPath, InverseForeignKey<O, DriversRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private DriversPath(Name alias, Table<DriversRecord> aliased) {
             super(alias, aliased);
         }

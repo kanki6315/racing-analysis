@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 public class ImportResponseDTO {
     private String importId;
     private String status;
-    private LocalDateTime estimatedCompletionTime;
+    private Long completionTime;
 
     /**
      * Default constructor.
@@ -22,12 +23,12 @@ public class ImportResponseDTO {
      *
      * @param importId the ID of the import operation
      * @param status the status of the import operation
-     * @param estimatedCompletionTime the estimated completion time of the import operation
+     * @param completionTime the completion time of the import operation
      */
-    public ImportResponseDTO(String importId, String status, LocalDateTime estimatedCompletionTime) {
+    public ImportResponseDTO(String importId, String status, Long completionTime) {
         this.importId = importId;
         this.status = status;
-        this.estimatedCompletionTime = estimatedCompletionTime;
+        this.completionTime = completionTime;
     }
 
     /**
@@ -66,21 +67,11 @@ public class ImportResponseDTO {
         this.status = status;
     }
 
-    /**
-     * Gets the estimated completion time of the import operation.
-     *
-     * @return the estimated completion time
-     */
-    public LocalDateTime getEstimatedCompletionTime() {
-        return estimatedCompletionTime;
+    public Long getCompletionTime() {
+        return completionTime;
     }
 
-    /**
-     * Sets the estimated completion time of the import operation.
-     *
-     * @param estimatedCompletionTime the estimated completion time to set
-     */
-    public void setEstimatedCompletionTime(LocalDateTime estimatedCompletionTime) {
-        this.estimatedCompletionTime = estimatedCompletionTime;
+    public void setCompletionTime(Long completionTime) {
+        this.completionTime = completionTime;
     }
 }

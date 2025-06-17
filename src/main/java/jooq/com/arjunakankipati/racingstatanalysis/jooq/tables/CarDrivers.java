@@ -117,11 +117,9 @@ public class CarDrivers extends TableImpl<CarDriversRecord> {
     public static class CarDriversPath extends CarDrivers implements Path<CarDriversRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> CarDriversPath(Table<O> path, ForeignKey<O, CarDriversRecord> childPath, InverseForeignKey<O, CarDriversRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private CarDriversPath(Name alias, Table<CarDriversRecord> aliased) {
             super(alias, aliased);
         }

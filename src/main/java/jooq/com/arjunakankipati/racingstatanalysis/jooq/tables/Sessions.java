@@ -165,11 +165,9 @@ public class Sessions extends TableImpl<SessionsRecord> {
     public static class SessionsPath extends Sessions implements Path<SessionsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> SessionsPath(Table<O> path, ForeignKey<O, SessionsRecord> childPath, InverseForeignKey<O, SessionsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private SessionsPath(Name alias, Table<SessionsRecord> aliased) {
             super(alias, aliased);
         }
