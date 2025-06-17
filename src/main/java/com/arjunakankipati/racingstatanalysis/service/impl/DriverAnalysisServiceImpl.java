@@ -25,6 +25,11 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
     private final EventRepository eventRepository;
     private final SessionRepository sessionRepository;
 
+    Map<Long, Car> carCache = new HashMap<>();
+    Map<Long, Team> teamCache = new HashMap<>();
+    Map<Long, Session> sessionCache = new HashMap<>();
+    Map<Long, Event> eventCache = new HashMap<>();
+
     /**
      * Constructor with repository dependency injection.
      *
@@ -63,24 +68,15 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(ResourceNotFoundException::new);
 
-        // Get filtered laps for the driver using SQL query
-        List<Lap> filteredLaps = lapRepository.findFilteredLaps(driverId, true, sessionId, eventId, year, seriesId);
+        // Get top percentage of laps for the driver using SQL query
+        // This handles filtering, sorting, and percentage-based limiting in the database
+        List<Lap> topLaps = lapRepository.findTopPercentageLapsByDriverId(
+                driverId, true, percentage, sessionId, eventId, year, seriesId);
 
-        // If no laps found after filtering, return empty list
-        if (filteredLaps.isEmpty()) {
+        // If no laps found, return empty list
+        if (topLaps.isEmpty()) {
             return new ArrayList<>();
         }
-
-        // Sort laps by lap time (ascending)
-        filteredLaps.sort(Comparator.comparing(Lap::getLapTimeSeconds));
-
-        // Calculate how many laps to return based on percentage
-        int topCount = Math.max(1, (int) Math.ceil(filteredLaps.size() * percentage / 100.0));
-
-        // Take the top N laps
-        List<Lap> topLaps = filteredLaps.stream()
-                .limit(topCount)
-                .collect(Collectors.toList());
 
         // Map laps to DTOs
         return mapLapsToLapTimeDTOs(topLaps, driver);
@@ -95,12 +91,6 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
      * @return the mapped DTOs
      */
     private List<LapTimeDTO> mapLapsToLapTimeDTOs(List<Lap> laps, Driver driver) {
-        // Create maps to cache entities and avoid repeated database queries
-        Map<Long, Car> carCache = new HashMap<>();
-        Map<Long, Team> teamCache = new HashMap<>();
-        Map<Long, Session> sessionCache = new HashMap<>();
-        Map<Long, Event> eventCache = new HashMap<>();
-
         return laps.stream().map(lap -> {
             // Get car
             Car car = carCache.computeIfAbsent(lap.getCarId(),

@@ -103,4 +103,24 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
                                Optional<Long> eventId,
                                Optional<Integer> year,
                                Optional<Long> seriesId);
+
+    /**
+     * Find top percentage of laps by driver ID, validity, and optional filters for session, event, year, and series.
+     * This method uses SQL JOINs to filter laps in the database rather than in memory.
+     * The laps are sorted by lap time (ascending) and limited to the top percentage.
+     *
+     * @param driverId   the ID of the driver to find laps for
+     * @param isValid    whether to find only valid laps
+     * @param percentage the percentage of top laps to return (e.g., 20 for top 20%)
+     * @param sessionId  optional filter by session ID
+     * @param eventId    optional filter by event ID
+     * @param year       optional filter by year
+     * @param seriesId   optional filter by series ID
+     * @return a list of top percentage laps for the driver
+     */
+    List<Lap> findTopPercentageLapsByDriverId(Long driverId, boolean isValid, int percentage,
+                                              Optional<Long> sessionId,
+                                              Optional<Long> eventId,
+                                              Optional<Integer> year,
+                                              Optional<Long> seriesId);
 }

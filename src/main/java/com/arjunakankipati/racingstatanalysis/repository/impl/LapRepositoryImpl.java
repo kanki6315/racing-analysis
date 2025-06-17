@@ -253,4 +253,58 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                 .fetch()
                 .map(this::mapToEntity);
     }
+
+    @Override
+    public List<Lap> findTopPercentageLapsByDriverId(Long driverId, boolean isValid, int percentage,
+                                                     Optional<Long> sessionId,
+                                                     Optional<Long> eventId,
+                                                     Optional<Integer> year,
+                                                     Optional<Long> seriesId) {
+        // Build the query with joins
+        var query = dsl.select(field("laps.*"))
+                .from(table)
+                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
+                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
+                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")));
+
+        // Start with base conditions
+        var whereCondition = field("laps.driver_id").eq(driverId)
+                .and(field("laps.is_valid").eq(isValid));
+
+        // Add optional filters
+        if (sessionId.isPresent()) {
+            whereCondition = whereCondition.and(field("cars.session_id").eq(sessionId.get()));
+        }
+
+        if (eventId.isPresent()) {
+            whereCondition = whereCondition.and(field("sessions.event_id").eq(eventId.get()));
+        }
+
+        if (year.isPresent()) {
+            whereCondition = whereCondition.and(field("events.year").eq(year.get()));
+        }
+
+        if (seriesId.isPresent()) {
+            whereCondition = whereCondition.and(field("events.series_id").eq(seriesId.get()));
+        }
+
+        // First, get the total count of laps that match the criteria
+        long totalLaps = dsl.selectCount()
+                .from(table)
+                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
+                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
+                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")))
+                .where(whereCondition)
+                .fetchOne(0, Long.class);
+
+        // Calculate how many laps to return based on percentage
+        int topCount = Math.max(1, (int) Math.ceil(totalLaps * percentage / 100.0));
+
+        // Execute the query with the where condition, order by lap time, and limit to top percentage
+        return query.where(whereCondition)
+                .orderBy(field("laps.lap_time_seconds").asc())
+                .limit(topCount)
+                .fetch()
+                .map(this::mapToEntity);
+    }
 }
