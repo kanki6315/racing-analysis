@@ -115,15 +115,6 @@ public class ImportServiceImpl implements ImportService {
             if (request.getUrl() == null || request.getUrl().trim().isEmpty()) {
                 throw new IllegalArgumentException("URL cannot be null or empty");
             }
-            if (request.getSeriesName() == null || request.getSeriesName().trim().isEmpty()) {
-                throw new IllegalArgumentException("Series name cannot be null or empty");
-            }
-            if (request.getEventName() == null || request.getEventName().trim().isEmpty()) {
-                throw new IllegalArgumentException("Event name cannot be null or empty");
-            }
-            if (request.getYear() == null) {
-                throw new IllegalArgumentException("Year cannot be null");
-            }
 
             // Generate a unique import ID
             String importId = UUID.randomUUID().toString();
@@ -135,7 +126,7 @@ public class ImportServiceImpl implements ImportService {
             validateJsonStructure(jsonData);
 
             // Process and store the data
-            processData(jsonData, request);
+            processData(jsonData, request.getUrl());
 
             // Return response
             return new ImportResponseDTO(
@@ -243,24 +234,32 @@ public class ImportServiceImpl implements ImportService {
      * Processes and stores the data from the JSON.
      *
      * @param jsonData the JSON data to process
-     * @param request  the import request containing metadata
+     * @param url      the URL of the imported data
      */
-    private void processData(JsonObject jsonData, ImportRequestDTO request) {
+    private void processData(JsonObject jsonData, String url) {
         // Extract session data
         JsonObject sessionJson = jsonData.getAsJsonObject("session");
         JsonObject circuitJson = sessionJson.getAsJsonObject("circuit");
 
+        // Extract series name, event name, and year from the JSON data
+        String seriesName = sessionJson.get("championship_name").getAsString();
+        String eventName = sessionJson.get("event_name").getAsString();
+
+        // Extract year from session_date (format: "25/01/2025 01:40")
+        String sessionDateStr = sessionJson.get("session_date").getAsString();
+        int year = Integer.parseInt(sessionDateStr.substring(6, 10));
+
         // Find or create series
-        Series series = findOrCreateSeries(request.getSeriesName());
+        Series series = findOrCreateSeries(seriesName);
 
         // Find or create circuit
         Circuit circuit = findOrCreateCircuit(circuitJson);
 
         // Find or create event
-        Event event = findOrCreateEvent(request.getEventName(), request.getYear(), series.getId());
+        Event event = findOrCreateEvent(eventName, year, series.getId());
 
         // Create session
-        Session session = createSession(sessionJson, event.getId(), circuit.getId(), request.getUrl());
+        Session session = createSession(sessionJson, event.getId(), circuit.getId(), url);
 
         // Process participants
         JsonArray participantsJson = jsonData.getAsJsonArray("participants");

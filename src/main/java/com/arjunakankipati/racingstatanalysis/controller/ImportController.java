@@ -32,7 +32,7 @@ public class ImportController {
     /**
      * Imports timing data from a URL.
      *
-     * @param request the import request containing the URL and metadata
+     * @param request the import request containing the URL
      * @return a response entity containing the import response
      */
     @PostMapping

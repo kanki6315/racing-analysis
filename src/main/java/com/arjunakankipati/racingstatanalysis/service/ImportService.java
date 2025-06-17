@@ -11,7 +11,7 @@ public interface ImportService {
     /**
      * Imports timing data from a URL.
      *
-     * @param request the import request containing the URL and metadata
+     * @param request the import request containing the URL
      * @return the import response containing the status of the import operation
      * @throws UnsupportedOperationException if the operation is not implemented
      */
