@@ -85,4 +85,22 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
      * @return a list of top laps for the given driver
      */
     List<Lap> findTopLapsByDriverId(Long driverId, int limit);
+
+    /**
+     * Find filtered laps by driver ID, validity, and optional filters for session, event, year, and series.
+     * This method uses SQL JOINs to filter laps in the database rather than in memory.
+     *
+     * @param driverId  the ID of the driver to find laps for
+     * @param isValid   whether to find only valid laps
+     * @param sessionId optional filter by session ID
+     * @param eventId   optional filter by event ID
+     * @param year      optional filter by year
+     * @param seriesId  optional filter by series ID
+     * @return a list of filtered laps
+     */
+    List<Lap> findFilteredLaps(Long driverId, boolean isValid,
+                               Optional<Long> sessionId,
+                               Optional<Long> eventId,
+                               Optional<Integer> year,
+                               Optional<Long> seriesId);
 }

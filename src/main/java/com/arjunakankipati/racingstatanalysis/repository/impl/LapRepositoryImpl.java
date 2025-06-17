@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
 
 /**
  * Implementation of the LapRepository interface using JOOQ.
@@ -209,6 +210,46 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                 .and(field("is_valid").eq(true))
                 .orderBy(field("lap_time_seconds").asc())
                 .limit(limit)
+                .fetch()
+                .map(this::mapToEntity);
+    }
+
+    @Override
+    public List<Lap> findFilteredLaps(Long driverId, boolean isValid,
+                                      Optional<Long> sessionId,
+                                      Optional<Long> eventId,
+                                      Optional<Integer> year,
+                                      Optional<Long> seriesId) {
+        // Build the query with joins
+        var query = dsl.select(field("laps.*"))
+                .from(table)
+                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
+                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
+                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")));
+
+        // Start with base conditions
+        var whereCondition = field("laps.driver_id").eq(driverId)
+                .and(field("laps.is_valid").eq(isValid));
+
+        // Add optional filters
+        if (sessionId.isPresent()) {
+            whereCondition = whereCondition.and(field("cars.session_id").eq(sessionId.get()));
+        }
+
+        if (eventId.isPresent()) {
+            whereCondition = whereCondition.and(field("sessions.event_id").eq(eventId.get()));
+        }
+
+        if (year.isPresent()) {
+            whereCondition = whereCondition.and(field("events.year").eq(year.get()));
+        }
+
+        if (seriesId.isPresent()) {
+            whereCondition = whereCondition.and(field("events.series_id").eq(seriesId.get()));
+        }
+
+        // Execute the query with the where condition
+        return query.where(whereCondition)
                 .fetch()
                 .map(this::mapToEntity);
     }
