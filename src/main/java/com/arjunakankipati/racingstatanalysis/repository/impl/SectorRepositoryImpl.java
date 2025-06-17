@@ -42,7 +42,9 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 record.get(field("sector_number", Integer.class)),
                 record.get(field("sector_time_seconds", BigDecimal.class)),
                 record.get(field("is_personal_best", Boolean.class)),
-                record.get(field("is_session_best", Boolean.class))
+                record.get(field("is_session_best", Boolean.class)),
+                record.get(field("is_valid", Boolean.class)),
+                record.get(field("invalidation_reason", String.class))
         );
     }
 
@@ -54,14 +56,18 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                         field("sector_number"),
                         field("sector_time_seconds"),
                         field("is_personal_best"),
-                        field("is_session_best")
+                        field("is_session_best"),
+                        field("is_valid"),
+                        field("invalidation_reason")
                 )
                 .values(
                         sector.getLapId(),
                         sector.getSectorNumber(),
                         sector.getSectorTimeSeconds(),
                         sector.getIsPersonalBest(),
-                        sector.getIsSessionBest()
+                        sector.getIsSessionBest(),
+                        sector.getIsValid(),
+                        sector.getInvalidationReason()
                 )
                 .returningResult(
                         field("id"),
@@ -69,7 +75,9 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                         field("sector_number"),
                         field("sector_time_seconds"),
                         field("is_personal_best"),
-                        field("is_session_best")
+                        field("is_session_best"),
+                        field("is_valid"),
+                        field("invalidation_reason")
                 )
                 .fetchOne();
 
@@ -84,6 +92,8 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 .set(field("sector_time_seconds"), sector.getSectorTimeSeconds())
                 .set(field("is_personal_best"), sector.getIsPersonalBest())
                 .set(field("is_session_best"), sector.getIsSessionBest())
+                .set(field("is_valid"), sector.getIsValid())
+                .set(field("invalidation_reason"), sector.getInvalidationReason())
                 .where(idField.eq(sector.getId()))
                 .execute();
     }

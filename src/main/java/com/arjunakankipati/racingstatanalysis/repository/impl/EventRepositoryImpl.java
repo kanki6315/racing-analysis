@@ -7,6 +7,7 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +42,8 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
                 record.get(field("series_id", Long.class)),
                 record.get(field("name", String.class)),
                 record.get(field("year", Integer.class)),
-                record.get(field("start_date", LocalDate.class)),
-                record.get(field("end_date", LocalDate.class)),
+                record.get(field("start_date", Date.class)).toLocalDate(),
+                record.get(field("end_date", Date.class)).toLocalDate(),
                 record.get(field("description", String.class))
         );
     }

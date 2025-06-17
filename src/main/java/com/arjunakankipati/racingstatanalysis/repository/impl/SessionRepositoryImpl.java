@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -43,14 +44,14 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 record.get(field("circuit_id", Long.class)),
                 record.get(field("name", String.class)),
                 record.get(field("type", String.class)),
-                record.get(field("start_datetime", LocalDateTime.class)),
+                record.get(field("start_datetime", Timestamp.class)).toLocalDateTime(),
                 record.get(field("duration_seconds", Integer.class)),
                 record.get(field("weather_air_temp", BigDecimal.class)),
                 record.get(field("weather_track_temp", BigDecimal.class)),
                 record.get(field("weather_condition", String.class)),
                 record.get(field("report_message", String.class)),
                 record.get(field("import_url", String.class)),
-                record.get(field("import_timestamp", LocalDateTime.class))
+                record.get(field("import_timestamp", Timestamp.class)).toLocalDateTime()
         );
     }
 

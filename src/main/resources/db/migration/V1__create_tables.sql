@@ -1,12 +1,12 @@
 CREATE TABLE series (
-    id SERIAL PRIMARY KEY,
+                        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     description TEXT
 );
 
 CREATE TABLE events (
-    id SERIAL PRIMARY KEY,
-    series_id INTEGER REFERENCES series(id),
+                        id        BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                        series_id BIGINT REFERENCES series (id),
     name VARCHAR(255) NOT NULL,
     year INTEGER NOT NULL,
     start_date DATE NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE circuits (
-    id SERIAL PRIMARY KEY,
+                          id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     length_meters DECIMAL(10,3) NOT NULL,
     country VARCHAR(100) NOT NULL,
@@ -24,9 +24,9 @@ CREATE TABLE circuits (
 );
 
 CREATE TABLE sessions (
-    id SERIAL PRIMARY KEY,
-    event_id INTEGER REFERENCES events(id),
-    circuit_id INTEGER REFERENCES circuits(id),
+                          id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                          event_id   BIGINT REFERENCES events (id),
+                          circuit_id BIGINT REFERENCES circuits (id),
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
     start_datetime TIMESTAMP NOT NULL,
@@ -40,26 +40,26 @@ CREATE TABLE sessions (
 );
 
 CREATE TABLE teams (
-    id SERIAL PRIMARY KEY,
+                       id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     description TEXT
 );
 
 CREATE TABLE manufacturers (
-    id SERIAL PRIMARY KEY,
+                               id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     country VARCHAR(100)
 );
 
 CREATE TABLE classes (
-    id SERIAL PRIMARY KEY,
-    series_id INTEGER REFERENCES series(id),
+                         id        BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                         series_id BIGINT REFERENCES series (id),
     name VARCHAR(100) NOT NULL,
     description TEXT
 );
 
 CREATE TABLE drivers (
-    id SERIAL PRIMARY KEY,
+                         id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     nationality VARCHAR(100),
@@ -69,27 +69,27 @@ CREATE TABLE drivers (
 );
 
 CREATE TABLE cars (
-    id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES sessions(id),
-    team_id INTEGER REFERENCES teams(id),
-    class_id INTEGER REFERENCES classes(id),
-    manufacturer_id INTEGER REFERENCES manufacturers(id),
+                      id              BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                      session_id      BIGINT REFERENCES sessions (id),
+                      team_id         BIGINT REFERENCES teams (id),
+                      class_id        BIGINT REFERENCES classes (id),
+                      manufacturer_id BIGINT REFERENCES manufacturers (id),
     number VARCHAR(10) NOT NULL,
     model VARCHAR(255) NOT NULL,
     tire_supplier VARCHAR(50)
 );
 
 CREATE TABLE car_drivers (
-    id SERIAL PRIMARY KEY,
-    car_id INTEGER REFERENCES cars(id),
-    driver_id INTEGER REFERENCES drivers(id),
+                             id        BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                             car_id    BIGINT REFERENCES cars (id),
+                             driver_id BIGINT REFERENCES drivers (id),
     driver_number INTEGER NOT NULL
 );
 
 CREATE TABLE laps (
-    id SERIAL PRIMARY KEY,
-    car_id INTEGER REFERENCES cars(id),
-    driver_id INTEGER REFERENCES drivers(id),
+                      id        BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                      car_id    BIGINT REFERENCES cars (id),
+                      driver_id BIGINT REFERENCES drivers (id),
     lap_number INTEGER NOT NULL,
     lap_time_seconds DECIMAL(10,3) NOT NULL,
     session_elapsed_seconds DECIMAL(12,3) NOT NULL,
@@ -102,10 +102,10 @@ CREATE TABLE laps (
 );
 
 CREATE TABLE sectors (
-    id SERIAL PRIMARY KEY,
-    lap_id INTEGER REFERENCES laps(id),
+                         id                  BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                         lap_id              BIGINT REFERENCES laps (id),
     sector_number INTEGER NOT NULL,
-    sector_time_seconds DECIMAL(10,3) NOT NULL,
+                         sector_time_seconds DECIMAL(12, 3) NOT NULL,
     is_personal_best BOOLEAN DEFAULT FALSE,
     is_session_best BOOLEAN DEFAULT FALSE
 );

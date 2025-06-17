@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
 import com.arjunakankipati.racingstatanalysis.model.Lap;
 import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
 import org.jooq.DSLContext;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -38,19 +40,20 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
             return null;
         }
 
+        var lapRec = (LapsRecord) record;
         return new Lap(
-                record.get(field("id", Long.class)),
-                record.get(field("car_id", Long.class)),
-                record.get(field("driver_id", Long.class)),
-                record.get(field("lap_number", Integer.class)),
-                record.get(field("lap_time_seconds", BigDecimal.class)),
-                record.get(field("session_elapsed_seconds", BigDecimal.class)),
-                record.get(field("timestamp", LocalDateTime.class)),
-                record.get(field("average_speed_kph", BigDecimal.class)),
-                record.get(field("is_valid", Boolean.class)),
-                record.get(field("is_personal_best", Boolean.class)),
-                record.get(field("is_session_best", Boolean.class)),
-                record.get(field("invalidation_reason", String.class))
+                lapRec.getId(),
+                lapRec.getCarId(),
+                lapRec.getDriverId(),
+                lapRec.getLapNumber(),
+                lapRec.getLapTimeSeconds(),
+                lapRec.getSessionElapsedSeconds(),
+                lapRec.getTimestamp(),
+                lapRec.getAverageSpeedKph(),
+                lapRec.getIsValid(),
+                lapRec.getIsPersonalBest(),
+                lapRec.getIsSessionBest(),
+                lapRec.getInvalidationReason()
         );
     }
 

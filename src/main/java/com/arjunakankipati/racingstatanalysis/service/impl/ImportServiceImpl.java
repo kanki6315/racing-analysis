@@ -11,6 +11,8 @@ import com.google.gson.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ImportServiceImpl implements ImportService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportServiceImpl.class);
     private final SeriesRepository seriesRepository;
     private final EventRepository eventRepository;
     private final CircuitRepository circuitRepository;
@@ -251,19 +256,23 @@ public class ImportServiceImpl implements ImportService {
 
         // Find or create series
         Series series = findOrCreateSeries(seriesName);
+        LOGGER.info(series.toString());
 
         // Find or create circuit
         Circuit circuit = findOrCreateCircuit(circuitJson);
+        LOGGER.info(circuit.toString());
 
         // Find or create event
         Event event = findOrCreateEvent(eventName, year, series.getId());
+        LOGGER.info(event.toString());
 
         // Create session
         Session session = createSession(sessionJson, event.getId(), circuit.getId(), url);
+        LOGGER.info(session.toString());
 
         // Process participants
         JsonArray participantsJson = jsonData.getAsJsonArray("participants");
-        processParticipants(participantsJson, session.getId());
+        processParticipants(participantsJson, series.getId(), session.getId());
     }
 
     /**
@@ -312,6 +321,7 @@ public class ImportServiceImpl implements ImportService {
      * @return the event entity
      */
     private Event findOrCreateEvent(String eventName, Integer year, Long seriesId) {
+        // TODO: this should have a filter on series id as well probably
         Optional<Event> existingEvent = eventRepository.findByNameAndYear(eventName, year);
         if (existingEvent.isPresent()) {
             return existingEvent.get();
@@ -321,6 +331,7 @@ public class ImportServiceImpl implements ImportService {
         newEvent.setName(eventName);
         newEvent.setYear(year);
         newEvent.setSeriesId(seriesId);
+        // TODO: this should be pulling from the actual dates
         newEvent.setStartDate(LocalDate.now()); // Default to current date
         newEvent.setEndDate(LocalDate.now().plusDays(1)); // Default to next day
         return eventRepository.save(newEvent);
@@ -382,6 +393,7 @@ public class ImportServiceImpl implements ImportService {
         newSession.setImportUrl(importUrl);
         newSession.setImportTimestamp(LocalDateTime.now());
 
+        LOGGER.info("Session parsed: " + newSession);
         return sessionRepository.save(newSession);
     }
 
@@ -391,23 +403,27 @@ public class ImportServiceImpl implements ImportService {
      * @param participantsJson the JSON data for the participants
      * @param sessionId        the ID of the session
      */
-    private void processParticipants(JsonArray participantsJson, Long sessionId) {
+    private void processParticipants(JsonArray participantsJson, Long seriesId, Long sessionId) {
         for (JsonElement participantElement : participantsJson) {
             JsonObject participantJson = participantElement.getAsJsonObject();
 
             // Find or create team
             Team team = findOrCreateTeam(participantJson.get("team").getAsString());
+            LOGGER.info(team.toString());
 
             // Find or create manufacturer
             Manufacturer manufacturer = findOrCreateManufacturer(
                     participantJson.get("manufacturer").getAsString());
+            LOGGER.info(manufacturer.toString());
 
             // Find or create class
-            Class carClass = findOrCreateClass(participantJson.get("class").getAsString());
+            Class carClass = findOrCreateClass(seriesId, participantJson.get("class").getAsString());
+            LOGGER.info(carClass.toString());
 
             // Create car
             Car car = createCar(participantJson, sessionId, team.getId(),
                     carClass.getId(), manufacturer.getId());
+            LOGGER.info(car.toString());
 
             // Process drivers
             if (participantJson.has("drivers") && participantJson.get("drivers").isJsonArray()) {
@@ -463,13 +479,15 @@ public class ImportServiceImpl implements ImportService {
      * @param className the name of the class
      * @return the class entity
      */
-    private Class findOrCreateClass(String className) {
+    private Class findOrCreateClass(Long seriesId, String className) {
+        //TODO add series id filter
         Optional<Class> existingClass = classRepository.findByName(className);
         if (existingClass.isPresent()) {
             return existingClass.get();
         }
 
         Class newClass = new Class();
+        newClass.setSeriesId(seriesId);
         newClass.setName(className);
         return classRepository.save(newClass);
     }
@@ -521,6 +539,7 @@ public class ImportServiceImpl implements ImportService {
 
             // Find or create driver
             Driver driver = findOrCreateDriver(driverJson);
+            LOGGER.info(driver.toString());
 
             // Create car-driver association
             createCarDriver(carId, driver.getId(), driverJson.get("number").getAsInt());
@@ -606,11 +625,28 @@ public class ImportServiceImpl implements ImportService {
 
             // Create lap
             Lap lap = createLap(lapJson, carId, carDriver.get().getDriverId());
+            LOGGER.info(lap.toString());
 
             // Process sector times
             if (lapJson.has("sector_times") && lapJson.get("sector_times").isJsonArray()) {
                 JsonArray sectorTimesJson = lapJson.getAsJsonArray("sector_times");
-                processSectorTimes(sectorTimesJson, lap.getId());
+                List<Sector> sectors = processSectorTimes(sectorTimesJson, lap.getId());
+
+                // Update lap validity based on sector validity
+                boolean allSectorsValid = true;
+                for (Sector sector : sectors) {
+                    if (sector.getIsValid() == null || !sector.getIsValid()) {
+                        allSectorsValid = false;
+                        break;
+                    }
+                }
+
+                if (!allSectorsValid && lap.getIsValid()) {
+                    lap.setIsValid(false);
+                    lap.setInvalidationReason("One or more invalid sector times");
+                    lapRepository.save(lap);
+                    LOGGER.info("Lap " + lap.getLapNumber() + " invalidated due to invalid sector times");
+                }
             }
         }
     }
@@ -686,14 +722,18 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param sectorTimesJson the JSON data for the sector times
      * @param lapId           the ID of the lap
+     * @return the list of created sectors
      */
-    private void processSectorTimes(JsonArray sectorTimesJson, Long lapId) {
+    private List<Sector> processSectorTimes(JsonArray sectorTimesJson, Long lapId) {
+        List<Sector> sectors = new ArrayList<>();
         for (JsonElement sectorElement : sectorTimesJson) {
             JsonObject sectorJson = sectorElement.getAsJsonObject();
 
             // Create sector
-            createSector(sectorJson, lapId);
+            Sector sector = createSector(sectorJson, lapId);
+            sectors.add(sector);
         }
+        return sectors;
     }
 
     /**
@@ -718,12 +758,68 @@ public class ImportServiceImpl implements ImportService {
 
         // Parse sector time
         String sectorTimeStr = sectorJson.get("time").getAsString();
-        newSector.setSectorTimeSeconds(new BigDecimal(sectorTimeStr));
+        BigDecimal sectorTime = parseSectorTime(sectorTimeStr);
+        newSector.setSectorTimeSeconds(sectorTime);
+
+        // Set validity based on sector time
+        boolean isValid = sectorTime != null;
+        newSector.setIsValid(isValid);
+
+        if (!isValid) {
+            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
+                newSector.setInvalidationReason("Missing sector time");
+            } else if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
+                newSector.setInvalidationReason("Unreasonably large sector time");
+            } else {
+                newSector.setInvalidationReason("Invalid sector time format");
+            }
+        }
 
         // Set best flags
         newSector.setIsPersonalBest(sectorJson.get("is_personal_best").getAsBoolean());
         newSector.setIsSessionBest(sectorJson.get("is_session_best").getAsBoolean());
 
         return sectorRepository.save(newSector);
+    }
+
+    BigDecimal parseSectorTime(String sectorTimeStr) {
+        try {
+            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
+                return null;  // Return null for blank values
+            }
+
+            // Check for unreasonably large values (e.g., starting with numbers like 48274)
+            if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
+                return null;  // Return null for unreasonably large values
+            }
+
+            if (sectorTimeStr.contains(":")) {
+                String[] parts = sectorTimeStr.split(":");
+                if (parts.length == 2) {
+                    // Format: MM:SS.SSS
+                    int minutes = Integer.parseInt(parts[0]);
+                    double seconds = Double.parseDouble(parts[1]);
+                    double totalSeconds = minutes * 60 + seconds;
+                    // Check if the time is reasonable (less than 1 hour)
+                    return totalSeconds < 3600 ? BigDecimal.valueOf(totalSeconds) : null;
+                } else if (parts.length == 3) {
+                    // Format: HH:MM:SS.SSS
+                    int hours = Integer.parseInt(parts[0]);
+                    int minutes = Integer.parseInt(parts[1]);
+                    double seconds = Double.parseDouble(parts[2]);
+                    double totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+                    // Check if the time is reasonable (less than 1 hour)
+                    return totalSeconds < 3600 ? BigDecimal.valueOf(totalSeconds) : null;
+                }
+            } else {
+                // Format: SS.SSS
+                double seconds = Double.parseDouble(sectorTimeStr);
+                // Check if the time is reasonable (less than 1 hour)
+                return seconds < 3600 ? BigDecimal.valueOf(seconds) : null;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;  // Return null for any parsing errors
+        }
     }
 }
