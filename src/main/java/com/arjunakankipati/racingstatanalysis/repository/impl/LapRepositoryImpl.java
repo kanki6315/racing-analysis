@@ -8,14 +8,9 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
 
 /**
  * Implementation of the LapRepository interface using JOOQ.
@@ -39,20 +34,20 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         if (record == null) {
             return null;
         }
-
+        var lapRec = record.into(Tables.LAPS);
         return new Lap(
-                record.get(field("id", Long.class)),
-                record.get(field("car_id", Long.class)),
-                record.get(field("driver_id", Long.class)),
-                record.get(field("lap_number", Integer.class)),
-                record.get(field("lap_time_seconds", BigDecimal.class)),
-                record.get(field("session_elapsed_seconds", BigDecimal.class)),
-                record.get(field("timestamp", Timestamp.class)).toLocalDateTime(),
-                record.get(field("average_speed_kph", BigDecimal.class)),
-                record.get(field("is_valid", Boolean.class)),
-                record.get(field("is_personal_best", Boolean.class)),
-                record.get(field("is_session_best", Boolean.class)),
-                record.get(field("invalidation_reason", String.class))
+                lapRec.getId(),
+                lapRec.getCarId(),
+                lapRec.getDriverId(),
+                lapRec.getLapNumber(),
+                lapRec.getLapTimeSeconds(),
+                lapRec.getSessionElapsedSeconds(),
+                lapRec.getTimestamp(),
+                lapRec.getAverageSpeedKph(),
+                lapRec.getIsValid(),
+                lapRec.getIsPersonalBest(),
+                lapRec.getIsSessionBest(),
+                lapRec.getInvalidationReason()
         );
     }
 
@@ -60,17 +55,17 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     protected Lap insert(Lap lap) {
         Record record = dsl.insertInto(table)
                 .columns(
-                        field("car_id"),
-                        field("driver_id"),
-                        field("lap_number"),
-                        field("lap_time_seconds"),
-                        field("session_elapsed_seconds"),
-                        field("timestamp"),
-                        field("average_speed_kph"),
-                        field("is_valid"),
-                        field("is_personal_best"),
-                        field("is_session_best"),
-                        field("invalidation_reason")
+                        Tables.LAPS.CAR_ID,
+                        Tables.LAPS.DRIVER_ID,
+                        Tables.LAPS.LAP_NUMBER,
+                        Tables.LAPS.LAP_TIME_SECONDS,
+                        Tables.LAPS.SESSION_ELAPSED_SECONDS,
+                        Tables.LAPS.TIMESTAMP,
+                        Tables.LAPS.AVERAGE_SPEED_KPH,
+                        Tables.LAPS.IS_VALID,
+                        Tables.LAPS.IS_PERSONAL_BEST,
+                        Tables.LAPS.IS_SESSION_BEST,
+                        Tables.LAPS.INVALIDATION_REASON
                 )
                 .values(
                         lap.getCarId(),
@@ -85,20 +80,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                         lap.getIsSessionBest(),
                         lap.getInvalidationReason()
                 )
-                .returningResult(
-                        field("id"),
-                        field("car_id"),
-                        field("driver_id"),
-                        field("lap_number"),
-                        field("lap_time_seconds"),
-                        field("session_elapsed_seconds"),
-                        field("timestamp"),
-                        field("average_speed_kph"),
-                        field("is_valid"),
-                        field("is_personal_best"),
-                        field("is_session_best"),
-                        field("invalidation_reason")
-                )
+                .returning()
                 .fetchOne();
 
         return mapToEntity(record);
@@ -107,17 +89,17 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     @Override
     protected void update(Lap lap) {
         dsl.update(table)
-                .set(field("car_id"), lap.getCarId())
-                .set(field("driver_id"), lap.getDriverId())
-                .set(field("lap_number"), lap.getLapNumber())
-                .set(field("lap_time_seconds"), lap.getLapTimeSeconds())
-                .set(field("session_elapsed_seconds"), lap.getSessionElapsedSeconds())
-                .set(field("timestamp"), lap.getTimestamp())
-                .set(field("average_speed_kph"), lap.getAverageSpeedKph())
-                .set(field("is_valid"), lap.getIsValid())
-                .set(field("is_personal_best"), lap.getIsPersonalBest())
-                .set(field("is_session_best"), lap.getIsSessionBest())
-                .set(field("invalidation_reason"), lap.getInvalidationReason())
+                .set(Tables.LAPS.CAR_ID, lap.getCarId())
+                .set(Tables.LAPS.DRIVER_ID, lap.getDriverId())
+                .set(Tables.LAPS.LAP_NUMBER, lap.getLapNumber())
+                .set(Tables.LAPS.LAP_TIME_SECONDS, lap.getLapTimeSeconds())
+                .set(Tables.LAPS.SESSION_ELAPSED_SECONDS, lap.getSessionElapsedSeconds())
+                .set(Tables.LAPS.TIMESTAMP, lap.getTimestamp())
+                .set(Tables.LAPS.AVERAGE_SPEED_KPH, lap.getAverageSpeedKph())
+                .set(Tables.LAPS.IS_VALID, lap.getIsValid())
+                .set(Tables.LAPS.IS_PERSONAL_BEST, lap.getIsPersonalBest())
+                .set(Tables.LAPS.IS_SESSION_BEST, lap.getIsSessionBest())
+                .set(Tables.LAPS.INVALIDATION_REASON, lap.getInvalidationReason())
                 .where(idField.eq(lap.getId()))
                 .execute();
     }
@@ -126,7 +108,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByCarId(Long carId) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
+                .where(Tables.LAPS.CAR_ID.eq(carId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -135,7 +117,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByDriverId(Long driverId) {
         return dsl.select()
                 .from(table)
-                .where(field("driver_id").eq(driverId))
+                .where(Tables.LAPS.DRIVER_ID.eq(driverId))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -144,8 +126,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public Optional<Lap> findByCarIdAndLapNumber(Long carId, Integer lapNumber) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("lap_number").eq(lapNumber))
+                .where(Tables.LAPS.CAR_ID.eq(carId))
+                .and(Tables.LAPS.LAP_NUMBER.eq(lapNumber))
                 .fetchOne();
 
         return Optional.ofNullable(record)
@@ -156,8 +138,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByCarIdAndIsValidTrue(Long carId) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("is_valid").eq(true))
+                .where(Tables.LAPS.CAR_ID.eq(carId))
+                .and(Tables.LAPS.IS_VALID.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -166,8 +148,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByDriverIdAndIsValidTrue(Long driverId) {
         return dsl.select()
                 .from(table)
-                .where(field("driver_id").eq(driverId))
-                .and(field("is_valid").eq(true))
+                .where(Tables.LAPS.DRIVER_ID.eq(driverId))
+                .and(Tables.LAPS.IS_VALID.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -176,8 +158,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByCarIdAndIsPersonalBestTrue(Long carId) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("is_personal_best").eq(true))
+                .where(Tables.LAPS.CAR_ID.eq(carId))
+                .and(Tables.LAPS.IS_PERSONAL_BEST.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -186,8 +168,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findByCarIdAndIsSessionBestTrue(Long carId) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("is_session_best").eq(true))
+                .where(Tables.LAPS.CAR_ID.eq(carId))
+                .and(Tables.LAPS.IS_SESSION_BEST.eq(true))
                 .fetch()
                 .map(this::mapToEntity);
     }
@@ -196,9 +178,9 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findTopLapsByCarId(Long carId, int limit) {
         return dsl.select()
                 .from(table)
-                .where(field("car_id").eq(carId))
-                .and(field("is_valid").eq(true))
-                .orderBy(field("lap_time_seconds").asc())
+                .where(Tables.LAPS.CAR_ID.eq(carId))
+                .and(Tables.LAPS.IS_VALID.eq(true))
+                .orderBy(Tables.LAPS.LAP_TIME_SECONDS.asc())
                 .limit(limit)
                 .fetch()
                 .map(this::mapToEntity);
@@ -208,9 +190,9 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     public List<Lap> findTopLapsByDriverId(Long driverId, int limit) {
         return dsl.select()
                 .from(table)
-                .where(field("driver_id").eq(driverId))
-                .and(field("is_valid").eq(true))
-                .orderBy(field("lap_time_seconds").asc())
+                .where(Tables.LAPS.DRIVER_ID.eq(driverId))
+                .and(Tables.LAPS.IS_VALID.eq(true))
+                .orderBy(Tables.LAPS.LAP_TIME_SECONDS.asc())
                 .limit(limit)
                 .fetch()
                 .map(this::mapToEntity);
@@ -223,31 +205,31 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                                       Optional<Integer> year,
                                       Optional<Long> seriesId) {
         // Build the query with joins
-        var query = dsl.select(field("laps.*"))
+        var query = dsl.select()
                 .from(table)
-                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
-                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
-                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")));
+                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID));
 
         // Start with base conditions
-        var whereCondition = field("laps.driver_id").eq(driverId)
-                .and(field("laps.is_valid").eq(isValid));
+        var whereCondition = Tables.LAPS.DRIVER_ID.eq(driverId)
+                .and(Tables.LAPS.IS_VALID.eq(isValid));
 
         // Add optional filters
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(field("cars.session_id").eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
         }
 
         if (eventId.isPresent()) {
-            whereCondition = whereCondition.and(field("sessions.event_id").eq(eventId.get()));
+            whereCondition = whereCondition.and(Tables.SESSIONS.EVENT_ID.eq(eventId.get()));
         }
 
         if (year.isPresent()) {
-            whereCondition = whereCondition.and(field("events.year").eq(year.get()));
+            whereCondition = whereCondition.and(Tables.EVENTS.YEAR.eq(year.get()));
         }
 
         if (seriesId.isPresent()) {
-            whereCondition = whereCondition.and(field("events.series_id").eq(seriesId.get()));
+            whereCondition = whereCondition.and(Tables.EVENTS.SERIES_ID.eq(seriesId.get()));
         }
 
         // Execute the query with the where condition
@@ -265,37 +247,37 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // Build the query with joins
         var query = dsl.select()
                 .from(table)
-                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
-                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
-                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")));
+                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID));
 
         // Start with base conditions
-        var whereCondition = field("laps.driver_id").eq(driverId)
-                .and(field("laps.is_valid").eq(isValid));
+        var whereCondition = Tables.LAPS.DRIVER_ID.eq(driverId)
+                .and(Tables.LAPS.IS_VALID.eq(isValid));
 
         // Add optional filters
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(field("cars.session_id").eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
         }
 
         if (eventId.isPresent()) {
-            whereCondition = whereCondition.and(field("sessions.event_id").eq(eventId.get()));
+            whereCondition = whereCondition.and(Tables.SESSIONS.EVENT_ID.eq(eventId.get()));
         }
 
         if (year.isPresent()) {
-            whereCondition = whereCondition.and(field("events.year").eq(year.get()));
+            whereCondition = whereCondition.and(Tables.EVENTS.YEAR.eq(year.get()));
         }
 
         if (seriesId.isPresent()) {
-            whereCondition = whereCondition.and(field("events.series_id").eq(seriesId.get()));
+            whereCondition = whereCondition.and(Tables.EVENTS.SERIES_ID.eq(seriesId.get()));
         }
 
         // First, get the total count of laps that match the criteria
         long totalLaps = dsl.selectCount()
                 .from(table)
-                .join(table("cars")).on(field("cars.id").eq(field("laps.car_id")))
-                .join(table("sessions")).on(field("sessions.id").eq(field("cars.session_id")))
-                .join(table("events")).on(field("events.id").eq(field("sessions.event_id")))
+                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID))
                 .where(whereCondition)
                 .fetchOne(0, Long.class);
 
@@ -304,7 +286,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
 
         // Execute the query with the where condition, order by lap time, and limit to top percentage
         return query.where(whereCondition)
-                .orderBy(field("laps.lap_time_seconds").asc())
+                .orderBy(Tables.LAPS.LAP_TIME_SECONDS.asc())
                 .limit(topCount)
                 .fetch()
                 .map(this::mapToEntity);
