@@ -1,8 +1,11 @@
 package com.arjunakankipati.racingstatanalysis.repository;
 
+import com.arjunakankipati.racingstatanalysis.dto.TeamDTO;
 import com.arjunakankipati.racingstatanalysis.model.Team;
+import org.jooq.Record;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -26,4 +29,22 @@ public interface TeamRepository extends BaseRepository<Team, Long> {
      * @return a list of teams with names containing the given string
      */
     List<Team> findByNameContaining(String nameContains);
+
+    /**
+     * Find all teams, cars, and drivers for a specific event in a single query.
+     * This method uses joins to fetch all related data efficiently.
+     *
+     * @param eventId the ID of the event
+     * @return a list of records containing team, car, and driver data
+     */
+    List<Record> findTeamsCarsAndDriversByEventId(Long eventId);
+
+    /**
+     * Find all teams with their cars and drivers for a specific event in a single query.
+     * This method uses joins to fetch all related data efficiently and returns it in a structured format.
+     *
+     * @param eventId the ID of the event
+     * @return a map of team IDs to TeamDTOs containing all team, car, and driver data
+     */
+    Map<Long, TeamDTO> findTeamsWithCarsAndDriversByEventId(Long eventId);
 }

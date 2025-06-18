@@ -2,6 +2,7 @@ package com.arjunakankipati.racingstatanalysis.service;
 
 import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
 
 import java.util.List;
@@ -29,4 +30,13 @@ public interface SeriesService {
     YearsResponseDTO findYearsBySeries(Long seriesId);
 
     List<EventsResponseDTO> findEventsForSeriesByYear(Long seriesId, Integer year);
+
+    /**
+     * Finds all teams that participated in a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response containing the teams that participated in the event
+     * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
+     */
+    TeamsResponseDTO findTeamsByEventId(Long eventId);
 }

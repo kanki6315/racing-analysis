@@ -2,6 +2,7 @@ package com.arjunakankipati.racingstatanalysis.controller;
 
 import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,5 +60,17 @@ public class SeriesController {
     public ResponseEntity<List<EventsResponseDTO>> getEventsForSeriesByYear(@PathVariable Long seriesId, @PathVariable Integer year) {
         var years = seriesService.findEventsForSeriesByYear(seriesId, year);
         return ResponseEntity.ok(years);
+    }
+
+    /**
+     * Gets all teams that participated in a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response entity containing the teams that participated in the event
+     */
+    @GetMapping("/events/{eventId}/teams")
+    public ResponseEntity<TeamsResponseDTO> getTeamsByEventId(@PathVariable Long eventId) {
+        TeamsResponseDTO teams = seriesService.findTeamsByEventId(eventId);
+        return ResponseEntity.ok(teams);
     }
 }

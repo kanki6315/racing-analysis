@@ -1,17 +1,15 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
-import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
-import com.arjunakankipati.racingstatanalysis.model.Series;
-import com.arjunakankipati.racingstatanalysis.repository.EventRepository;
-import com.arjunakankipati.racingstatanalysis.repository.SeriesRepository;
+import com.arjunakankipati.racingstatanalysis.model.*;
+import com.arjunakankipati.racingstatanalysis.repository.*;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the SeriesService interface.
@@ -21,17 +19,38 @@ public class SeriesServiceImpl implements SeriesService {
 
     private final SeriesRepository seriesRepository;
     private final EventRepository eventRepository;
+    private final SessionRepository sessionRepository;
+    private final CarRepository carRepository;
+    private final TeamRepository teamRepository;
+    private final CarDriverRepository carDriverRepository;
+    private final DriverRepository driverRepository;
 
     /**
      * Constructor with repository dependency injection.
      *
      * @param seriesRepository the series repository
-     * @param eventRepository  the event repository
+     * @param eventRepository the event repository
+     * @param sessionRepository the session repository
+     * @param carRepository the car repository
+     * @param teamRepository the team repository
+     * @param carDriverRepository the car driver repository
+     * @param driverRepository the driver repository
      */
     @Autowired
-    public SeriesServiceImpl(SeriesRepository seriesRepository, EventRepository eventRepository) {
+    public SeriesServiceImpl(SeriesRepository seriesRepository,
+                             EventRepository eventRepository,
+                             SessionRepository sessionRepository,
+                             CarRepository carRepository,
+                             TeamRepository teamRepository,
+                             CarDriverRepository carDriverRepository,
+                             DriverRepository driverRepository) {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
+        this.sessionRepository = sessionRepository;
+        this.carRepository = carRepository;
+        this.teamRepository = teamRepository;
+        this.carDriverRepository = carDriverRepository;
+        this.driverRepository = driverRepository;
     }
 
     /**
@@ -93,5 +112,26 @@ public class SeriesServiceImpl implements SeriesService {
                         event.getEndDate(),
                         event.getDescription()))
                 .toList();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TeamsResponseDTO findTeamsByEventId(Long eventId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Create response DTO
+        TeamsResponseDTO response = new TeamsResponseDTO(event.getId(), event.getName());
+
+        // Fetch all teams with their cars and drivers for the event in a single query
+        Map<Long, TeamDTO> teamMap = teamRepository.findTeamsWithCarsAndDriversByEventId(eventId);
+
+        // Add all teams to response
+        teamMap.values().forEach(response::addTeam);
+
+        return response;
     }
 }
