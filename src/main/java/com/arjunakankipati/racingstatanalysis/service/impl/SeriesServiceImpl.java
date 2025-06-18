@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
+import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementation of the SeriesService interface.
@@ -53,7 +53,7 @@ public class SeriesServiceImpl implements SeriesService {
                             (int) eventCount
                     );
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -74,5 +74,24 @@ public class SeriesServiceImpl implements SeriesService {
                 series.getName(),
                 years
         );
+    }
+
+    @Override
+    public List<EventsResponseDTO> findEventsForSeriesByYear(Long seriesId, Integer year) {
+        // Find the series by ID
+        Series series = seriesRepository.findById(seriesId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        var events = eventRepository.findBySeriesIdAndYear(seriesId, year);
+
+        return events.stream().map(event -> new EventsResponseDTO(
+                        event.getId(),
+                        event.getSeriesId(),
+                        event.getName(),
+                        event.getYear(),
+                        event.getStartDate(),
+                        event.getEndDate(),
+                        event.getDescription()))
+                .toList();
     }
 }

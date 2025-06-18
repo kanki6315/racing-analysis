@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.controller;
 
+import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
@@ -51,6 +52,12 @@ public class SeriesController {
     @GetMapping("/{seriesId}/years")
     public ResponseEntity<YearsResponseDTO> getYearsForSeries(@PathVariable Long seriesId) {
         YearsResponseDTO years = seriesService.findYearsBySeries(seriesId);
+        return ResponseEntity.ok(years);
+    }
+
+    @GetMapping("/{seriesId}/{year}/events")
+    public ResponseEntity<List<EventsResponseDTO>> getEventsForSeriesByYear(@PathVariable Long seriesId, @PathVariable Integer year) {
+        var years = seriesService.findEventsForSeriesByYear(seriesId, year);
         return ResponseEntity.ok(years);
     }
 }

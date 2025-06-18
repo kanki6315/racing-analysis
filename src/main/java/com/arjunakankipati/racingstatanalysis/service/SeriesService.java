@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
+import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
 
@@ -26,4 +27,6 @@ public interface SeriesService {
      * @throws UnsupportedOperationException if the operation is not implemented
      */
     YearsResponseDTO findYearsBySeries(Long seriesId);
+
+    List<EventsResponseDTO> findEventsForSeriesByYear(Long seriesId, Integer year);
 }
