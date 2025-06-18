@@ -1,5 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.repository;
 
+import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
+import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
 import com.arjunakankipati.racingstatanalysis.model.Lap;
 
 import java.util.List;
@@ -123,4 +125,51 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
                                               Optional<Long> eventId,
                                               Optional<Integer> year,
                                               Optional<Long> seriesId);
+
+    /**
+     * Calculate lap time analysis for an event with optional filters.
+     * This method uses SQL to calculate the average of the top percentage of valid lap times,
+     * the fastest lap time, the median lap time, and the total lap count.
+     *
+     * @param eventId    the ID of the event
+     * @param percentage the percentage of top laps to include in the average calculation (default: 20)
+     * @param classId    optional filter by class ID
+     * @param carId      optional filter by car ID
+     * @param sessionId  optional filter by session ID
+     * @param offset     optional pagination offset
+     * @param limit      optional pagination limit
+     * @return a DTO containing the lap time analysis
+     */
+    LapTimeAnalysisDTO calculateLapTimeAnalysisForEvent(
+            Long eventId,
+            int percentage,
+            Optional<Long> classId,
+            Optional<Long> carId,
+            Optional<Long> sessionId,
+            Optional<Integer> offset,
+            Optional<Integer> limit);
+
+    /**
+     * Calculate lap time analysis per driver for an event with optional filters.
+     * This method uses SQL to calculate the average of the top percentage of valid lap times,
+     * the fastest lap time, the median lap time, and the total lap count for each driver.
+     * Results are ordered by the average lap time for paging purposes.
+     *
+     * @param eventId    the ID of the event
+     * @param percentage the percentage of top laps to include in the average calculation (default: 20)
+     * @param classId    optional filter by class ID
+     * @param carId      optional filter by car ID
+     * @param sessionId  optional filter by session ID
+     * @param offset     optional pagination offset
+     * @param limit      optional pagination limit
+     * @return a list of DTOs containing driver-specific lap time analysis
+     */
+    List<DriverLapTimeAnalysisDTO> calculateLapTimeAnalysisPerDriverForEvent(
+            Long eventId,
+            int percentage,
+            Optional<Long> classId,
+            Optional<Long> carId,
+            Optional<Long> sessionId,
+            Optional<Integer> offset,
+            Optional<Integer> limit);
 }

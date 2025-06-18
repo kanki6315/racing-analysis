@@ -1,18 +1,24 @@
 package com.arjunakankipati.racingstatanalysis.controller;
 
+import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
 import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
+import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for series operations.
@@ -22,15 +28,18 @@ import java.util.List;
 public class SeriesController {
 
     private final SeriesService seriesService;
+    private final LapRepository lapRepository;
 
     /**
-     * Constructor with SeriesService dependency injection.
+     * Constructor with SeriesService and LapRepository dependency injection.
      *
      * @param seriesService the series service
+     * @param lapRepository the lap repository
      */
     @Autowired
-    public SeriesController(SeriesService seriesService) {
+    public SeriesController(SeriesService seriesService, LapRepository lapRepository) {
         this.seriesService = seriesService;
+        this.lapRepository = lapRepository;
     }
 
     /**
@@ -72,5 +81,53 @@ public class SeriesController {
     public ResponseEntity<TeamsResponseDTO> getTeamsByEventId(@PathVariable Long eventId) {
         TeamsResponseDTO teams = seriesService.findTeamsByEventId(eventId);
         return ResponseEntity.ok(teams);
+    }
+
+    /**
+     * Gets lap time analysis for an event.
+     *
+     * @param eventId    the ID of the event
+     * @param percentage the percentage of top lap times to include in the average calculation (default: 20)
+     * @param classId    optional filter by class ID
+     * @param carId      optional filter by car ID
+     * @param sessionId  optional filter by session ID
+     * @param offset     optional pagination offset
+     * @param limit      optional pagination limit
+     * @return a response entity containing the lap time analysis for the event
+     */
+    @GetMapping("/events/{eventId}/laptimeanalysis")
+    public ResponseEntity<LapTimeAnalysisResponseDTO> getLapTimeAnalysisForEvent(
+            @PathVariable Long eventId,
+            @RequestParam(defaultValue = "20") int percentage,
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long carId,
+            @RequestParam(required = false) Long sessionId,
+            @RequestParam(required = false) Integer offset,
+            @RequestParam(required = false) Integer limit) {
+
+        // Calculate overall lap time analysis
+        LapTimeAnalysisDTO overallAnalysis = lapRepository.calculateLapTimeAnalysisForEvent(
+                eventId,
+                percentage,
+                Optional.ofNullable(classId),
+                Optional.ofNullable(carId),
+                Optional.ofNullable(sessionId),
+                Optional.ofNullable(offset),
+                Optional.ofNullable(limit));
+
+        // Calculate driver-specific lap time analyses
+        List<DriverLapTimeAnalysisDTO> driverAnalyses = lapRepository.calculateLapTimeAnalysisPerDriverForEvent(
+                eventId,
+                percentage,
+                Optional.ofNullable(classId),
+                Optional.ofNullable(carId),
+                Optional.ofNullable(sessionId),
+                Optional.ofNullable(offset),
+                Optional.ofNullable(limit));
+
+        // Create the response DTO with both overall and driver-specific analyses
+        LapTimeAnalysisResponseDTO response = new LapTimeAnalysisResponseDTO(eventId, driverAnalyses, overallAnalysis);
+
+        return ResponseEntity.ok(response);
     }
 }
