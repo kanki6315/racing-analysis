@@ -59,4 +59,15 @@ public interface CarRepository extends BaseRepository<Car, Long> {
      * @return a list of cars with the given tire supplier
      */
     List<Car> findByTireSupplier(String tireSupplier);
+
+    /**
+     * Find cars by event ID and class ID.
+     * This is done by finding all sessions for the event, then all cars in those sessions
+     * that belong to the specified class.
+     *
+     * @param eventId the ID of the event to find cars for
+     * @param classId the ID of the class to find cars for
+     * @return a list of cars in the specified class for the event
+     */
+    List<Car> findByEventIdAndClassId(Long eventId, Long classId);
 }

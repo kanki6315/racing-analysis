@@ -1,22 +1,11 @@
 package com.arjunakankipati.racingstatanalysis.controller;
 
-import com.arjunakankipati.racingstatanalysis.dto.ClassesResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
-import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
-import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -94,6 +83,19 @@ public class SeriesController {
     public ResponseEntity<ClassesResponseDTO> getClassesByEventId(@PathVariable Long eventId) {
         ClassesResponseDTO classes = seriesService.findClassesByEventId(eventId);
         return ResponseEntity.ok(classes);
+    }
+
+    /**
+     * Gets all cars in a specific class for a specific event.
+     *
+     * @param eventId the ID of the event
+     * @param classId the ID of the class
+     * @return a response entity containing the cars in the specified class for the event
+     */
+    @GetMapping("/events/{eventId}/classes/{classId}/cars")
+    public ResponseEntity<CarsResponseDTO> getCarsByEventIdAndClassId(@PathVariable Long eventId, @PathVariable Long classId) {
+        CarsResponseDTO cars = seriesService.findCarsByEventIdAndClassId(eventId, classId);
+        return ResponseEntity.ok(cars);
     }
 
     /**

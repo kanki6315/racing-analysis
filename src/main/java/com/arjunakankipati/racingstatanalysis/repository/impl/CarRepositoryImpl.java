@@ -144,4 +144,15 @@ public class CarRepositoryImpl extends BaseRepositoryImpl<Car, Long> implements 
                 .fetch()
                 .map(this::mapToEntity);
     }
+
+    @Override
+    public List<Car> findByEventIdAndClassId(Long eventId, Long classId) {
+        return dsl.selectDistinct(Tables.CARS.asterisk())
+                .from(Tables.CARS)
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
+                .and(Tables.CARS.CLASS_ID.eq(classId))
+                .fetch()
+                .map(this::mapToEntity);
+    }
 }

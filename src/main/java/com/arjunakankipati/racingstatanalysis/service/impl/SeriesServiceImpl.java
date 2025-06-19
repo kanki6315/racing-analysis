@@ -2,15 +2,17 @@ package com.arjunakankipati.racingstatanalysis.service.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
-import com.arjunakankipati.racingstatanalysis.model.*;
+import com.arjunakankipati.racingstatanalysis.model.Car;
 import com.arjunakankipati.racingstatanalysis.model.Class;
+import com.arjunakankipati.racingstatanalysis.model.Event;
+import com.arjunakankipati.racingstatanalysis.model.Series;
 import com.arjunakankipati.racingstatanalysis.repository.*;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the SeriesService interface.
@@ -164,5 +166,37 @@ public class SeriesServiceImpl implements SeriesService {
 
         // Create response DTO
         return new ClassesResponseDTO(event.getId(), event.getName(), classDTOs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CarsResponseDTO findCarsByEventIdAndClassId(Long eventId, Long classId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find the class by ID
+        Class clazz = classRepository.findById(classId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find all cars in this class for this event
+        List<Car> cars = carRepository.findByEventIdAndClassId(eventId, classId);
+
+        // Convert to DTOs
+        List<CarDTO> carDTOs = cars.stream()
+                .map(car -> new CarDTO(
+                        car.getId(),
+                        car.getNumber(),
+                        car.getModel(),
+                        car.getTireSupplier(),
+                        car.getClassId(),
+                        car.getManufacturerId()
+                ))
+                .toList();
+
+        // Create response DTO
+        return new CarsResponseDTO(event.getId(), event.getName(), clazz.getId(), clazz.getName(), carDTOs);
     }
 }

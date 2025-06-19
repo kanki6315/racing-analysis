@@ -1,10 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
-import com.arjunakankipati.racingstatanalysis.dto.ClassesResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
-import com.arjunakankipati.racingstatanalysis.dto.YearsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.*;
 
 import java.util.List;
 
@@ -49,4 +45,14 @@ public interface SeriesService {
      * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
      */
     ClassesResponseDTO findClassesByEventId(Long eventId);
+
+    /**
+     * Finds all cars in a specific class for a specific event.
+     *
+     * @param eventId the ID of the event
+     * @param classId the ID of the class
+     * @return a response containing the cars in the specified class for the event
+     * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event or class is not found
+     */
+    CarsResponseDTO findCarsByEventIdAndClassId(Long eventId, Long classId);
 }
