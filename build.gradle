@@ -1,8 +1,14 @@
+buildscript {
+    dependencies {
+        classpath("org.flywaydb:flyway-database-postgresql:11.9.1")
+    }
+}
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
     id 'nu.studer.jooq' version '10.0'
+    id 'org.flywaydb.flyway' version '11.9.1'
 }
 
 group = 'com.arjunakankipati'
@@ -22,8 +28,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-jooq:3.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.5.0'
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.flywaydb:flyway-core:11.9.1'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.9.1'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.postgresql:postgresql:42.7.7'
@@ -66,3 +72,14 @@ jooq {
         }
     }
 }
+
+// Flyway configuration
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/statsdb'
+    user = 'postgres'
+    password = 'stats'
+    driver = 'org.postgresql.Driver'
+    locations = ['filesystem:src/main/resources/db/migration']
+    baselineOnMigrate = true
+}
+
