@@ -55,4 +55,13 @@ public interface SeriesService {
      * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event or class is not found
      */
     CarsResponseDTO findCarsByEventIdAndClassId(Long eventId, Long classId);
+
+    /**
+     * Finds all sessions for a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response containing the sessions for the event
+     * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
+     */
+    SessionsResponseDTO findSessionsByEventId(Long eventId);
 }

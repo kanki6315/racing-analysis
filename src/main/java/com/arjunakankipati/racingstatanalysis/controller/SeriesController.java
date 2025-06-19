@@ -99,6 +99,18 @@ public class SeriesController {
     }
 
     /**
+     * Gets all sessions for a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response entity containing the sessions for the event
+     */
+    @GetMapping("/events/{eventId}/sessions")
+    public ResponseEntity<SessionsResponseDTO> getSessionsByEventId(@PathVariable Long eventId) {
+        SessionsResponseDTO sessions = seriesService.findSessionsByEventId(eventId);
+        return ResponseEntity.ok(sessions);
+    }
+
+    /**
      * Gets lap time analysis for an event.
      *
      * @param eventId    the ID of the event

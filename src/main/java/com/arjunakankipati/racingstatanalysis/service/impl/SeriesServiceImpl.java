@@ -2,17 +2,16 @@ package com.arjunakankipati.racingstatanalysis.service.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
-import com.arjunakankipati.racingstatanalysis.model.Car;
+import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
-import com.arjunakankipati.racingstatanalysis.model.Event;
-import com.arjunakankipati.racingstatanalysis.model.Series;
+import com.arjunakankipati.racingstatanalysis.model.Session;
 import com.arjunakankipati.racingstatanalysis.repository.*;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the SeriesService interface.
@@ -198,5 +197,40 @@ public class SeriesServiceImpl implements SeriesService {
 
         // Create response DTO
         return new CarsResponseDTO(event.getId(), event.getName(), clazz.getId(), clazz.getName(), carDTOs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SessionsResponseDTO findSessionsByEventId(Long eventId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find all sessions for this event
+        List<Session> sessions = sessionRepository.findByEventId(eventId);
+
+        // Convert to DTOs
+        List<SessionDTO> sessionDTOs = sessions.stream()
+                .map(session -> new SessionDTO(
+                        session.getId(),
+                        session.getEventId(),
+                        session.getCircuitId(),
+                        session.getName(),
+                        session.getType(),
+                        session.getStartDatetime(),
+                        session.getDurationSeconds(),
+                        session.getWeatherAirTemp(),
+                        session.getWeatherTrackTemp(),
+                        session.getWeatherCondition(),
+                        session.getReportMessage(),
+                        session.getImportUrl(),
+                        session.getImportTimestamp()
+                ))
+                .toList();
+
+        // Create response DTO
+        return new SessionsResponseDTO(event.getId(), event.getName(), sessionDTOs);
     }
 }
