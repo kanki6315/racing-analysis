@@ -6,7 +6,7 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars.CarsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels.CarModelsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ManufacturersRecord;
 
 import java.util.Collection;
@@ -147,16 +147,17 @@ public class Manufacturers extends TableImpl<ManufacturersRecord> {
         return Keys.MANUFACTURERS_PKEY;
     }
 
-    private transient CarsPath _cars;
+    private transient CarModelsPath _carModels;
 
     /**
-     * Get the implicit to-many join path to the <code>public.cars</code> table
+     * Get the implicit to-many join path to the <code>public.car_models</code>
+     * table
      */
-    public CarsPath cars() {
-        if (_cars == null)
-            _cars = new CarsPath(this, null, Keys.CARS__CARS_MANUFACTURER_ID_FKEY.getInverseKey());
+    public CarModelsPath carModels() {
+        if (_carModels == null)
+            _carModels = new CarModelsPath(this, null, Keys.CAR_MODELS__CAR_MODELS_MANUFACTURER_ID_FKEY.getInverseKey());
 
-        return _cars;
+        return _carModels;
     }
 
     @Override

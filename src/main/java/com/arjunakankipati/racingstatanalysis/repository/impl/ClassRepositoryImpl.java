@@ -117,8 +117,8 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     public List<Class> findByEventId(Long eventId) {
         return dsl.selectDistinct(Tables.CLASSES.asterisk())
                 .from(Tables.CLASSES)
-                .join(Tables.CARS).on(Tables.CARS.CLASS_ID.eq(Tables.CLASSES.ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.CLASS_ID.eq(Tables.CLASSES.ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
                 .fetch()
                 .map(this::mapToEntity);

@@ -33,45 +33,45 @@ public class CarDriversRecord extends UpdatableRecordImpl<CarDriversRecord> {
     }
 
     /**
-     * Setter for <code>public.car_drivers.car_id</code>.
-     */
-    public void setCarId(Long value) {
-        set(1, value);
-    }
-
-    /**
-     * Getter for <code>public.car_drivers.car_id</code>.
-     */
-    public Long getCarId() {
-        return (Long) get(1);
-    }
-
-    /**
      * Setter for <code>public.car_drivers.driver_id</code>.
      */
     public void setDriverId(Long value) {
-        set(2, value);
+        set(1, value);
     }
 
     /**
      * Getter for <code>public.car_drivers.driver_id</code>.
      */
     public Long getDriverId() {
-        return (Long) get(2);
+        return (Long) get(1);
     }
 
     /**
      * Setter for <code>public.car_drivers.driver_number</code>.
      */
     public void setDriverNumber(Integer value) {
-        set(3, value);
+        set(2, value);
     }
 
     /**
      * Getter for <code>public.car_drivers.driver_number</code>.
      */
     public Integer getDriverNumber() {
-        return (Integer) get(3);
+        return (Integer) get(2);
+    }
+
+    /**
+     * Setter for <code>public.car_drivers.car_id</code>.
+     */
+    public void setCarId(Long value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.car_drivers.car_id</code>.
+     */
+    public Long getCarId() {
+        return (Long) get(3);
     }
 
     // -------------------------------------------------------------------------
@@ -97,13 +97,13 @@ public class CarDriversRecord extends UpdatableRecordImpl<CarDriversRecord> {
     /**
      * Create a detached, initialised CarDriversRecord
      */
-    public CarDriversRecord(Long id, Long carId, Long driverId, Integer driverNumber) {
+    public CarDriversRecord(Long id, Long driverId, Integer driverNumber, Long carId) {
         super(CarDrivers.CAR_DRIVERS);
 
         setId(id);
-        setCarId(carId);
         setDriverId(driverId);
         setDriverNumber(driverNumber);
+        setCarId(carId);
         resetChangedOnNotNull();
     }
 }

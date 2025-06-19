@@ -1,6 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.CarDTO;
+import com.arjunakankipati.racingstatanalysis.dto.CarModelDTO;
 import com.arjunakankipati.racingstatanalysis.dto.DriverDTO;
 import com.arjunakankipati.racingstatanalysis.dto.TeamDTO;
 import com.arjunakankipati.racingstatanalysis.jooq.Tables;
@@ -97,9 +98,9 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
     public List<Record> findTeamsCarsAndDriversByEventId(Long eventId) {
         return dsl.select()
                 .from(Tables.TEAMS)
-                .join(Tables.CARS).on(Tables.CARS.TEAM_ID.eq(Tables.TEAMS.ID))
-                .join(Tables.SESSIONS).on(Tables.CARS.SESSION_ID.eq(Tables.SESSIONS.ID))
-                .join(Tables.CAR_DRIVERS).on(Tables.CAR_DRIVERS.CAR_ID.eq(Tables.CARS.ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.TEAM_ID.eq(Tables.TEAMS.ID))
+                .join(Tables.SESSIONS).on(Tables.CAR_ENTRIES.SESSION_ID.eq(Tables.SESSIONS.ID))
+                .join(Tables.CAR_DRIVERS).on(Tables.CAR_DRIVERS.CAR_ID.eq(Tables.CAR_ENTRIES.ID))
                 .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.CAR_DRIVERS.DRIVER_ID))
                 .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
                 .fetch();
@@ -114,9 +115,10 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
         // Fetch all teams, cars, and drivers for the event in a single query
         Result<Record> records = dsl.select()
                 .from(Tables.TEAMS)
-                .join(Tables.CARS).on(Tables.CARS.TEAM_ID.eq(Tables.TEAMS.ID))
-                .join(Tables.SESSIONS).on(Tables.CARS.SESSION_ID.eq(Tables.SESSIONS.ID))
-                .join(Tables.CAR_DRIVERS).on(Tables.CAR_DRIVERS.CAR_ID.eq(Tables.CARS.ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.TEAM_ID.eq(Tables.TEAMS.ID))
+                .join(Tables.SESSIONS).on(Tables.CAR_ENTRIES.SESSION_ID.eq(Tables.SESSIONS.ID))
+                .join(Tables.CAR_MODELS).on(Tables.CAR_MODELS.ID.eq(Tables.CAR_ENTRIES.CAR_MODEL_ID))
+                .join(Tables.CAR_DRIVERS).on(Tables.CAR_DRIVERS.CAR_ID.eq(Tables.CAR_ENTRIES.ID))
                 .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.CAR_DRIVERS.DRIVER_ID))
                 .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
                 .fetch();
@@ -133,23 +135,34 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
                     id -> new TeamDTO(teamId, teamName, teamDescription));
 
             // Extract car data
-            Long carId = record.get(Tables.CARS.ID);
-            String carNumber = record.get(Tables.CARS.NUMBER);
-            String carModel = record.get(Tables.CARS.MODEL);
-            String carTireSupplier = record.get(Tables.CARS.TIRE_SUPPLIER);
-            Long carClassId = record.get(Tables.CARS.CLASS_ID);
-            Long carManufacturerId = record.get(Tables.CARS.MANUFACTURER_ID);
+            Long carId = record.get(Tables.CAR_ENTRIES.ID);
+            String carNumber = record.get(Tables.CAR_ENTRIES.NUMBER);
+            String carModelName = record.get(Tables.CAR_MODELS.NAME);
+            String carTireSupplier = record.get(Tables.CAR_ENTRIES.TIRE_SUPPLIER);
+            Long carClassId = record.get(Tables.CAR_ENTRIES.CLASS_ID);
+            Long carModelId = record.get(Tables.CAR_MODELS.ID);
+            Long carManufacturerId = record.get(Tables.CAR_MODELS.MANUFACTURER_ID);
 
             // Create or get the car DTO
             CarDTO carDTO = carMap.computeIfAbsent(carId,
                     id -> {
+                        // Create CarModelDTO
+                        CarModelDTO carModelDTO = new CarModelDTO(
+                                carModelId,
+                                carManufacturerId,
+                                carModelName,
+                                carModelName, // For now, use name as fullName
+                                null, // yearModel not available
+                                null  // description not available
+                        );
+                        
                         CarDTO car = new CarDTO(
                                 carId,
                                 carNumber,
-                                carModel,
+                                carModelDTO,
                                 carTireSupplier,
                                 carClassId,
-                                carManufacturerId
+                                teamId
                         );
                         teamDTO.addCar(car);
                         return car;

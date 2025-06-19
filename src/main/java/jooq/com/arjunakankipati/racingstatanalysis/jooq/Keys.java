@@ -5,7 +5,8 @@ package com.arjunakankipati.racingstatanalysis.jooq;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
@@ -18,7 +19,8 @@ import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarDriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarsRecord;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarEntriesRecord;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarModelsRecord;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CircuitsRecord;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ClassesRecord;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
@@ -50,7 +52,10 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<CarDriversRecord> CAR_DRIVERS_PKEY = Internal.createUniqueKey(CarDrivers.CAR_DRIVERS, DSL.name("car_drivers_pkey"), new TableField[]{CarDrivers.CAR_DRIVERS.ID}, true);
-    public static final UniqueKey<CarsRecord> CARS_PKEY = Internal.createUniqueKey(Cars.CARS, DSL.name("cars_pkey"), new TableField[]{Cars.CARS.ID}, true);
+    public static final UniqueKey<CarEntriesRecord> CAR_ENTRIES_PKEY = Internal.createUniqueKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_pkey"), new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
+    public static final UniqueKey<CarEntriesRecord> CAR_ENTRIES_SESSION_ID_NUMBER_KEY = Internal.createUniqueKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_session_id_number_key"), new TableField[]{CarEntries.CAR_ENTRIES.SESSION_ID, CarEntries.CAR_ENTRIES.NUMBER}, true);
+    public static final UniqueKey<CarModelsRecord> CAR_MODELS_MANUFACTURER_ID_NAME_YEAR_MODEL_KEY = Internal.createUniqueKey(CarModels.CAR_MODELS, DSL.name("car_models_manufacturer_id_name_year_model_key"), new TableField[]{CarModels.CAR_MODELS.MANUFACTURER_ID, CarModels.CAR_MODELS.NAME, CarModels.CAR_MODELS.YEAR_MODEL}, true);
+    public static final UniqueKey<CarModelsRecord> CAR_MODELS_PKEY = Internal.createUniqueKey(CarModels.CAR_MODELS, DSL.name("car_models_pkey"), new TableField[]{CarModels.CAR_MODELS.ID}, true);
     public static final UniqueKey<CircuitsRecord> CIRCUITS_PKEY = Internal.createUniqueKey(Circuits.CIRCUITS, DSL.name("circuits_pkey"), new TableField[]{Circuits.CIRCUITS.ID}, true);
     public static final UniqueKey<ClassesRecord> CLASSES_PKEY = Internal.createUniqueKey(Classes.CLASSES, DSL.name("classes_pkey"), new TableField[]{Classes.CLASSES.ID}, true);
     public static final UniqueKey<DriversRecord> DRIVERS_PKEY = Internal.createUniqueKey(Drivers.DRIVERS, DSL.name("drivers_pkey"), new TableField[]{Drivers.DRIVERS.ID}, true);
@@ -67,15 +72,18 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<CarDriversRecord, CarsRecord> CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY = Internal.createForeignKey(CarDrivers.CAR_DRIVERS, DSL.name("car_drivers_car_id_fkey"), new TableField[]{CarDrivers.CAR_DRIVERS.CAR_ID}, Keys.CARS_PKEY, new TableField[]{Cars.CARS.ID}, true);
+    public static final ForeignKey<CarDriversRecord, CarEntriesRecord> CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY = Internal.createForeignKey(CarDrivers.CAR_DRIVERS, DSL.name("car_drivers_car_entry_id_fkey"), new TableField[]{CarDrivers.CAR_DRIVERS.CAR_ID}, Keys.CAR_ENTRIES_PKEY, new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
+    public static final ForeignKey<CarDriversRecord, CarEntriesRecord> CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY = Internal.createForeignKey(CarDrivers.CAR_DRIVERS, DSL.name("car_drivers_car_id_fkey"), new TableField[]{CarDrivers.CAR_DRIVERS.CAR_ID}, Keys.CAR_ENTRIES_PKEY, new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
     public static final ForeignKey<CarDriversRecord, DriversRecord> CAR_DRIVERS__CAR_DRIVERS_DRIVER_ID_FKEY = Internal.createForeignKey(CarDrivers.CAR_DRIVERS, DSL.name("car_drivers_driver_id_fkey"), new TableField[]{CarDrivers.CAR_DRIVERS.DRIVER_ID}, Keys.DRIVERS_PKEY, new TableField[]{Drivers.DRIVERS.ID}, true);
-    public static final ForeignKey<CarsRecord, ClassesRecord> CARS__CARS_CLASS_ID_FKEY = Internal.createForeignKey(Cars.CARS, DSL.name("cars_class_id_fkey"), new TableField[]{Cars.CARS.CLASS_ID}, Keys.CLASSES_PKEY, new TableField[]{Classes.CLASSES.ID}, true);
-    public static final ForeignKey<CarsRecord, ManufacturersRecord> CARS__CARS_MANUFACTURER_ID_FKEY = Internal.createForeignKey(Cars.CARS, DSL.name("cars_manufacturer_id_fkey"), new TableField[]{Cars.CARS.MANUFACTURER_ID}, Keys.MANUFACTURERS_PKEY, new TableField[]{Manufacturers.MANUFACTURERS.ID}, true);
-    public static final ForeignKey<CarsRecord, SessionsRecord> CARS__CARS_SESSION_ID_FKEY = Internal.createForeignKey(Cars.CARS, DSL.name("cars_session_id_fkey"), new TableField[]{Cars.CARS.SESSION_ID}, Keys.SESSIONS_PKEY, new TableField[]{Sessions.SESSIONS.ID}, true);
-    public static final ForeignKey<CarsRecord, TeamsRecord> CARS__CARS_TEAM_ID_FKEY = Internal.createForeignKey(Cars.CARS, DSL.name("cars_team_id_fkey"), new TableField[]{Cars.CARS.TEAM_ID}, Keys.TEAMS_PKEY, new TableField[]{Teams.TEAMS.ID}, true);
+    public static final ForeignKey<CarEntriesRecord, CarModelsRecord> CAR_ENTRIES__CAR_ENTRIES_CAR_MODEL_ID_FKEY = Internal.createForeignKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_car_model_id_fkey"), new TableField[]{CarEntries.CAR_ENTRIES.CAR_MODEL_ID}, Keys.CAR_MODELS_PKEY, new TableField[]{CarModels.CAR_MODELS.ID}, true);
+    public static final ForeignKey<CarEntriesRecord, ClassesRecord> CAR_ENTRIES__CAR_ENTRIES_CLASS_ID_FKEY = Internal.createForeignKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_class_id_fkey"), new TableField[]{CarEntries.CAR_ENTRIES.CLASS_ID}, Keys.CLASSES_PKEY, new TableField[]{Classes.CLASSES.ID}, true);
+    public static final ForeignKey<CarEntriesRecord, SessionsRecord> CAR_ENTRIES__CAR_ENTRIES_SESSION_ID_FKEY = Internal.createForeignKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_session_id_fkey"), new TableField[]{CarEntries.CAR_ENTRIES.SESSION_ID}, Keys.SESSIONS_PKEY, new TableField[]{Sessions.SESSIONS.ID}, true);
+    public static final ForeignKey<CarEntriesRecord, TeamsRecord> CAR_ENTRIES__CAR_ENTRIES_TEAM_ID_FKEY = Internal.createForeignKey(CarEntries.CAR_ENTRIES, DSL.name("car_entries_team_id_fkey"), new TableField[]{CarEntries.CAR_ENTRIES.TEAM_ID}, Keys.TEAMS_PKEY, new TableField[]{Teams.TEAMS.ID}, true);
+    public static final ForeignKey<CarModelsRecord, ManufacturersRecord> CAR_MODELS__CAR_MODELS_MANUFACTURER_ID_FKEY = Internal.createForeignKey(CarModels.CAR_MODELS, DSL.name("car_models_manufacturer_id_fkey"), new TableField[]{CarModels.CAR_MODELS.MANUFACTURER_ID}, Keys.MANUFACTURERS_PKEY, new TableField[]{Manufacturers.MANUFACTURERS.ID}, true);
     public static final ForeignKey<ClassesRecord, SeriesRecord> CLASSES__CLASSES_SERIES_ID_FKEY = Internal.createForeignKey(Classes.CLASSES, DSL.name("classes_series_id_fkey"), new TableField[]{Classes.CLASSES.SERIES_ID}, Keys.SERIES_PKEY, new TableField[]{Series.SERIES.ID}, true);
     public static final ForeignKey<EventsRecord, SeriesRecord> EVENTS__EVENTS_SERIES_ID_FKEY = Internal.createForeignKey(Events.EVENTS, DSL.name("events_series_id_fkey"), new TableField[]{Events.EVENTS.SERIES_ID}, Keys.SERIES_PKEY, new TableField[]{Series.SERIES.ID}, true);
-    public static final ForeignKey<LapsRecord, CarsRecord> LAPS__LAPS_CAR_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_car_id_fkey"), new TableField[]{Laps.LAPS.CAR_ID}, Keys.CARS_PKEY, new TableField[]{Cars.CARS.ID}, true);
+    public static final ForeignKey<LapsRecord, CarEntriesRecord> LAPS__LAPS_CAR_ENTRY_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_car_entry_id_fkey"), new TableField[]{Laps.LAPS.CAR_ID}, Keys.CAR_ENTRIES_PKEY, new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
+    public static final ForeignKey<LapsRecord, CarEntriesRecord> LAPS__LAPS_CAR_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_car_id_fkey"), new TableField[]{Laps.LAPS.CAR_ID}, Keys.CAR_ENTRIES_PKEY, new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
     public static final ForeignKey<LapsRecord, DriversRecord> LAPS__LAPS_DRIVER_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_driver_id_fkey"), new TableField[]{Laps.LAPS.DRIVER_ID}, Keys.DRIVERS_PKEY, new TableField[]{Drivers.DRIVERS.ID}, true);
     public static final ForeignKey<SectorsRecord, LapsRecord> SECTORS__SECTORS_LAP_ID_FKEY = Internal.createForeignKey(Sectors.SECTORS, DSL.name("sectors_lap_id_fkey"), new TableField[]{Sectors.SECTORS.LAP_ID}, Keys.LAPS_PKEY, new TableField[]{Laps.LAPS.ID}, true);
     public static final ForeignKey<SessionsRecord, CircuitsRecord> SESSIONS__SESSIONS_CIRCUIT_ID_FKEY = Internal.createForeignKey(Sessions.SESSIONS, DSL.name("sessions_circuit_id_fkey"), new TableField[]{Sessions.SESSIONS.CIRCUIT_ID}, Keys.CIRCUITS_PKEY, new TableField[]{Circuits.CIRCUITS.ID}, true);

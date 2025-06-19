@@ -19,13 +19,15 @@ import java.util.stream.Collectors;
 public class DriverAnalysisServiceImpl implements DriverAnalysisService {
 
     private final LapRepository lapRepository;
+    private final CarEntryRepository carEntryRepository;
     private final DriverRepository driverRepository;
-    private final CarRepository carRepository;
+    private final CarDriverRepository carDriverRepository;
     private final TeamRepository teamRepository;
-    private final EventRepository eventRepository;
+    private final ClassRepository classRepository;
     private final SessionRepository sessionRepository;
+    private final EventRepository eventRepository;
 
-    Map<Long, Car> carCache = new HashMap<>();
+    Map<Long, CarEntry> carCache = new HashMap<>();
     Map<Long, Team> teamCache = new HashMap<>();
     Map<Long, Session> sessionCache = new HashMap<>();
     Map<Long, Event> eventCache = new HashMap<>();
@@ -33,26 +35,32 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
     /**
      * Constructor with repository dependency injection.
      *
-     * @param lapRepository     the lap repository
-     * @param driverRepository  the driver repository
-     * @param carRepository     the car repository
-     * @param teamRepository    the team repository
-     * @param eventRepository   the event repository
+     * @param lapRepository the lap repository
+     * @param carEntryRepository the car entry repository
+     * @param driverRepository the driver repository
+     * @param carDriverRepository the car driver repository
+     * @param teamRepository the team repository
+     * @param classRepository the class repository
      * @param sessionRepository the session repository
+     * @param eventRepository the event repository
      */
     @Autowired
     public DriverAnalysisServiceImpl(LapRepository lapRepository,
+                                     CarEntryRepository carEntryRepository,
                                      DriverRepository driverRepository,
-                                     CarRepository carRepository,
+                                     CarDriverRepository carDriverRepository,
                                      TeamRepository teamRepository,
-                                     EventRepository eventRepository,
-                                     SessionRepository sessionRepository) {
+                                     ClassRepository classRepository,
+                                     SessionRepository sessionRepository,
+                                     EventRepository eventRepository) {
         this.lapRepository = lapRepository;
+        this.carEntryRepository = carEntryRepository;
         this.driverRepository = driverRepository;
-        this.carRepository = carRepository;
+        this.carDriverRepository = carDriverRepository;
         this.teamRepository = teamRepository;
-        this.eventRepository = eventRepository;
+        this.classRepository = classRepository;
         this.sessionRepository = sessionRepository;
+        this.eventRepository = eventRepository;
     }
 
     /**
@@ -92,20 +100,20 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
      */
     private List<LapTimeDTO> mapLapsToLapTimeDTOs(List<Lap> laps, Driver driver) {
         return laps.stream().map(lap -> {
-            // Get car
-            Car car = carCache.computeIfAbsent(lap.getCarId(),
-                    id -> carRepository.findById(id).orElse(null));
+            // Get car entry
+            CarEntry carEntry = carCache.computeIfAbsent(lap.getCarId(),
+                    id -> carEntryRepository.findById(id).orElse(null));
 
-            if (car == null) {
+            if (carEntry == null) {
                 return null;
             }
 
             // Get team
-            Team team = teamCache.computeIfAbsent(car.getTeamId(),
+            Team team = teamCache.computeIfAbsent(carEntry.getTeamId(),
                     id -> teamRepository.findById(id).orElse(null));
 
             // Get session
-            Session session = sessionCache.computeIfAbsent(car.getSessionId(),
+            Session session = sessionCache.computeIfAbsent(carEntry.getSessionId(),
                     id -> sessionRepository.findById(id).orElse(null));
 
             if (session == null) {
@@ -129,7 +137,7 @@ public class DriverAnalysisServiceImpl implements DriverAnalysisService {
                     lap.getAverageSpeedKph(),
                     event.getName(),
                     event.getYear(),
-                    car.getNumber(),
+                    carEntry.getNumber(),
                     team != null ? team.getName() : "Unknown Team",
                     driver.getFullName(),
                     lap.getTimestamp()

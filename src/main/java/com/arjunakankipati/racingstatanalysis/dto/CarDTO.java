@@ -4,29 +4,30 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * DTO for Car information including its drivers.
+ * DTO for Car Entry information including its car model and drivers.
+ * Represents an individual car entry in a racing session.
  */
 public class CarDTO {
     private Long carId;
     private String number;
-    private String model;
+    private CarModelDTO carModel;
     private String tireSupplier;
     private Long classId;
-    private Long manufacturerId;
+    private Long teamId;
     private List<DriverDTO> drivers;
 
     public CarDTO() {
         this.drivers = new ArrayList<>();
     }
 
-    public CarDTO(Long carId, String number, String model, String tireSupplier,
-                  Long classId, Long manufacturerId) {
+    public CarDTO(Long carId, String number, CarModelDTO carModel, String tireSupplier,
+                  Long classId, Long teamId) {
         this.carId = carId;
         this.number = number;
-        this.model = model;
+        this.carModel = carModel;
         this.tireSupplier = tireSupplier;
         this.classId = classId;
-        this.manufacturerId = manufacturerId;
+        this.teamId = teamId;
         this.drivers = new ArrayList<>();
     }
 
@@ -46,12 +47,12 @@ public class CarDTO {
         this.number = number;
     }
 
-    public String getModel() {
-        return model;
+    public CarModelDTO getCarModel() {
+        return carModel;
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public void setCarModel(CarModelDTO carModel) {
+        this.carModel = carModel;
     }
 
     public String getTireSupplier() {
@@ -70,12 +71,12 @@ public class CarDTO {
         this.classId = classId;
     }
 
-    public Long getManufacturerId() {
-        return manufacturerId;
+    public Long getTeamId() {
+        return teamId;
     }
 
-    public void setManufacturerId(Long manufacturerId) {
-        this.manufacturerId = manufacturerId;
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
     }
 
     public List<DriverDTO> getDrivers() {

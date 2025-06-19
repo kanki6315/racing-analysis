@@ -22,7 +22,8 @@ public class SeriesServiceImpl implements SeriesService {
     private final SeriesRepository seriesRepository;
     private final EventRepository eventRepository;
     private final SessionRepository sessionRepository;
-    private final CarRepository carRepository;
+    private final CarEntryRepository carEntryRepository;
+    private final CarModelRepository carModelRepository;
     private final TeamRepository teamRepository;
     private final CarDriverRepository carDriverRepository;
     private final DriverRepository driverRepository;
@@ -34,7 +35,8 @@ public class SeriesServiceImpl implements SeriesService {
      * @param seriesRepository the series repository
      * @param eventRepository the event repository
      * @param sessionRepository the session repository
-     * @param carRepository the car repository
+     * @param carEntryRepository the car entry repository
+     * @param carModelRepository the car model repository
      * @param teamRepository the team repository
      * @param carDriverRepository the car driver repository
      * @param driverRepository the driver repository
@@ -44,7 +46,8 @@ public class SeriesServiceImpl implements SeriesService {
     public SeriesServiceImpl(SeriesRepository seriesRepository,
                              EventRepository eventRepository,
                              SessionRepository sessionRepository,
-                             CarRepository carRepository,
+                             CarEntryRepository carEntryRepository,
+                             CarModelRepository carModelRepository,
                              TeamRepository teamRepository,
                              CarDriverRepository carDriverRepository,
                              DriverRepository driverRepository,
@@ -52,7 +55,8 @@ public class SeriesServiceImpl implements SeriesService {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
         this.sessionRepository = sessionRepository;
-        this.carRepository = carRepository;
+        this.carEntryRepository = carEntryRepository;
+        this.carModelRepository = carModelRepository;
         this.teamRepository = teamRepository;
         this.carDriverRepository = carDriverRepository;
         this.driverRepository = driverRepository;
@@ -180,19 +184,37 @@ public class SeriesServiceImpl implements SeriesService {
         Class clazz = classRepository.findById(classId)
                 .orElseThrow(ResourceNotFoundException::new);
 
-        // Find all cars in this class for this event
-        List<Car> cars = carRepository.findByEventIdAndClassId(eventId, classId);
+        // Find all car entries in this class for this event
+        List<CarEntry> carEntries = carEntryRepository.findByEventIdAndClassId(eventId, classId);
 
-        // Convert to DTOs
-        List<CarDTO> carDTOs = cars.stream()
-                .map(car -> new CarDTO(
-                        car.getId(),
-                        car.getNumber(),
-                        car.getModel(),
-                        car.getTireSupplier(),
-                        car.getClassId(),
-                        car.getManufacturerId()
-                ))
+        // Convert to DTOs with car model information
+        List<CarDTO> carDTOs = carEntries.stream()
+                .map(carEntry -> {
+                    // Get the car model information
+                    CarModel carModel = carModelRepository.findById(carEntry.getCarModelId())
+                            .orElse(null);
+
+                    CarModelDTO carModelDTO = null;
+                    if (carModel != null) {
+                        carModelDTO = new CarModelDTO(
+                                carModel.getId(),
+                                carModel.getManufacturerId(),
+                                carModel.getName(),
+                                carModel.getFullName(),
+                                carModel.getYearModel(),
+                                carModel.getDescription()
+                        );
+                    }
+
+                    return new CarDTO(
+                            carEntry.getId(),
+                            carEntry.getNumber(),
+                            carModelDTO,
+                            carEntry.getTireSupplier(),
+                            carEntry.getClassId(),
+                            carEntry.getTeamId()
+                    );
+                })
                 .toList();
 
         // Create response DTO

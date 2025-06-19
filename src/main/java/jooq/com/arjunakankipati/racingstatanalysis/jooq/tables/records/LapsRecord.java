@@ -36,157 +36,157 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
     }
 
     /**
-     * Setter for <code>public.laps.car_id</code>.
-     */
-    public void setCarId(Long value) {
-        set(1, value);
-    }
-
-    /**
-     * Getter for <code>public.laps.car_id</code>.
-     */
-    public Long getCarId() {
-        return (Long) get(1);
-    }
-
-    /**
      * Setter for <code>public.laps.driver_id</code>.
      */
     public void setDriverId(Long value) {
-        set(2, value);
+        set(1, value);
     }
 
     /**
      * Getter for <code>public.laps.driver_id</code>.
      */
     public Long getDriverId() {
-        return (Long) get(2);
+        return (Long) get(1);
     }
 
     /**
      * Setter for <code>public.laps.lap_number</code>.
      */
     public void setLapNumber(Integer value) {
-        set(3, value);
+        set(2, value);
     }
 
     /**
      * Getter for <code>public.laps.lap_number</code>.
      */
     public Integer getLapNumber() {
-        return (Integer) get(3);
+        return (Integer) get(2);
     }
 
     /**
      * Setter for <code>public.laps.lap_time_seconds</code>.
      */
     public void setLapTimeSeconds(BigDecimal value) {
-        set(4, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.laps.lap_time_seconds</code>.
      */
     public BigDecimal getLapTimeSeconds() {
-        return (BigDecimal) get(4);
+        return (BigDecimal) get(3);
     }
 
     /**
      * Setter for <code>public.laps.session_elapsed_seconds</code>.
      */
     public void setSessionElapsedSeconds(BigDecimal value) {
-        set(5, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.laps.session_elapsed_seconds</code>.
      */
     public BigDecimal getSessionElapsedSeconds() {
-        return (BigDecimal) get(5);
+        return (BigDecimal) get(4);
     }
 
     /**
      * Setter for <code>public.laps.timestamp</code>.
      */
     public void setTimestamp(LocalDateTime value) {
-        set(6, value);
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.laps.timestamp</code>.
      */
     public LocalDateTime getTimestamp() {
-        return (LocalDateTime) get(6);
+        return (LocalDateTime) get(5);
     }
 
     /**
      * Setter for <code>public.laps.average_speed_kph</code>.
      */
     public void setAverageSpeedKph(BigDecimal value) {
-        set(7, value);
+        set(6, value);
     }
 
     /**
      * Getter for <code>public.laps.average_speed_kph</code>.
      */
     public BigDecimal getAverageSpeedKph() {
-        return (BigDecimal) get(7);
+        return (BigDecimal) get(6);
     }
 
     /**
      * Setter for <code>public.laps.is_valid</code>.
      */
     public void setIsValid(Boolean value) {
-        set(8, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.laps.is_valid</code>.
      */
     public Boolean getIsValid() {
-        return (Boolean) get(8);
+        return (Boolean) get(7);
     }
 
     /**
      * Setter for <code>public.laps.is_personal_best</code>.
      */
     public void setIsPersonalBest(Boolean value) {
-        set(9, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>public.laps.is_personal_best</code>.
      */
     public Boolean getIsPersonalBest() {
-        return (Boolean) get(9);
+        return (Boolean) get(8);
     }
 
     /**
      * Setter for <code>public.laps.is_session_best</code>.
      */
     public void setIsSessionBest(Boolean value) {
-        set(10, value);
+        set(9, value);
     }
 
     /**
      * Getter for <code>public.laps.is_session_best</code>.
      */
     public Boolean getIsSessionBest() {
-        return (Boolean) get(10);
+        return (Boolean) get(9);
     }
 
     /**
      * Setter for <code>public.laps.invalidation_reason</code>.
      */
     public void setInvalidationReason(String value) {
-        set(11, value);
+        set(10, value);
     }
 
     /**
      * Getter for <code>public.laps.invalidation_reason</code>.
      */
     public String getInvalidationReason() {
-        return (String) get(11);
+        return (String) get(10);
+    }
+
+    /**
+     * Setter for <code>public.laps.car_id</code>.
+     */
+    public void setCarId(Long value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.laps.car_id</code>.
+     */
+    public Long getCarId() {
+        return (Long) get(11);
     }
 
     // -------------------------------------------------------------------------
@@ -212,11 +212,10 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
     /**
      * Create a detached, initialised LapsRecord
      */
-    public LapsRecord(Long id, Long carId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds, BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph, Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason) {
+    public LapsRecord(Long id, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds, BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph, Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason, Long carId) {
         super(Laps.LAPS);
 
         setId(id);
-        setCarId(carId);
         setDriverId(driverId);
         setLapNumber(lapNumber);
         setLapTimeSeconds(lapTimeSeconds);
@@ -227,6 +226,7 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
         setIsPersonalBest(isPersonalBest);
         setIsSessionBest(isSessionBest);
         setInvalidationReason(invalidationReason);
+        setCarId(carId);
         resetChangedOnNotNull();
     }
 }

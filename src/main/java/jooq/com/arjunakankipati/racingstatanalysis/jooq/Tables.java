@@ -5,7 +5,8 @@ package com.arjunakankipati.racingstatanalysis.jooq;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
@@ -31,9 +32,14 @@ public class Tables {
     public static final CarDrivers CAR_DRIVERS = CarDrivers.CAR_DRIVERS;
 
     /**
-     * The table <code>public.cars</code>.
+     * The table <code>public.car_entries</code>.
      */
-    public static final Cars CARS = Cars.CARS;
+    public static final CarEntries CAR_ENTRIES = CarEntries.CAR_ENTRIES;
+
+    /**
+     * The table <code>public.car_models</code>.
+     */
+    public static final CarModels CAR_MODELS = CarModels.CAR_MODELS;
 
     /**
      * The table <code>public.circuits</code>.

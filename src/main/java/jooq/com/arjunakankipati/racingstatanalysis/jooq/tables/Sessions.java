@@ -6,7 +6,7 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars.CarsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits.CircuitsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Events.EventsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
@@ -232,16 +232,17 @@ public class Sessions extends TableImpl<SessionsRecord> {
         return _events;
     }
 
-    private transient CarsPath _cars;
+    private transient CarEntriesPath _carEntries;
 
     /**
-     * Get the implicit to-many join path to the <code>public.cars</code> table
+     * Get the implicit to-many join path to the <code>public.car_entries</code>
+     * table
      */
-    public CarsPath cars() {
-        if (_cars == null)
-            _cars = new CarsPath(this, null, Keys.CARS__CARS_SESSION_ID_FKEY.getInverseKey());
+    public CarEntriesPath carEntries() {
+        if (_carEntries == null)
+            _carEntries = new CarEntriesPath(this, null, Keys.CAR_ENTRIES__CAR_ENTRIES_SESSION_ID_FKEY.getInverseKey());
 
-        return _cars;
+        return _carEntries;
     }
 
     @Override

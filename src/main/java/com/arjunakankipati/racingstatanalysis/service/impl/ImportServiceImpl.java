@@ -44,7 +44,8 @@ public class ImportServiceImpl implements ImportService {
     private final ManufacturerRepository manufacturerRepository;
     private final ClassRepository classRepository;
     private final DriverRepository driverRepository;
-    private final CarRepository carRepository;
+    private final CarEntryRepository carEntryRepository;
+    private final CarModelRepository carModelRepository;
     private final CarDriverRepository carDriverRepository;
     private final LapRepository lapRepository;
     private final SectorRepository sectorRepository;
@@ -64,7 +65,8 @@ public class ImportServiceImpl implements ImportService {
                              ManufacturerRepository manufacturerRepository,
                              ClassRepository classRepository,
                              DriverRepository driverRepository,
-                             CarRepository carRepository,
+                             CarEntryRepository carEntryRepository,
+                             CarModelRepository carModelRepository,
                              CarDriverRepository carDriverRepository,
                              LapRepository lapRepository,
                              SectorRepository sectorRepository) {
@@ -76,7 +78,8 @@ public class ImportServiceImpl implements ImportService {
         this.manufacturerRepository = manufacturerRepository;
         this.classRepository = classRepository;
         this.driverRepository = driverRepository;
-        this.carRepository = carRepository;
+        this.carEntryRepository = carEntryRepository;
+        this.carModelRepository = carModelRepository;
         this.carDriverRepository = carDriverRepository;
         this.lapRepository = lapRepository;
         this.sectorRepository = sectorRepository;
@@ -425,7 +428,7 @@ public class ImportServiceImpl implements ImportService {
             LOGGER.info(carClass.toString());
 
             // Create car
-            Car car = createCar(participantJson, sessionId, team.getId(),
+            CarEntry car = createCar(participantJson, sessionId, team.getId(),
                     carClass.getId(), manufacturer.getId());
             LOGGER.info(car.toString());
 
@@ -497,38 +500,67 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Creates a car with the given data.
+     * Creates a car entry with the given data.
      *
      * @param participantJson the JSON data for the participant
      * @param sessionId       the ID of the session
      * @param teamId          the ID of the team
      * @param classId         the ID of the class
      * @param manufacturerId  the ID of the manufacturer
-     * @return the car entity
+     * @return the car entry entity
      */
-    private Car createCar(JsonObject participantJson, Long sessionId, Long teamId,
+    private CarEntry createCar(JsonObject participantJson, Long sessionId, Long teamId,
                           Long classId, Long manufacturerId) {
         String carNumber = participantJson.get("number").getAsString();
+        String vehicleModel = participantJson.get("vehicle").getAsString();
 
-        // Check if car already exists for this session and number
-        Optional<Car> existingCar = carRepository.findBySessionIdAndNumber(sessionId, carNumber);
-        if (existingCar.isPresent()) {
-            return existingCar.get();
+        // Check if car entry already exists for this session and car number
+        Optional<CarEntry> existingCarEntry = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
+        if (existingCarEntry.isPresent()) {
+            return existingCarEntry.get();
         }
 
-        Car newCar = new Car();
-        newCar.setSessionId(sessionId);
-        newCar.setTeamId(teamId);
-        newCar.setClassId(classId);
-        newCar.setManufacturerId(manufacturerId);
-        newCar.setNumber(carNumber);
-        newCar.setModel(participantJson.get("vehicle").getAsString());
+        // Find or create car model
+        CarModel carModel = findOrCreateCarModel(vehicleModel, manufacturerId);
+
+        // Create car entry
+        CarEntry newCarEntry = new CarEntry();
+        newCarEntry.setSessionId(sessionId);
+        newCarEntry.setTeamId(teamId);
+        newCarEntry.setClassId(classId);
+        newCarEntry.setCarModelId(carModel.getId());
+        newCarEntry.setNumber(carNumber);
 
         if (participantJson.has("tires") && !participantJson.get("tires").isJsonNull()) {
-            newCar.setTireSupplier(participantJson.get("tires").getAsString());
+            newCarEntry.setTireSupplier(participantJson.get("tires").getAsString());
         }
 
-        return carRepository.save(newCar);
+        return carEntryRepository.save(newCarEntry);
+    }
+
+    /**
+     * Finds or creates a car model with the given data.
+     *
+     * @param vehicleModel   the vehicle model name
+     * @param manufacturerId the ID of the manufacturer
+     * @return the car model entity
+     */
+    private CarModel findOrCreateCarModel(String vehicleModel, Long manufacturerId) {
+        // Try to find existing car model by manufacturer and name
+        Optional<CarModel> existingCarModel = carModelRepository.findByManufacturerIdAndName(manufacturerId, vehicleModel);
+        if (existingCarModel.isPresent()) {
+            return existingCarModel.get();
+        }
+
+        // Create new car model
+        CarModel newCarModel = new CarModel();
+        newCarModel.setManufacturerId(manufacturerId);
+        newCarModel.setName(vehicleModel);
+        newCarModel.setFullName(vehicleModel); // For now, use the same name as full name
+        newCarModel.setYearModel(null); // Year model not available in import data
+        newCarModel.setDescription(null);
+
+        return carModelRepository.save(newCarModel);
     }
 
     /**

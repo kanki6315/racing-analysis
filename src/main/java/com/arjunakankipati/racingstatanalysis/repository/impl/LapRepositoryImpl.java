@@ -217,8 +217,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // Build the query with joins
         var query = dsl.select()
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID));
 
         // Start with base conditions
@@ -227,7 +227,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
 
         // Add optional filters
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId.get()));
         }
 
         if (eventId.isPresent()) {
@@ -257,8 +257,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // Build the query with joins
         var query = dsl.select()
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID));
 
         // Start with base conditions
@@ -267,7 +267,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
 
         // Add optional filters
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId.get()));
         }
 
         if (eventId.isPresent()) {
@@ -285,8 +285,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // First, get the total count of laps that match the criteria
         long totalLaps = dsl.selectCount()
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .join(Tables.EVENTS).on(Tables.EVENTS.ID.eq(Tables.SESSIONS.EVENT_ID))
                 .where(whereCondition)
                 .fetchOne(0, Long.class);
@@ -318,7 +318,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
 
         // Add optional filters
         if (classId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.CLASS_ID.eq(classId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.CLASS_ID.eq(classId.get()));
         }
 
         if (carId.isPresent()) {
@@ -326,14 +326,14 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         }
 
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId.get()));
         }
 
         // First, get the total count of laps that match the criteria
         Integer totalLapCount = dsl.selectCount()
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .where(whereCondition)
                 .fetchOne(0, Integer.class);
 
@@ -369,8 +369,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // Calculate average of top percentage of lap times using a proper jOOQ subquery
         var topLapsSubquery = dsl.select(Tables.LAPS.LAP_TIME_SECONDS.as("lap_time"))
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .where(whereCondition)
                 .orderBy(Tables.LAPS.LAP_TIME_SECONDS.asc())
                 .limit(topCount);
@@ -387,8 +387,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                         DSL.val(totalLapCount).as("total_lap_count")
                 )
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .where(whereCondition)
                 .offset(finalOffset)
                 .limit(finalLimit)
@@ -430,7 +430,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
 
         // Add optional filters
         if (classId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.CLASS_ID.eq(classId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.CLASS_ID.eq(classId.get()));
         }
 
         if (carId.isPresent()) {
@@ -438,7 +438,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         }
 
         if (sessionId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.CARS.SESSION_ID.eq(sessionId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId.get()));
         }
 
         // Apply pagination if specified
@@ -448,11 +448,12 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         // We need to join with additional tables to get driver, car, team, and class information
         SelectJoinStep<?> baseQuery = dsl.select()
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.LAPS.DRIVER_ID))
-                .join(Tables.TEAMS).on(Tables.TEAMS.ID.eq(Tables.CARS.TEAM_ID))
-                .join(Tables.CLASSES).on(Tables.CLASSES.ID.eq(Tables.CARS.CLASS_ID));
+                .join(Tables.TEAMS).on(Tables.TEAMS.ID.eq(Tables.CAR_ENTRIES.TEAM_ID))
+                .join(Tables.CLASSES).on(Tables.CLASSES.ID.eq(Tables.CAR_ENTRIES.CLASS_ID))
+                .join(Tables.CAR_MODELS).on(Tables.CAR_MODELS.ID.eq(Tables.CAR_ENTRIES.CAR_MODEL_ID));
 
         // First, get all distinct drivers that match the criteria
         Result<?> driversResult = dsl.selectDistinct(
@@ -460,20 +461,21 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                         Tables.DRIVERS.FIRST_NAME,
                         Tables.DRIVERS.LAST_NAME,
                         Tables.DRIVERS.NATIONALITY,
-                        Tables.CARS.ID.as("car_id"),
-                        Tables.CARS.NUMBER,
-                        Tables.CARS.MODEL,
+                        Tables.CAR_ENTRIES.ID.as("car_id"),
+                        Tables.CAR_ENTRIES.NUMBER,
+                        Tables.CAR_MODELS.NAME.as("car_model"),
                         Tables.TEAMS.ID.as("team_id"),
                         Tables.TEAMS.NAME.as("team_name"),
                         Tables.CLASSES.ID.as("class_id"),
                         Tables.CLASSES.NAME.as("class_name")
                 )
                 .from(table)
-                .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                 .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.LAPS.DRIVER_ID))
-                .join(Tables.TEAMS).on(Tables.TEAMS.ID.eq(Tables.CARS.TEAM_ID))
-                .join(Tables.CLASSES).on(Tables.CLASSES.ID.eq(Tables.CARS.CLASS_ID))
+                .join(Tables.TEAMS).on(Tables.TEAMS.ID.eq(Tables.CAR_ENTRIES.TEAM_ID))
+                .join(Tables.CLASSES).on(Tables.CLASSES.ID.eq(Tables.CAR_ENTRIES.CLASS_ID))
+                .join(Tables.CAR_MODELS).on(Tables.CAR_MODELS.ID.eq(Tables.CAR_ENTRIES.CAR_MODEL_ID))
                 .where(whereCondition)
                 .orderBy(Tables.DRIVERS.LAST_NAME, Tables.DRIVERS.FIRST_NAME)
                 .offset(finalOffset)
@@ -491,8 +493,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
             String nationality = driverRecord.get(Tables.DRIVERS.NATIONALITY);
 
             Long driverCarId = driverRecord.get("car_id", Long.class);
-            String carNumber = driverRecord.get(Tables.CARS.NUMBER);
-            String carModel = driverRecord.get(Tables.CARS.MODEL);
+            String carNumber = driverRecord.get(Tables.CAR_ENTRIES.NUMBER);
+            String carModel = driverRecord.get("car_model", String.class);
 
             Long teamId = driverRecord.get("team_id", Long.class);
             String teamName = driverRecord.get("team_name", String.class);
@@ -506,8 +508,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
             // Get total lap count for this driver
             Integer driverTotalLapCount = dsl.selectCount()
                     .from(table)
-                    .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                    .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                     .where(driverWhereCondition)
                     .fetchOne(0, Integer.class);
 
@@ -532,8 +534,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
             // Calculate average of top percentage of lap times using a proper jOOQ subquery
             var driverTopLapsSubquery = dsl.select(Tables.LAPS.LAP_TIME_SECONDS.as("lap_time"))
                     .from(table)
-                    .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                    .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                     .where(driverWhereCondition)
                     .orderBy(Tables.LAPS.LAP_TIME_SECONDS.asc())
                     .limit(driverTopCount);
@@ -550,8 +552,8 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                             DSL.val(driverTotalLapCount).as("total_lap_count")
                     )
                     .from(table)
-                    .join(Tables.CARS).on(Tables.CARS.ID.eq(Tables.LAPS.CAR_ID))
-                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CARS.SESSION_ID))
+                    .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                    .join(Tables.SESSIONS).on(Tables.SESSIONS.ID.eq(Tables.CAR_ENTRIES.SESSION_ID))
                     .where(driverWhereCondition)
                     .fetchOne();
 

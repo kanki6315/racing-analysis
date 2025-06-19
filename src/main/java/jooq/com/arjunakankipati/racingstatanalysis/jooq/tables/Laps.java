@@ -6,7 +6,7 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars.CarsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers.DriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors.SectorsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
@@ -67,11 +67,6 @@ public class Laps extends TableImpl<LapsRecord> {
     public final TableField<LapsRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.laps.car_id</code>.
-     */
-    public final TableField<LapsRecord, Long> CAR_ID = createField(DSL.name("car_id"), SQLDataType.BIGINT, this, "");
-
-    /**
      * The column <code>public.laps.driver_id</code>.
      */
     public final TableField<LapsRecord, Long> DRIVER_ID = createField(DSL.name("driver_id"), SQLDataType.BIGINT, this, "");
@@ -120,6 +115,11 @@ public class Laps extends TableImpl<LapsRecord> {
      * The column <code>public.laps.invalidation_reason</code>.
      */
     public final TableField<LapsRecord, String> INVALIDATION_REASON = createField(DSL.name("invalidation_reason"), SQLDataType.VARCHAR(100), this, "");
+
+    /**
+     * The column <code>public.laps.car_id</code>.
+     */
+    public final TableField<LapsRecord, Long> CAR_ID = createField(DSL.name("car_id"), SQLDataType.BIGINT, this, "");
 
     private Laps(Name alias, Table<LapsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -200,19 +200,33 @@ public class Laps extends TableImpl<LapsRecord> {
 
     @Override
     public List<ForeignKey<LapsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.LAPS__LAPS_CAR_ID_FKEY, Keys.LAPS__LAPS_DRIVER_ID_FKEY);
+        return Arrays.asList(Keys.LAPS__LAPS_CAR_ENTRY_ID_FKEY, Keys.LAPS__LAPS_CAR_ID_FKEY, Keys.LAPS__LAPS_DRIVER_ID_FKEY);
     }
 
-    private transient CarsPath _cars;
+    private transient CarEntriesPath _lapsCarEntryIdFkey;
 
     /**
-     * Get the implicit join path to the <code>public.cars</code> table.
+     * Get the implicit join path to the <code>public.car_entries</code> table,
+     * via the <code>laps_car_entry_id_fkey</code> key.
      */
-    public CarsPath cars() {
-        if (_cars == null)
-            _cars = new CarsPath(this, Keys.LAPS__LAPS_CAR_ID_FKEY, null);
+    public CarEntriesPath lapsCarEntryIdFkey() {
+        if (_lapsCarEntryIdFkey == null)
+            _lapsCarEntryIdFkey = new CarEntriesPath(this, Keys.LAPS__LAPS_CAR_ENTRY_ID_FKEY, null);
 
-        return _cars;
+        return _lapsCarEntryIdFkey;
+    }
+
+    private transient CarEntriesPath _lapsCarIdFkey;
+
+    /**
+     * Get the implicit join path to the <code>public.car_entries</code> table,
+     * via the <code>laps_car_id_fkey</code> key.
+     */
+    public CarEntriesPath lapsCarIdFkey() {
+        if (_lapsCarIdFkey == null)
+            _lapsCarIdFkey = new CarEntriesPath(this, Keys.LAPS__LAPS_CAR_ID_FKEY, null);
+
+        return _lapsCarIdFkey;
     }
 
     private transient DriversPath _drivers;

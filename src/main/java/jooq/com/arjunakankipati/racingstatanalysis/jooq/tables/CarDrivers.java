@@ -6,7 +6,7 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars.CarsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers.DriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarDriversRecord;
 
@@ -64,11 +64,6 @@ public class CarDrivers extends TableImpl<CarDriversRecord> {
     public final TableField<CarDriversRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.car_drivers.car_id</code>.
-     */
-    public final TableField<CarDriversRecord, Long> CAR_ID = createField(DSL.name("car_id"), SQLDataType.BIGINT, this, "");
-
-    /**
      * The column <code>public.car_drivers.driver_id</code>.
      */
     public final TableField<CarDriversRecord, Long> DRIVER_ID = createField(DSL.name("driver_id"), SQLDataType.BIGINT, this, "");
@@ -77,6 +72,11 @@ public class CarDrivers extends TableImpl<CarDriversRecord> {
      * The column <code>public.car_drivers.driver_number</code>.
      */
     public final TableField<CarDriversRecord, Integer> DRIVER_NUMBER = createField(DSL.name("driver_number"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>public.car_drivers.car_id</code>.
+     */
+    public final TableField<CarDriversRecord, Long> CAR_ID = createField(DSL.name("car_id"), SQLDataType.BIGINT, this, "");
 
     private CarDrivers(Name alias, Table<CarDriversRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -157,19 +157,33 @@ public class CarDrivers extends TableImpl<CarDriversRecord> {
 
     @Override
     public List<ForeignKey<CarDriversRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_DRIVER_ID_FKEY);
+        return Arrays.asList(Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_DRIVER_ID_FKEY);
     }
 
-    private transient CarsPath _cars;
+    private transient CarEntriesPath _carDriversCarEntryIdFkey;
 
     /**
-     * Get the implicit join path to the <code>public.cars</code> table.
+     * Get the implicit join path to the <code>public.car_entries</code> table,
+     * via the <code>car_drivers_car_entry_id_fkey</code> key.
      */
-    public CarsPath cars() {
-        if (_cars == null)
-            _cars = new CarsPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, null);
+    public CarEntriesPath carDriversCarEntryIdFkey() {
+        if (_carDriversCarEntryIdFkey == null)
+            _carDriversCarEntryIdFkey = new CarEntriesPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY, null);
 
-        return _cars;
+        return _carDriversCarEntryIdFkey;
+    }
+
+    private transient CarEntriesPath _carDriversCarIdFkey;
+
+    /**
+     * Get the implicit join path to the <code>public.car_entries</code> table,
+     * via the <code>car_drivers_car_id_fkey</code> key.
+     */
+    public CarEntriesPath carDriversCarIdFkey() {
+        if (_carDriversCarIdFkey == null)
+            _carDriversCarIdFkey = new CarEntriesPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, null);
+
+        return _carDriversCarIdFkey;
     }
 
     private transient DriversPath _drivers;

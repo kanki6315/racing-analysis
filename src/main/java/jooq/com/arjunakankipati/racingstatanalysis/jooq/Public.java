@@ -5,7 +5,8 @@ package com.arjunakankipati.racingstatanalysis.jooq;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Cars;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
@@ -45,9 +46,14 @@ public class Public extends SchemaImpl {
     public final CarDrivers CAR_DRIVERS = CarDrivers.CAR_DRIVERS;
 
     /**
-     * The table <code>public.cars</code>.
+     * The table <code>public.car_entries</code>.
      */
-    public final Cars CARS = Cars.CARS;
+    public final CarEntries CAR_ENTRIES = CarEntries.CAR_ENTRIES;
+
+    /**
+     * The table <code>public.car_models</code>.
+     */
+    public final CarModels CAR_MODELS = CarModels.CAR_MODELS;
 
     /**
      * The table <code>public.circuits</code>.
@@ -121,7 +127,8 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
                 CarDrivers.CAR_DRIVERS,
-                Cars.CARS,
+                CarEntries.CAR_ENTRIES,
+                CarModels.CAR_MODELS,
                 Circuits.CIRCUITS,
                 Classes.CLASSES,
                 Drivers.DRIVERS,
