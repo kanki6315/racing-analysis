@@ -3,6 +3,7 @@ package com.arjunakankipati.racingstatanalysis.service.impl;
 import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
 import com.arjunakankipati.racingstatanalysis.model.*;
+import com.arjunakankipati.racingstatanalysis.model.Class;
 import com.arjunakankipati.racingstatanalysis.repository.*;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ public class SeriesServiceImpl implements SeriesService {
     private final TeamRepository teamRepository;
     private final CarDriverRepository carDriverRepository;
     private final DriverRepository driverRepository;
+    private final ClassRepository classRepository;
 
     /**
      * Constructor with repository dependency injection.
@@ -35,6 +37,7 @@ public class SeriesServiceImpl implements SeriesService {
      * @param teamRepository the team repository
      * @param carDriverRepository the car driver repository
      * @param driverRepository the driver repository
+     * @param classRepository the class repository
      */
     @Autowired
     public SeriesServiceImpl(SeriesRepository seriesRepository,
@@ -43,7 +46,8 @@ public class SeriesServiceImpl implements SeriesService {
                              CarRepository carRepository,
                              TeamRepository teamRepository,
                              CarDriverRepository carDriverRepository,
-                             DriverRepository driverRepository) {
+                             DriverRepository driverRepository,
+                             ClassRepository classRepository) {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
         this.sessionRepository = sessionRepository;
@@ -51,6 +55,7 @@ public class SeriesServiceImpl implements SeriesService {
         this.teamRepository = teamRepository;
         this.carDriverRepository = carDriverRepository;
         this.driverRepository = driverRepository;
+        this.classRepository = classRepository;
     }
 
     /**
@@ -133,5 +138,31 @@ public class SeriesServiceImpl implements SeriesService {
         teamMap.values().forEach(response::addTeam);
 
         return response;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ClassesResponseDTO findClassesByEventId(Long eventId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find all classes that competed in this event
+        List<Class> classes = classRepository.findByEventId(eventId);
+
+        // Convert to DTOs
+        List<ClassDTO> classDTOs = classes.stream()
+                .map(clazz -> new ClassDTO(
+                        clazz.getId(),
+                        clazz.getSeriesId(),
+                        clazz.getName(),
+                        clazz.getDescription()
+                ))
+                .toList();
+
+        // Create response DTO
+        return new ClassesResponseDTO(event.getId(), event.getName(), classDTOs);
     }
 }

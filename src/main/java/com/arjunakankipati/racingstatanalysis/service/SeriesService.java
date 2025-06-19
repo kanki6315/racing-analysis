@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
+import com.arjunakankipati.racingstatanalysis.dto.ClassesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.SeriesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.TeamsResponseDTO;
@@ -39,4 +40,13 @@ public interface SeriesService {
      * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
      */
     TeamsResponseDTO findTeamsByEventId(Long eventId);
+
+    /**
+     * Finds all classes that competed in a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response containing the classes that competed in the event
+     * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
+     */
+    ClassesResponseDTO findClassesByEventId(Long eventId);
 }

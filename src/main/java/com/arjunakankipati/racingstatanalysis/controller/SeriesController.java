@@ -1,5 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.controller;
 
+import com.arjunakankipati.racingstatanalysis.dto.ClassesResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
 import com.arjunakankipati.racingstatanalysis.dto.EventsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
@@ -81,6 +82,18 @@ public class SeriesController {
     public ResponseEntity<TeamsResponseDTO> getTeamsByEventId(@PathVariable Long eventId) {
         TeamsResponseDTO teams = seriesService.findTeamsByEventId(eventId);
         return ResponseEntity.ok(teams);
+    }
+
+    /**
+     * Gets all classes that competed in a specific event.
+     *
+     * @param eventId the ID of the event
+     * @return a response entity containing the classes that competed in the event
+     */
+    @GetMapping("/events/{eventId}/classes")
+    public ResponseEntity<ClassesResponseDTO> getClassesByEventId(@PathVariable Long eventId) {
+        ClassesResponseDTO classes = seriesService.findClassesByEventId(eventId);
+        return ResponseEntity.ok(classes);
     }
 
     /**

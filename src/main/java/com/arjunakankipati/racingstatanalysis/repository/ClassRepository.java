@@ -43,4 +43,14 @@ public interface ClassRepository extends BaseRepository<Class, Long> {
      * @return a list of classes with names containing the given string
      */
     List<Class> findByNameContaining(String nameContains);
+
+    /**
+     * Find classes that competed in a specific event.
+     * This is done by finding all sessions for the event, then all cars in those sessions,
+     * and finally getting the unique classes from those cars.
+     *
+     * @param eventId the ID of the event to find classes for
+     * @return a list of classes that competed in the event
+     */
+    List<Class> findByEventId(Long eventId);
 }
