@@ -136,11 +136,9 @@ public class CarEntries extends TableImpl<CarEntriesRecord> {
     public static class CarEntriesPath extends CarEntries implements Path<CarEntriesRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> CarEntriesPath(Table<O> path, ForeignKey<O, CarEntriesRecord> childPath, InverseForeignKey<O, CarEntriesRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private CarEntriesPath(Name alias, Table<CarEntriesRecord> aliased) {
             super(alias, aliased);
         }

@@ -4,14 +4,13 @@ import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException;
 import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
-import com.arjunakankipati.racingstatanalysis.model.Session;
 import com.arjunakankipati.racingstatanalysis.repository.*;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the SeriesService interface.
@@ -28,6 +27,7 @@ public class SeriesServiceImpl implements SeriesService {
     private final CarDriverRepository carDriverRepository;
     private final DriverRepository driverRepository;
     private final ClassRepository classRepository;
+    private final ManufacturerRepository manufacturerRepository;
 
     /**
      * Constructor with repository dependency injection.
@@ -41,6 +41,7 @@ public class SeriesServiceImpl implements SeriesService {
      * @param carDriverRepository the car driver repository
      * @param driverRepository the driver repository
      * @param classRepository the class repository
+     * @param manufacturerRepository the manufacturer repository
      */
     @Autowired
     public SeriesServiceImpl(SeriesRepository seriesRepository,
@@ -51,7 +52,8 @@ public class SeriesServiceImpl implements SeriesService {
                              TeamRepository teamRepository,
                              CarDriverRepository carDriverRepository,
                              DriverRepository driverRepository,
-                             ClassRepository classRepository) {
+                             ClassRepository classRepository,
+                             ManufacturerRepository manufacturerRepository) {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
         this.sessionRepository = sessionRepository;
@@ -61,6 +63,7 @@ public class SeriesServiceImpl implements SeriesService {
         this.carDriverRepository = carDriverRepository;
         this.driverRepository = driverRepository;
         this.classRepository = classRepository;
+        this.manufacturerRepository = manufacturerRepository;
     }
 
     /**
@@ -196,6 +199,21 @@ public class SeriesServiceImpl implements SeriesService {
 
                     CarModelDTO carModelDTO = null;
                     if (carModel != null) {
+                        // Get manufacturer information
+                        Manufacturer manufacturer = null;
+                        ManufacturerDTO manufacturerDTO = null;
+                        if (carModel.getManufacturerId() != null) {
+                            manufacturer = manufacturerRepository.findById(carModel.getManufacturerId()).orElse(null);
+                            if (manufacturer != null) {
+                                manufacturerDTO = new ManufacturerDTO(
+                                        manufacturer.getId(),
+                                        manufacturer.getName(),
+                                        manufacturer.getCountry(),
+                                        null // Manufacturer model doesn't have description field
+                                );
+                            }
+                        }
+
                         carModelDTO = new CarModelDTO(
                                 carModel.getId(),
                                 carModel.getManufacturerId(),
@@ -204,6 +222,7 @@ public class SeriesServiceImpl implements SeriesService {
                                 carModel.getYearModel(),
                                 carModel.getDescription()
                         );
+                        carModelDTO.setManufacturer(manufacturerDTO);
                     }
 
                     return new CarDTO(
@@ -254,5 +273,65 @@ public class SeriesServiceImpl implements SeriesService {
 
         // Create response DTO
         return new SessionsResponseDTO(event.getId(), event.getName(), sessionDTOs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CarModelsResponseDTO findCarModelsByEventIdAndClassId(Long eventId, Long classId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find the class by ID
+        Class clazz = classRepository.findById(classId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Find all car entries in this class for this event to get unique car models
+        List<CarEntry> carEntries = carEntryRepository.findByEventIdAndClassId(eventId, classId);
+
+        // Extract unique car models from car entries
+        List<CarModelDTO> carModelDTOs = carEntries.stream()
+                .map(carEntry -> {
+                    // Get the car model information
+                    CarModel carModel = carModelRepository.findById(carEntry.getCarModelId())
+                            .orElse(null);
+
+                    if (carModel != null) {
+                        // Get manufacturer information
+                        Manufacturer manufacturer = null;
+                        ManufacturerDTO manufacturerDTO = null;
+                        if (carModel.getManufacturerId() != null) {
+                            manufacturer = manufacturerRepository.findById(carModel.getManufacturerId()).orElse(null);
+                            if (manufacturer != null) {
+                                manufacturerDTO = new ManufacturerDTO(
+                                        manufacturer.getId(),
+                                        manufacturer.getName(),
+                                        manufacturer.getCountry(),
+                                        null // Manufacturer model doesn't have description field
+                                );
+                            }
+                        }
+
+                        CarModelDTO carModelDTO = new CarModelDTO(
+                                carModel.getId(),
+                                carModel.getManufacturerId(),
+                                carModel.getName(),
+                                carModel.getFullName(),
+                                carModel.getYearModel(),
+                                carModel.getDescription()
+                        );
+                        carModelDTO.setManufacturer(manufacturerDTO);
+                        return carModelDTO;
+                    }
+                    return null;
+                })
+                .filter(carModelDTO -> carModelDTO != null)
+                .distinct() // Remove duplicates based on car model ID
+                .toList();
+
+        // Create response DTO
+        return new CarModelsResponseDTO(event.getId(), event.getName(), clazz.getId(), clazz.getName(), carModelDTOs);
     }
 }

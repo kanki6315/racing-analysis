@@ -5,13 +5,8 @@ import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
 import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Lap;
 import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.Record4;
-import org.jooq.Record13;
-import org.jooq.Result;
-import org.jooq.SelectJoinStep;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -322,7 +317,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         }
 
         if (carId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.LAPS.CAR_ID.eq(carId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.CAR_MODEL_ID.eq(carId.get()));
         }
 
         if (sessionId.isPresent()) {
@@ -434,7 +429,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         }
 
         if (carId.isPresent()) {
-            whereCondition = whereCondition.and(Tables.LAPS.CAR_ID.eq(carId.get()));
+            whereCondition = whereCondition.and(Tables.CAR_ENTRIES.CAR_MODEL_ID.eq(carId.get()));
         }
 
         if (sessionId.isPresent()) {

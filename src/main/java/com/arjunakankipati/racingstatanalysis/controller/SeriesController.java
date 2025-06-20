@@ -86,16 +86,16 @@ public class SeriesController {
     }
 
     /**
-     * Gets all cars in a specific class for a specific event.
+     * Gets all car models in a specific class for a specific event.
      *
      * @param eventId the ID of the event
      * @param classId the ID of the class
-     * @return a response entity containing the cars in the specified class for the event
+     * @return a response entity containing the car models in the specified class for the event
      */
     @GetMapping("/events/{eventId}/classes/{classId}/cars")
-    public ResponseEntity<CarsResponseDTO> getCarsByEventIdAndClassId(@PathVariable Long eventId, @PathVariable Long classId) {
-        CarsResponseDTO cars = seriesService.findCarsByEventIdAndClassId(eventId, classId);
-        return ResponseEntity.ok(cars);
+    public ResponseEntity<CarModelsResponseDTO> getCarModelsByEventIdAndClassId(@PathVariable Long eventId, @PathVariable Long classId) {
+        CarModelsResponseDTO carModels = seriesService.findCarModelsByEventIdAndClassId(eventId, classId);
+        return ResponseEntity.ok(carModels);
     }
 
     /**
@@ -116,7 +116,7 @@ public class SeriesController {
      * @param eventId    the ID of the event
      * @param percentage the percentage of top lap times to include in the average calculation (default: 20)
      * @param classId    optional filter by class ID
-     * @param carId      optional filter by car ID
+     * @param carId      optional filter by car model ID
      * @param sessionId  optional filter by session ID
      * @param offset     optional pagination offset
      * @param limit      optional pagination limit

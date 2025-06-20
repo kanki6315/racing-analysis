@@ -4,35 +4,8 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarDriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarEntriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarModelsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CircuitsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ClassesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.EventsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.FlywaySchemaHistoryRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ManufacturersRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SectorsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SeriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.TeamsRecord;
-
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.*;
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;

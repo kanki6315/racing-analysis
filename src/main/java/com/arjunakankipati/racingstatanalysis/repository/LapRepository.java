@@ -134,7 +134,7 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
      * @param eventId    the ID of the event
      * @param percentage the percentage of top laps to include in the average calculation (default: 20)
      * @param classId    optional filter by class ID
-     * @param carId      optional filter by car ID
+     * @param carId      optional filter by car model ID
      * @param sessionId  optional filter by session ID
      * @param offset     optional pagination offset
      * @param limit      optional pagination limit
@@ -158,7 +158,7 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
      * @param eventId    the ID of the event
      * @param percentage the percentage of top laps to include in the average calculation (default: 20)
      * @param classId    optional filter by class ID
-     * @param carId      optional filter by car ID
+     * @param carId      optional filter by car model ID
      * @param sessionId  optional filter by session ID
      * @param offset     optional pagination offset
      * @param limit      optional pagination limit
