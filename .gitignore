@@ -1,3 +1,5 @@
+src/main/resources/timecardjson/*
+
 HELP.md
 .gradle
 build/

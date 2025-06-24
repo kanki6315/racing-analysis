@@ -372,8 +372,21 @@ public class ImportServiceImpl implements ImportService {
         LocalDateTime startDateTime = LocalDateTime.parse(sessionDateStr, formatter);
         newSession.setStartDatetime(startDateTime);
 
-        // Set duration (default to 24 hours for endurance races)
-        newSession.setDurationSeconds(86400);
+        // Parse duration from finalize_type.time_in_seconds
+        int durationSeconds;
+        if (sessionJson.has("finalize_type") && sessionJson.get("finalize_type").isJsonObject()) {
+            JsonObject finalizeType = sessionJson.getAsJsonObject("finalize_type");
+            if (finalizeType.has("time_in_seconds")) {
+                durationSeconds = finalizeType.get("time_in_seconds").getAsInt();
+                LOGGER.info("Parsed session duration: {} seconds ({} hours)",
+                        durationSeconds, durationSeconds / 3600.0);
+            } else {
+                throw new IllegalArgumentException("finalize_type object found but time_in_seconds field is missing");
+            }
+        } else {
+            throw new IllegalArgumentException("finalize_type object not found in session JSON");
+        }
+        newSession.setDurationSeconds(durationSeconds);
 
         // Set weather data if available
         if (sessionJson.has("weather") && sessionJson.get("weather").isJsonObject()) {
