@@ -240,6 +240,64 @@ public class ImportServiceImpl implements ImportService {
                 throw new ReportURLNotValidException("Circuit object must contain '" + field + "' field");
             }
         }
+
+        // Validate finalize_type structure
+        if (!session.has("finalize_type") || !session.get("finalize_type").isJsonObject()) {
+            throw new ReportURLNotValidException("Session object must contain a 'finalize_type' object");
+        }
+
+        JsonObject finalizeType = session.getAsJsonObject("finalize_type");
+        if (!finalizeType.has("time_in_seconds")) {
+            throw new ReportURLNotValidException("finalize_type object must contain 'time_in_seconds' field");
+        }
+
+        // Validate participants structure
+        JsonArray participants = jsonData.getAsJsonArray("participants");
+        for (JsonElement participantElement : participants) {
+            if (!participantElement.isJsonObject()) {
+                throw new ReportURLNotValidException("Each participant must be an object");
+            }
+
+            JsonObject participant = participantElement.getAsJsonObject();
+
+            // Check required participant fields
+            String[] requiredParticipantFields = {"number", "team", "class", "vehicle", "manufacturer"};
+            for (String field : requiredParticipantFields) {
+                if (!participant.has(field)) {
+                    throw new ReportURLNotValidException("Participant object must contain '" + field + "' field");
+                }
+            }
+
+            // Validate that number field is not null or empty
+            JsonElement numberElement = participant.get("number");
+            if (numberElement == null || numberElement.isJsonNull()) {
+                throw new ReportURLNotValidException("Participant number field cannot be null");
+            }
+
+            // Validate drivers array if present
+            if (participant.has("drivers") && participant.get("drivers").isJsonArray()) {
+                JsonArray drivers = participant.getAsJsonArray("drivers");
+                for (JsonElement driverElement : drivers) {
+                    if (!driverElement.isJsonObject()) {
+                        throw new ReportURLNotValidException("Each driver must be an object");
+                    }
+
+                    JsonObject driver = driverElement.getAsJsonObject();
+                    String[] requiredDriverFields = {"number", "firstname", "surname"};
+                    for (String field : requiredDriverFields) {
+                        if (!driver.has(field)) {
+                            throw new ReportURLNotValidException("Driver object must contain '" + field + "' field");
+                        }
+                    }
+
+                    // Validate that driver number field is not null or empty
+                    JsonElement driverNumberElement = driver.get("number");
+                    if (driverNumberElement == null || driverNumberElement.isJsonNull()) {
+                        throw new ReportURLNotValidException("Driver number field cannot be null");
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -524,7 +582,10 @@ public class ImportServiceImpl implements ImportService {
      */
     private CarEntry createCar(JsonObject participantJson, Long sessionId, Long teamId,
                           Long classId, Long manufacturerId) {
-        String carNumber = participantJson.get("number").getAsString();
+        // Parse car number safely, handling both string and integer formats
+        String carNumber = parseJsonNumberAsString(participantJson.get("number"), "car number");
+        validateCarNumber(carNumber);
+        
         String vehicleModel = participantJson.get("vehicle").getAsString();
 
         // Check if car entry already exists for this session and car number
@@ -548,6 +609,7 @@ public class ImportServiceImpl implements ImportService {
             newCarEntry.setTireSupplier(participantJson.get("tires").getAsString());
         }
 
+        LOGGER.info("Created car entry: {} - {}", carNumber, vehicleModel);
         return carEntryRepository.save(newCarEntry);
     }
 
@@ -590,8 +652,11 @@ public class ImportServiceImpl implements ImportService {
             Driver driver = findOrCreateDriver(driverJson);
             LOGGER.info(driver.toString());
 
+            // Parse driver number safely, handling both string and integer formats
+            int driverNumber = parseJsonNumberAsInt(driverJson.get("number"), "driver number");
+
             // Create car-driver association
-            createCarDriver(carId, driver.getId(), driverJson.get("number").getAsInt());
+            createCarDriver(carId, driver.getId(), driverNumber);
         }
     }
 
@@ -662,8 +727,8 @@ public class ImportServiceImpl implements ImportService {
         for (JsonElement lapElement : lapsJson) {
             JsonObject lapJson = lapElement.getAsJsonObject();
 
-            // Get driver number
-            int driverNumber = Integer.parseInt(lapJson.get("driver_number").getAsString());
+            // Parse driver number safely, handling both string and integer formats
+            int driverNumber = parseJsonNumberAsInt(lapJson.get("driver_number"), "driver_number");
 
             // Find driver ID for this car and driver number
             Optional<CarDriver> carDriver = carDriverRepository.findByCarIdAndDriverNumber(carId, driverNumber);
@@ -709,7 +774,8 @@ public class ImportServiceImpl implements ImportService {
      * @return the lap entity
      */
     private Lap createLap(JsonObject lapJson, Long carId, Long driverId) {
-        int lapNumber = lapJson.get("number").getAsInt();
+        // Parse lap number safely, handling both string and integer formats
+        int lapNumber = parseJsonNumberAsInt(lapJson.get("number"), "lap number");
 
         // Check if lap already exists for this car and lap number
         Optional<Lap> existingLap = lapRepository.findByCarIdAndLapNumber(carId, lapNumber);
@@ -793,7 +859,8 @@ public class ImportServiceImpl implements ImportService {
      * @return the sector entity
      */
     private Sector createSector(JsonObject sectorJson, Long lapId) {
-        int sectorNumber = sectorJson.get("index").getAsInt();
+        // Parse sector number safely, handling both string and integer formats
+        int sectorNumber = parseJsonNumberAsInt(sectorJson.get("index"), "sector index");
 
         // Check if sector already exists for this lap and sector number
         Optional<Sector> existingSector = sectorRepository.findByLapIdAndSectorNumber(lapId, sectorNumber);
@@ -869,6 +936,99 @@ public class ImportServiceImpl implements ImportService {
             return null;
         } catch (Exception e) {
             return null;  // Return null for any parsing errors
+        }
+    }
+
+    /**
+     * Safely converts a JSON element to a string, handling both string and number types.
+     *
+     * @param element   the JSON element to convert
+     * @param fieldName the name of the field for error messages
+     * @return the string representation of the element
+     * @throws IllegalArgumentException if the element cannot be converted to a string
+     */
+    private String parseJsonNumberAsString(JsonElement element, String fieldName) {
+        if (element == null || element.isJsonNull()) {
+            throw new IllegalArgumentException(fieldName + " field cannot be null or empty");
+        }
+
+        if (element.isJsonPrimitive()) {
+            JsonPrimitive primitive = element.getAsJsonPrimitive();
+            if (primitive.isString()) {
+                String value = primitive.getAsString();
+                if (value.trim().isEmpty()) {
+                    throw new IllegalArgumentException(fieldName + " field cannot be empty");
+                }
+                return value;
+            } else if (primitive.isNumber()) {
+                return String.valueOf(primitive.getAsInt());
+            }
+        }
+
+        throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
+    }
+
+    /**
+     * Safely converts a JSON element to an integer, handling both string and number types.
+     *
+     * @param element   the JSON element to convert
+     * @param fieldName the name of the field for error messages
+     * @return the integer value
+     * @throws IllegalArgumentException if the element cannot be converted to an integer
+     */
+    private int parseJsonNumberAsInt(JsonElement element, String fieldName) {
+        if (element == null || element.isJsonNull()) {
+            throw new IllegalArgumentException(fieldName + " field cannot be null or empty");
+        }
+
+        if (element.isJsonPrimitive()) {
+            JsonPrimitive primitive = element.getAsJsonPrimitive();
+            if (primitive.isNumber()) {
+                int value = primitive.getAsInt();
+                if (value < 0) {
+                    throw new IllegalArgumentException(fieldName + " field cannot be negative: " + value);
+                }
+                return value;
+            } else if (primitive.isString()) {
+                try {
+                    int value = Integer.parseInt(primitive.getAsString().trim());
+                    if (value < 0) {
+                        throw new IllegalArgumentException(fieldName + " field cannot be negative: " + value);
+                    }
+                    return value;
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(fieldName + " field must be a valid integer, got: " + primitive.getAsString());
+                }
+            }
+        }
+
+        throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
+    }
+
+    /**
+     * Validates that a car number is reasonable.
+     *
+     * @param carNumber the car number to validate
+     * @throws IllegalArgumentException if the car number is not reasonable
+     */
+    private void validateCarNumber(String carNumber) {
+        if (carNumber == null || carNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Car number cannot be null or empty");
+        }
+
+        // Remove leading zeros for validation
+        String normalizedNumber = carNumber.replaceFirst("^0+", "");
+        if (normalizedNumber.isEmpty()) {
+            normalizedNumber = "0"; // Handle case where number is all zeros
+        }
+
+        try {
+            int numberValue = Integer.parseInt(normalizedNumber);
+            if (numberValue < 0 || numberValue > 999) {
+                throw new IllegalArgumentException("Car number must be between 0 and 999, got: " + carNumber);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Car number must be a valid number, got: " + carNumber);
         }
     }
 }
