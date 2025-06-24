@@ -5,6 +5,7 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
+
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 

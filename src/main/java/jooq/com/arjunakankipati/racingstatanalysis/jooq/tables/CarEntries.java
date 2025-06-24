@@ -232,30 +232,17 @@ public class CarEntries extends TableImpl<CarEntriesRecord> {
         return _teams;
     }
 
-    private transient CarDriversPath _carDriversCarEntryIdFkey;
+    private transient CarDriversPath _carDrivers;
 
     /**
      * Get the implicit to-many join path to the <code>public.car_drivers</code>
-     * table, via the <code>car_drivers_car_entry_id_fkey</code> key
+     * table
      */
-    public CarDriversPath carDriversCarEntryIdFkey() {
-        if (_carDriversCarEntryIdFkey == null)
-            _carDriversCarEntryIdFkey = new CarDriversPath(this, null, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY.getInverseKey());
+    public CarDriversPath carDrivers() {
+        if (_carDrivers == null)
+            _carDrivers = new CarDriversPath(this, null, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY.getInverseKey());
 
-        return _carDriversCarEntryIdFkey;
-    }
-
-    private transient CarDriversPath _carDriversCarIdFkey;
-
-    /**
-     * Get the implicit to-many join path to the <code>public.car_drivers</code>
-     * table, via the <code>car_drivers_car_id_fkey</code> key
-     */
-    public CarDriversPath carDriversCarIdFkey() {
-        if (_carDriversCarIdFkey == null)
-            _carDriversCarIdFkey = new CarDriversPath(this, null, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY.getInverseKey());
-
-        return _carDriversCarIdFkey;
+        return _carDrivers;
     }
 
     private transient LapsPath _lapsCarEntryIdFkey;

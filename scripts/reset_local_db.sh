@@ -35,4 +35,7 @@ sleep 5
 echo "Creating the 'statsdb' database..."
 PGPASSWORD=stats psql -h localhost -U postgres -c "CREATE DATABASE statsdb;"
 
+echo "Applying migrations..."
+gradle flywayMigrate
+
 echo "✅ Local development database has been reset successfully!"

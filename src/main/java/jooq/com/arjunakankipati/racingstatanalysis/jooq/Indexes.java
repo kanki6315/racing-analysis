@@ -5,6 +5,7 @@ package com.arjunakankipati.racingstatanalysis.jooq;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
+
 import org.jooq.Index;
 import org.jooq.OrderField;
 import org.jooq.impl.DSL;

@@ -157,33 +157,19 @@ public class CarDrivers extends TableImpl<CarDriversRecord> {
 
     @Override
     public List<ForeignKey<CarDriversRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_DRIVER_ID_FKEY);
+        return Arrays.asList(Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, Keys.CAR_DRIVERS__CAR_DRIVERS_DRIVER_ID_FKEY);
     }
 
-    private transient CarEntriesPath _carDriversCarEntryIdFkey;
+    private transient CarEntriesPath _carEntries;
 
     /**
-     * Get the implicit join path to the <code>public.car_entries</code> table,
-     * via the <code>car_drivers_car_entry_id_fkey</code> key.
+     * Get the implicit join path to the <code>public.car_entries</code> table.
      */
-    public CarEntriesPath carDriversCarEntryIdFkey() {
-        if (_carDriversCarEntryIdFkey == null)
-            _carDriversCarEntryIdFkey = new CarEntriesPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ENTRY_ID_FKEY, null);
+    public CarEntriesPath carEntries() {
+        if (_carEntries == null)
+            _carEntries = new CarEntriesPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, null);
 
-        return _carDriversCarEntryIdFkey;
-    }
-
-    private transient CarEntriesPath _carDriversCarIdFkey;
-
-    /**
-     * Get the implicit join path to the <code>public.car_entries</code> table,
-     * via the <code>car_drivers_car_id_fkey</code> key.
-     */
-    public CarEntriesPath carDriversCarIdFkey() {
-        if (_carDriversCarIdFkey == null)
-            _carDriversCarIdFkey = new CarEntriesPath(this, Keys.CAR_DRIVERS__CAR_DRIVERS_CAR_ID_FKEY, null);
-
-        return _carDriversCarIdFkey;
+        return _carEntries;
     }
 
     private transient DriversPath _drivers;
