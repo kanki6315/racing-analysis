@@ -183,4 +183,11 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
      * @return a list of DTOs containing driver-specific lap times
      */
     List<DriverLapTimesDTO> findLapTimesForDriversInSession(Long sessionId, List<Long> driverIds);
+
+    /**
+     * Batch insert laps.
+     * @param laps the list of laps to insert
+     * @return the list of inserted laps (with IDs populated)
+     */
+    List<Lap> saveAll(List<Lap> laps);
 }

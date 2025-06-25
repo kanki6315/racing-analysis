@@ -742,28 +742,31 @@ public class ImportServiceImpl implements ImportService {
      * @param sessionStartDateTime the start date and time of the session
      */
     private void processLaps(JsonArray lapsJson, Long carId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
+        List<Lap> lapsToInsert = new ArrayList<>();
+        List<JsonObject> lapJsons = new ArrayList<>();
+        // First, parse all laps and collect unsaved Lap entities
         for (JsonElement lapElement : lapsJson) {
             JsonObject lapJson = lapElement.getAsJsonObject();
-
-            // Parse driver number safely, handling both string and integer formats
             int driverNumber = parseJsonNumberAsInt(lapJson.get("driver_number"), "driver_number");
-
-            // Find driver ID for this car and driver number
             Optional<CarDriver> carDriver = carDriverRepository.findByCarIdAndDriverNumber(carId, driverNumber);
             if (!carDriver.isPresent()) {
-                // Skip this lap if driver not found
                 continue;
             }
-
-            // Create lap
-            Lap lap = createLap(lapJson, carId, carDriver.get().getDriverId(), sessionDurationSeconds, sessionStartDateTime);
-            LOGGER.info(lap.toString());
-
-            // Process sector times
+            Lap lap = createLapUnsaved(lapJson, carId, carDriver.get().getDriverId(), sessionDurationSeconds, sessionStartDateTime);
+            lapsToInsert.add(lap);
+            lapJsons.add(lapJson);
+        }
+        // Batch insert all laps
+        List<Lap> savedLaps = lapRepository.saveAll(lapsToInsert);
+        // Now process sectors for each lap
+        List<Sector> sectorsToInsert = new ArrayList<>();
+        for (int i = 0; i < savedLaps.size(); i++) {
+            Lap lap = savedLaps.get(i);
+            JsonObject lapJson = lapJsons.get(i);
             if (lapJson.has("sector_times") && lapJson.get("sector_times").isJsonArray()) {
                 JsonArray sectorTimesJson = lapJson.getAsJsonArray("sector_times");
-                List<Sector> sectors = processSectorTimes(sectorTimesJson, lap.getId());
-
+                List<Sector> sectors = processSectorTimesUnsaved(sectorTimesJson, lap.getId());
+                sectorsToInsert.addAll(sectors);
                 // Update lap validity based on sector validity
                 boolean allSectorsValid = true;
                 for (Sector sector : sectors) {
@@ -772,7 +775,6 @@ public class ImportServiceImpl implements ImportService {
                         break;
                     }
                 }
-
                 if (!allSectorsValid && lap.getIsValid()) {
                     lap.setIsValid(false);
                     lap.setInvalidationReason("One or more invalid sector times");
@@ -781,57 +783,73 @@ public class ImportServiceImpl implements ImportService {
                 }
             }
         }
+        // Batch insert all sectors
+        sectorRepository.saveAll(sectorsToInsert);
     }
 
-    /**
-     * Creates a lap with the given data.
-     *
-     * @param lapJson  the JSON data for the lap
-     * @param carId    the ID of the car
-     * @param driverId the ID of the driver
-     * @param sessionDurationSeconds the duration of the session in seconds
-     * @param sessionStartDateTime the start date and time of the session
-     * @return the lap entity
-     */
-    private Lap createLap(JsonObject lapJson, Long carId, Long driverId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
-        // Parse lap number safely, handling both string and integer formats
+    // Utility method to create an unsaved Lap entity
+    private Lap createLapUnsaved(JsonObject lapJson, Long carId, Long driverId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
         int lapNumber = parseJsonNumberAsInt(lapJson.get("number"), "lap number");
-
-        // Check if lap already exists for this car and lap number
         Optional<Lap> existingLap = lapRepository.findByCarIdAndLapNumber(carId, lapNumber);
         if (existingLap.isPresent()) {
             return existingLap.get();
         }
-
         Lap newLap = new Lap();
         newLap.setCarId(carId);
         newLap.setDriverId(driverId);
         newLap.setLapNumber(lapNumber);
-
-        // Parse lap time
         String lapTimeStr = lapJson.get("time").getAsString();
         newLap.setLapTimeSeconds(parseLapTime(lapTimeStr));
-
-        // Parse session elapsed time
         String sessionElapsedStr = lapJson.get("session_elapsed").getAsString();
         newLap.setSessionElapsedSeconds(parseLapTime(sessionElapsedStr));
-
-        // Parse timestamp - handle both 24-hour and shorter races
         String timestampStr = lapJson.get("hour").getAsString();
         LocalDateTime timestamp = parseTimestamp(timestampStr, sessionDurationSeconds, sessionStartDateTime);
         newLap.setTimestamp(timestamp);
-
-        // Set average speed if available
         if (lapJson.has("average_speed_kph") && !lapJson.get("average_speed_kph").isJsonNull()) {
             newLap.setAverageSpeedKph(new BigDecimal(lapJson.get("average_speed_kph").getAsString()));
         }
-
-        // Set validity flags
         newLap.setIsValid(lapJson.get("is_valid").getAsBoolean());
         newLap.setIsPersonalBest(lapJson.get("is_personal_best").getAsBoolean());
         newLap.setIsSessionBest(lapJson.get("is_session_best").getAsBoolean());
+        return newLap;
+    }
 
-        return lapRepository.save(newLap);
+    // Utility method to process sector times and return unsaved entities
+    private List<Sector> processSectorTimesUnsaved(JsonArray sectorTimesJson, Long lapId) {
+        List<Sector> sectors = new ArrayList<>();
+        for (JsonElement sectorElement : sectorTimesJson) {
+            JsonObject sectorJson = sectorElement.getAsJsonObject();
+            Sector sector = createSectorUnsaved(sectorJson, lapId);
+            sectors.add(sector);
+        }
+        return sectors;
+    }
+
+    // Utility method to create an unsaved Sector entity
+    private Sector createSectorUnsaved(JsonObject sectorJson, Long lapId) {
+        int sectorNumber = parseJsonNumberAsInt(sectorJson.get("index"), "sector index");
+        Optional<Sector> existingSector = sectorRepository.findByLapIdAndSectorNumber(lapId, sectorNumber);
+        if (existingSector.isPresent()) {
+            return existingSector.get();
+        }
+        Sector newSector = new Sector();
+        newSector.setLapId(lapId);
+        newSector.setSectorNumber(sectorNumber);
+        String sectorTimeStr = sectorJson.get("time").getAsString();
+        BigDecimal sectorTime = parseSectorTime(sectorTimeStr);
+        newSector.setSectorTimeSeconds(sectorTime);
+        boolean isValid = sectorTime != null;
+        newSector.setIsValid(isValid);
+        if (!isValid) {
+            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
+                newSector.setInvalidationReason("Missing sector time");
+            } else if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
+                newSector.setInvalidationReason("Unreasonably large sector time");
+            } else {
+                newSector.setInvalidationReason("Invalid sector time format");
+            }
+        }
+        return newSector;
     }
 
     /**
@@ -890,72 +908,6 @@ public class ImportServiceImpl implements ImportService {
                 }
             }
         }
-    }
-
-    /**
-     * Processes the sector times data.
-     *
-     * @param sectorTimesJson the JSON data for the sector times
-     * @param lapId           the ID of the lap
-     * @return the list of created sectors
-     */
-    private List<Sector> processSectorTimes(JsonArray sectorTimesJson, Long lapId) {
-        List<Sector> sectors = new ArrayList<>();
-        for (JsonElement sectorElement : sectorTimesJson) {
-            JsonObject sectorJson = sectorElement.getAsJsonObject();
-
-            // Create sector
-            Sector sector = createSector(sectorJson, lapId);
-            sectors.add(sector);
-        }
-        return sectors;
-    }
-
-    /**
-     * Creates a sector with the given data.
-     *
-     * @param sectorJson the JSON data for the sector
-     * @param lapId      the ID of the lap
-     * @return the sector entity
-     */
-    private Sector createSector(JsonObject sectorJson, Long lapId) {
-        // Parse sector number safely, handling both string and integer formats
-        int sectorNumber = parseJsonNumberAsInt(sectorJson.get("index"), "sector index");
-
-        // Check if sector already exists for this lap and sector number
-        Optional<Sector> existingSector = sectorRepository.findByLapIdAndSectorNumber(lapId, sectorNumber);
-        if (existingSector.isPresent()) {
-            return existingSector.get();
-        }
-
-        Sector newSector = new Sector();
-        newSector.setLapId(lapId);
-        newSector.setSectorNumber(sectorNumber);
-
-        // Parse sector time
-        String sectorTimeStr = sectorJson.get("time").getAsString();
-        BigDecimal sectorTime = parseSectorTime(sectorTimeStr);
-        newSector.setSectorTimeSeconds(sectorTime);
-
-        // Set validity based on sector time
-        boolean isValid = sectorTime != null;
-        newSector.setIsValid(isValid);
-
-        if (!isValid) {
-            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
-                newSector.setInvalidationReason("Missing sector time");
-            } else if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
-                newSector.setInvalidationReason("Unreasonably large sector time");
-            } else {
-                newSector.setInvalidationReason("Invalid sector time format");
-            }
-        }
-
-        // Set best flags
-        newSector.setIsPersonalBest(sectorJson.get("is_personal_best").getAsBoolean());
-        newSector.setIsSessionBest(sectorJson.get("is_session_best").getAsBoolean());
-
-        return sectorRepository.save(newSector);
     }
 
     BigDecimal parseSectorTime(String sectorTimeStr) {

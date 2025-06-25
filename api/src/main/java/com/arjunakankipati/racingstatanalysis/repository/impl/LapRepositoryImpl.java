@@ -686,6 +686,47 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         return driverLapTimes;
     }
 
+    @Override
+    public List<Lap> saveAll(List<Lap> laps) {
+        if (laps == null || laps.isEmpty()) return new ArrayList<>();
+        // Batch insert using JOOQ
+        var insertStep = dsl.insertInto(table)
+            .columns(
+                Tables.LAPS.CAR_ID,
+                Tables.LAPS.DRIVER_ID,
+                Tables.LAPS.LAP_NUMBER,
+                Tables.LAPS.LAP_TIME_SECONDS,
+                Tables.LAPS.SESSION_ELAPSED_SECONDS,
+                Tables.LAPS.TIMESTAMP,
+                Tables.LAPS.AVERAGE_SPEED_KPH,
+                Tables.LAPS.IS_VALID,
+                Tables.LAPS.IS_PERSONAL_BEST,
+                Tables.LAPS.IS_SESSION_BEST,
+                Tables.LAPS.INVALIDATION_REASON
+            );
+        for (Lap lap : laps) {
+            insertStep = insertStep.values(
+                lap.getCarId(),
+                lap.getDriverId(),
+                lap.getLapNumber(),
+                lap.getLapTimeSeconds(),
+                lap.getSessionElapsedSeconds(),
+                lap.getTimestamp(),
+                lap.getAverageSpeedKph(),
+                lap.getIsValid(),
+                lap.getIsPersonalBest(),
+                lap.getIsSessionBest(),
+                lap.getInvalidationReason()
+            );
+        }
+        var result = insertStep.returning().fetch();
+        List<Lap> savedLaps = new ArrayList<>();
+        for (Record record : result) {
+            savedLaps.add(mapToEntity(record));
+        }
+        return savedLaps;
+    }
+
     /**
      * Helper class to store driver information.
      */

@@ -8,6 +8,7 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,5 +140,37 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 .limit(limit)
                 .fetch()
                 .map(this::mapToEntity);
+    }
+
+    @Override
+    public List<Sector> saveAll(List<Sector> sectors) {
+        if (sectors == null || sectors.isEmpty()) return new ArrayList<>();
+        var insertStep = dsl.insertInto(table)
+            .columns(
+                Tables.SECTORS.LAP_ID,
+                Tables.SECTORS.SECTOR_NUMBER,
+                Tables.SECTORS.SECTOR_TIME_SECONDS,
+                Tables.SECTORS.IS_PERSONAL_BEST,
+                Tables.SECTORS.IS_SESSION_BEST,
+                Tables.SECTORS.IS_VALID,
+                Tables.SECTORS.INVALIDATION_REASON
+            );
+        for (Sector sector : sectors) {
+            insertStep = insertStep.values(
+                sector.getLapId(),
+                sector.getSectorNumber(),
+                sector.getSectorTimeSeconds(),
+                sector.getIsPersonalBest(),
+                sector.getIsSessionBest(),
+                sector.getIsValid(),
+                sector.getInvalidationReason()
+            );
+        }
+        var result = insertStep.returning().fetch();
+        List<Sector> savedSectors = new ArrayList<>();
+        for (Record record : result) {
+            savedSectors.add(mapToEntity(record));
+        }
+        return savedSectors;
     }
 }

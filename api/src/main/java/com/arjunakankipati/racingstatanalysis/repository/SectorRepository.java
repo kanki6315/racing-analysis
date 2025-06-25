@@ -52,4 +52,11 @@ public interface SectorRepository extends BaseRepository<Sector, Long> {
      * @return a list of top sectors for the given lap
      */
     List<Sector> findTopSectorsByLapId(Long lapId, int limit);
+
+    /**
+     * Batch insert sectors.
+     * @param sectors the list of sectors to insert
+     * @return the list of inserted sectors (with IDs populated)
+     */
+    List<Sector> saveAll(List<Sector> sectors);
 }
