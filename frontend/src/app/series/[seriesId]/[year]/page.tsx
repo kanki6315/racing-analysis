@@ -228,7 +228,25 @@ export default function YearPage() {
               {eventTeams[event.eventId] && (
                 <div className="p-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-4">
-                    Participating Teams ({eventTeams[event.eventId].teams.length} teams)
+                    Participating Teams ({eventTeams[event.eventId].teams.reduce((sum, team) => sum + (team.cars?.length || 0), 0)} cars)
+                    {(() => {
+                      // Count cars per class
+                      const classCounts: Record<string, number> = {};
+                      eventTeams[event.eventId].teams.forEach(team => {
+                        team.cars.forEach(car => {
+                          const className = getClassName(event.eventId, car.classId);
+                          classCounts[className] = (classCounts[className] || 0) + 1;
+                        });
+                      });
+                      // Format as '16 GTP | 20 GTD Pro | 20 GTD' (alphabetical by class name)
+                      const summary = Object.entries(classCounts)
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([className, count]) => `${count} ${className}`)
+                        .join(' | ');
+                      return summary ? (
+                        <span className="ml-2 text-gray-500 text-sm">{summary}</span>
+                      ) : null;
+                    })()}
                   </h3>
                   
                   <div className="overflow-x-auto">
