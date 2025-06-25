@@ -74,4 +74,15 @@ public interface SeriesService {
      * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event or class is not found
      */
     CarModelsResponseDTO findCarModelsByEventIdAndClassId(Long eventId, Long classId);
+
+    /**
+     * Finds all drivers for a specific event with optional filters.
+     *
+     * @param eventId    the ID of the event
+     * @param carModelId optional filter by car model ID
+     * @param classId    optional filter by class ID
+     * @return a response containing the drivers for the event
+     * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
+     */
+    DriversResponseDTO findDriversByEventId(Long eventId, Long carModelId, Long classId);
 }

@@ -157,4 +157,22 @@ public class SeriesController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Gets all drivers for a specific event with optional filters.
+     *
+     * @param eventId    the ID of the event
+     * @param carModelId optional filter by car model ID
+     * @param classId    optional filter by class ID
+     * @return a response entity containing the drivers for the event
+     */
+    @GetMapping("/events/{eventId}/drivers")
+    public ResponseEntity<DriversResponseDTO> getDriversByEventId(
+            @PathVariable Long eventId,
+            @RequestParam(required = false) Long carModelId,
+            @RequestParam(required = false) Long classId) {
+
+        DriversResponseDTO drivers = seriesService.findDriversByEventId(eventId, carModelId, classId);
+        return ResponseEntity.ok(drivers);
+    }
 }

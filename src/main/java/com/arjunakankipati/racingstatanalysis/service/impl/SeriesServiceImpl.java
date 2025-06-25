@@ -334,4 +334,66 @@ public class SeriesServiceImpl implements SeriesService {
         // Create response DTO
         return new CarModelsResponseDTO(event.getId(), event.getName(), clazz.getId(), clazz.getName(), carModelDTOs);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DriversResponseDTO findDriversByEventId(Long eventId, Long carModelId, Long classId) {
+        // Find the event by ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        // Get all car entries for the event
+        List<CarEntry> carEntries;
+        if (classId != null) {
+            // Filter by class if provided
+            carEntries = carEntryRepository.findByEventIdAndClassId(eventId, classId);
+        } else {
+            // Get all car entries for the event by getting all sessions and their car entries
+            List<Session> sessions = sessionRepository.findByEventId(eventId);
+            carEntries = sessions.stream()
+                    .flatMap(session -> carEntryRepository.findBySessionId(session.getId()).stream())
+                    .distinct()
+                    .toList();
+        }
+
+        // Filter by car model if provided
+        if (carModelId != null) {
+            carEntries = carEntries.stream()
+                    .filter(carEntry -> carModelId.equals(carEntry.getCarModelId()))
+                    .toList();
+        }
+
+        // Get all drivers for these car entries
+        List<DriverDTO> driverDTOs = carEntries.stream()
+                .flatMap(carEntry -> {
+                    // Get car drivers for this car entry
+                    List<CarDriver> carDrivers = carDriverRepository.findByCarId(carEntry.getId());
+
+                    return carDrivers.stream()
+                            .map(carDriver -> {
+                                // Get driver information
+                                Driver driver = driverRepository.findById(carDriver.getDriverId()).orElse(null);
+                                if (driver != null) {
+                                    return new DriverDTO(
+                                            driver.getId(),
+                                            driver.getFirstName(),
+                                            driver.getLastName(),
+                                            driver.getNationality(),
+                                            driver.getHometown(),
+                                            driver.getLicenseType(),
+                                            carDriver.getDriverNumber()
+                                    );
+                                }
+                                return null;
+                            })
+                            .filter(driverDTO -> driverDTO != null);
+                })
+                .distinct() // Remove duplicate drivers
+                .toList();
+
+        // Create response DTO
+        return new DriversResponseDTO(event.getId(), event.getName(), driverDTOs);
+    }
 }
