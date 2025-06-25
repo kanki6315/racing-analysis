@@ -2,12 +2,16 @@ package com.arjunakankipati.racingstatanalysis.controller;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
+import com.arjunakankipati.racingstatanalysis.model.ImportJob;
+import com.arjunakankipati.racingstatanalysis.service.ImportJobService;
 import com.arjunakankipati.racingstatanalysis.service.ImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 /**
  * REST controller for import operations.
@@ -17,26 +21,22 @@ import org.springframework.web.bind.annotation.*;
 public class ImportController {
 
     private final ImportService importService;
+    private final ImportJobService importJobService;
 
     @Value("${api.key}")
     private String expectedApiKey;
 
     /**
-     * Constructor with ImportService dependency injection.
-     *
-     * @param importService the import service
+     * Constructor with ImportService and ImportJobService dependency injection.
      */
     @Autowired
-    public ImportController(ImportService importService) {
+    public ImportController(ImportService importService, ImportJobService importJobService) {
         this.importService = importService;
+        this.importJobService = importJobService;
     }
 
     /**
-     * Imports timing data from a URL.
-     *
-     * @param request the import request containing the URL
-     * @param apiKey the API key from the request header
-     * @return a response entity containing the import response
+     * Starts an async import and returns the job ID.
      */
     @PostMapping
     public ResponseEntity<ImportResponseDTO> importData(
@@ -45,7 +45,33 @@ public class ImportController {
         if (apiKey == null || !apiKey.equals(expectedApiKey)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        ImportResponseDTO result = importService.importFromUrl(request);
-        return ResponseEntity.accepted().body(result);
+        Integer jobId = importJobService.createJob(request.getUrl()).getId();
+        importService.processImport(jobId, request); // This runs asynchronously!
+        ImportResponseDTO response = new ImportResponseDTO(
+                jobId != null ? jobId.toString() : null,
+                "PENDING",
+                null
+        );
+        return ResponseEntity.accepted().body(response);
+    }
+
+    /**
+     * Gets the status of an import job by job ID.
+     */
+    @GetMapping("/status/{jobId}")
+    public ResponseEntity<ImportResponseDTO> getImportStatus(@PathVariable Integer jobId) {
+        Optional<ImportJob> jobOpt = importJobService.getJob(jobId);
+        if (jobOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        ImportJob job = jobOpt.get();
+        ImportResponseDTO response = new ImportResponseDTO(
+                job.getId() != null ? job.getId().toString() : null,
+                job.getStatus(),
+                job.getEndedAt() != null && job.getStartedAt() != null ?
+                        java.time.Duration.between(job.getStartedAt(), job.getEndedAt()).toMillis() : null,
+                job.getError()
+        );
+        return ResponseEntity.ok(response);
     }
 }

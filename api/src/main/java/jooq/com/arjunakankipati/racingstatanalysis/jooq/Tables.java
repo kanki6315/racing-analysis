@@ -4,20 +4,7 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
 
 
 /**
@@ -65,6 +52,11 @@ public class Tables {
      * The table <code>public.flyway_schema_history</code>.
      */
     public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
+
+    /**
+     * The table <code>public.import_jobs</code>.
+     */
+    public static final ImportJobs IMPORT_JOBS = ImportJobs.IMPORT_JOBS;
 
     /**
      * The table <code>public.laps</code>.

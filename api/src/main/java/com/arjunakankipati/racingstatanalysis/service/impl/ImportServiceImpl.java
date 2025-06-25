@@ -1,12 +1,14 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
 import com.arjunakankipati.racingstatanalysis.exceptions.ReportURLNotValidException;
 import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
 import com.arjunakankipati.racingstatanalysis.repository.*;
+import com.arjunakankipati.racingstatanalysis.service.ImportJobService;
 import com.arjunakankipati.racingstatanalysis.service.ImportService;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.gson.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,9 +16,8 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 import java.io.File;
 import java.io.FileReader;
@@ -29,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -52,6 +52,7 @@ public class ImportServiceImpl implements ImportService {
     private final CarDriverRepository carDriverRepository;
     private final LapRepository lapRepository;
     private final SectorRepository sectorRepository;
+    private final ImportJobService importJobService;
 
     private final OkHttpClient httpClient;
 
@@ -80,7 +81,8 @@ public class ImportServiceImpl implements ImportService {
                              CarModelRepository carModelRepository,
                              CarDriverRepository carDriverRepository,
                              LapRepository lapRepository,
-                             SectorRepository sectorRepository) {
+                             SectorRepository sectorRepository,
+                             ImportJobService importJobService) {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
         this.circuitRepository = circuitRepository;
@@ -94,6 +96,7 @@ public class ImportServiceImpl implements ImportService {
         this.carDriverRepository = carDriverRepository;
         this.lapRepository = lapRepository;
         this.sectorRepository = sectorRepository;
+        this.importJobService = importJobService;
 
         // Initialize OkHttpClient with reasonable timeouts
         this.httpClient = new OkHttpClient.Builder()
@@ -102,52 +105,20 @@ public class ImportServiceImpl implements ImportService {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Async
     @Override
-    public ImportResponseDTO importFromUrl(ImportRequestDTO request) {
-        long startTimeMillis = System.currentTimeMillis();
+    public void processImport(Integer jobId, ImportRequestDTO request) {
+        importJobService.markStarted(jobId);
         try {
-            // Validate request
-            if (request == null) {
-                throw new IllegalArgumentException("Import request cannot be null");
-            }
-            if (request.getUrl() == null || request.getUrl().trim().isEmpty()) {
-                throw new IllegalArgumentException("URL cannot be null or empty");
-            }
-
-            // Generate a unique import ID
-            String importId = UUID.randomUUID().toString();
-
             // Fetch JSON data from URL
             JsonObject jsonData = fetchJsonData(request.getUrl());
-
             // Validate JSON structure
             validateJsonStructure(jsonData);
-
             // Process and store the data
             processData(jsonData, request.getUrl());
-
-            long endTimeMillis = System.currentTimeMillis();
-
-            // Return response
-            return new ImportResponseDTO(
-                    importId,
-                    "completed",
-                    (endTimeMillis - startTimeMillis) / 1000
-            );
+            importJobService.markCompleted(jobId);
         } catch (Exception e) {
-            // Log the error
-            e.printStackTrace();
-
-            long endTimeMillis = System.currentTimeMillis();
-            // Return error response
-            return new ImportResponseDTO(
-                    UUID.randomUUID().toString(),
-                    "failed: " + e.getMessage(),
-                    (endTimeMillis - startTimeMillis) / 1000
-            );
+            importJobService.markFailed(jobId, e.getMessage());
         }
     }
 

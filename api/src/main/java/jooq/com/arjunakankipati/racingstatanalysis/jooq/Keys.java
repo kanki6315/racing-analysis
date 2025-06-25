@@ -4,35 +4,8 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarDriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarEntriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarModelsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CircuitsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ClassesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.EventsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.FlywaySchemaHistoryRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ManufacturersRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SectorsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SeriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.TeamsRecord;
-
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.*;
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
@@ -61,6 +34,7 @@ public class Keys {
     public static final UniqueKey<DriversRecord> DRIVERS_PKEY = Internal.createUniqueKey(Drivers.DRIVERS, DSL.name("drivers_pkey"), new TableField[] { Drivers.DRIVERS.ID }, true);
     public static final UniqueKey<EventsRecord> EVENTS_PKEY = Internal.createUniqueKey(Events.EVENTS, DSL.name("events_pkey"), new TableField[] { Events.EVENTS.ID }, true);
     public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY_PK = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("flyway_schema_history_pk"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
+    public static final UniqueKey<ImportJobsRecord> IMPORT_JOBS_PKEY = Internal.createUniqueKey(ImportJobs.IMPORT_JOBS, DSL.name("import_jobs_pkey"), new TableField[]{ImportJobs.IMPORT_JOBS.ID}, true);
     public static final UniqueKey<LapsRecord> LAPS_PKEY = Internal.createUniqueKey(Laps.LAPS, DSL.name("laps_pkey"), new TableField[] { Laps.LAPS.ID }, true);
     public static final UniqueKey<ManufacturersRecord> MANUFACTURERS_PKEY = Internal.createUniqueKey(Manufacturers.MANUFACTURERS, DSL.name("manufacturers_pkey"), new TableField[] { Manufacturers.MANUFACTURERS.ID }, true);
     public static final UniqueKey<SectorsRecord> SECTORS_PKEY = Internal.createUniqueKey(Sectors.SECTORS, DSL.name("sectors_pkey"), new TableField[] { Sectors.SECTORS.ID }, true);

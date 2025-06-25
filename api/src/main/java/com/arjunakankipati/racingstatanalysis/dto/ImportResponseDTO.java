@@ -1,8 +1,5 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-
 /**
  * Data Transfer Object for import responses.
  * Contains information about the status of an import operation.
@@ -11,6 +8,7 @@ public class ImportResponseDTO {
     private String importId;
     private String status;
     private Long completionTime;
+    private String error;
 
     /**
      * Default constructor.
@@ -24,11 +22,17 @@ public class ImportResponseDTO {
      * @param importId the ID of the import operation
      * @param status the status of the import operation
      * @param completionTime the completion time of the import operation
+     * @param error the error message, if any
      */
-    public ImportResponseDTO(String importId, String status, Long completionTime) {
+    public ImportResponseDTO(String importId, String status, Long completionTime, String error) {
         this.importId = importId;
         this.status = status;
         this.completionTime = completionTime;
+        this.error = error;
+    }
+
+    public ImportResponseDTO(String importId, String status, Long completionTime) {
+        this(importId, status, completionTime, null);
     }
 
     /**
@@ -73,5 +77,13 @@ public class ImportResponseDTO {
 
     public void setCompletionTime(Long completionTime) {
         this.completionTime = completionTime;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

@@ -1,7 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
+import org.springframework.scheduling.annotation.Async;
 
 /**
  * Service interface for importing timing data.
@@ -9,11 +9,10 @@ import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
 public interface ImportService {
 
     /**
-     * Imports timing data from a URL.
-     *
-     * @param request the import request containing the URL
-     * @return the import response containing the status of the import operation
-     * @throws UnsupportedOperationException if the operation is not implemented
+     * Processes the import for a given job ID (called asynchronously).
+     * @param jobId the import job ID
+     * @param request the import request
      */
-    ImportResponseDTO importFromUrl(ImportRequestDTO request);
+    @Async
+    void processImport(Integer jobId, ImportRequestDTO request);
 }
