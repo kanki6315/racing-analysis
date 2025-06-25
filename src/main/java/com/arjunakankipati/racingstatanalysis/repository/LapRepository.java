@@ -1,6 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.repository;
 
 import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
+import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimesDTO;
 import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
 import com.arjunakankipati.racingstatanalysis.model.Lap;
 
@@ -172,4 +173,14 @@ public interface LapRepository extends BaseRepository<Lap, Long> {
             Optional<Long> sessionId,
             Optional<Integer> offset,
             Optional<Integer> limit);
+
+    /**
+     * Find lap times for multiple drivers in a specific session.
+     * This method uses SQL JOINs to efficiently retrieve lap times with driver, car, team, and class information.
+     *
+     * @param sessionId the ID of the session
+     * @param driverIds the list of driver IDs to find lap times for
+     * @return a list of DTOs containing driver-specific lap times
+     */
+    List<DriverLapTimesDTO> findLapTimesForDriversInSession(Long sessionId, List<Long> driverIds);
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -174,5 +175,45 @@ public class SeriesController {
 
         DriversResponseDTO drivers = seriesService.findDriversByEventId(eventId, carModelId, classId);
         return ResponseEntity.ok(drivers);
+    }
+
+    /**
+     * Gets lap times for multiple drivers in a specific session.
+     *
+     * @param eventId   the ID of the event
+     * @param sessionId the ID of the session
+     * @param driverIds comma-separated list of driver IDs
+     * @return a response entity containing the lap times for the specified drivers
+     */
+    @GetMapping("/events/{eventId}/session/{sessionId}/laptimes")
+    public ResponseEntity<LapTimesResponseDTO> getLapTimesForDriversInSession(
+            @PathVariable Long eventId,
+            @PathVariable Long sessionId,
+            @RequestParam String driverIds) {
+
+        // Parse comma-separated driver IDs
+        List<Long> driverIdList = new ArrayList<>();
+        if (driverIds != null && !driverIds.trim().isEmpty()) {
+            String[] ids = driverIds.split(",");
+            for (String id : ids) {
+                try {
+                    driverIdList.add(Long.parseLong(id.trim()));
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+        }
+
+        if (driverIdList.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Get lap times for the specified drivers
+        List<DriverLapTimesDTO> driverLapTimes = lapRepository.findLapTimesForDriversInSession(sessionId, driverIdList);
+
+        // Create response DTO
+        LapTimesResponseDTO response = new LapTimesResponseDTO(eventId, sessionId, driverLapTimes);
+
+        return ResponseEntity.ok(response);
     }
 }

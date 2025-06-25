@@ -1,7 +1,9 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimeAnalysisDTO;
+import com.arjunakankipati.racingstatanalysis.dto.DriverLapTimesDTO;
 import com.arjunakankipati.racingstatanalysis.dto.LapTimeAnalysisDTO;
+import com.arjunakankipati.racingstatanalysis.dto.LapTimeDetailDTO;
 import com.arjunakankipati.racingstatanalysis.jooq.Tables;
 import com.arjunakankipati.racingstatanalysis.model.Lap;
 import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
@@ -13,7 +15,9 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -583,6 +587,122 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
         });
 
         return driverAnalyses;
+    }
+
+    @Override
+    public List<DriverLapTimesDTO> findLapTimesForDriversInSession(Long sessionId, List<Long> driverIds) {
+        if (driverIds == null || driverIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Query to get lap times for the specified drivers in the session
+        // This joins with all necessary tables to get complete information
+        Result<?> result = dsl.select(
+                        Tables.LAPS.ID,
+                        Tables.LAPS.LAP_NUMBER,
+                        Tables.LAPS.LAP_TIME_SECONDS,
+                        Tables.LAPS.SESSION_ELAPSED_SECONDS,
+                        Tables.LAPS.TIMESTAMP,
+                        Tables.LAPS.AVERAGE_SPEED_KPH,
+                        Tables.LAPS.IS_VALID,
+                        Tables.LAPS.IS_PERSONAL_BEST,
+                        Tables.LAPS.IS_SESSION_BEST,
+                        Tables.LAPS.INVALIDATION_REASON,
+                        Tables.DRIVERS.ID.as("driver_id"),
+                        DSL.concat(Tables.DRIVERS.FIRST_NAME, DSL.val(" "), Tables.DRIVERS.LAST_NAME).as("driver_name"),
+                        Tables.CAR_ENTRIES.NUMBER.as("car_number"),
+                        Tables.TEAMS.NAME.as("team_name"),
+                        Tables.CAR_MODELS.NAME.as("car_model"),
+                        Tables.CLASSES.NAME.as("class_name")
+                )
+                .from(table)
+                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.ID.eq(Tables.LAPS.CAR_ID))
+                .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.LAPS.DRIVER_ID))
+                .join(Tables.TEAMS).on(Tables.TEAMS.ID.eq(Tables.CAR_ENTRIES.TEAM_ID))
+                .join(Tables.CAR_MODELS).on(Tables.CAR_MODELS.ID.eq(Tables.CAR_ENTRIES.CAR_MODEL_ID))
+                .join(Tables.CLASSES).on(Tables.CLASSES.ID.eq(Tables.CAR_ENTRIES.CLASS_ID))
+                .where(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId))
+                .and(Tables.LAPS.DRIVER_ID.in(driverIds))
+                .orderBy(Tables.LAPS.DRIVER_ID, Tables.LAPS.LAP_NUMBER)
+                .fetch();
+
+        // Group lap times by driver
+        Map<Long, List<LapTimeDetailDTO>> driverLapTimesMap = new HashMap<>();
+        Map<Long, DriverInfo> driverInfoMap = new HashMap<>();
+
+        for (Record record : result) {
+            Long driverId = record.get("driver_id", Long.class);
+
+            // Create lap time detail DTO
+            LapTimeDetailDTO lapTimeDetail = new LapTimeDetailDTO(
+                    record.get(Tables.LAPS.ID),
+                    record.get(Tables.LAPS.LAP_NUMBER),
+                    formatLapTime(record.get(Tables.LAPS.LAP_TIME_SECONDS)),
+                    record.get(Tables.LAPS.LAP_TIME_SECONDS),
+                    record.get(Tables.LAPS.SESSION_ELAPSED_SECONDS),
+                    record.get(Tables.LAPS.TIMESTAMP),
+                    record.get(Tables.LAPS.AVERAGE_SPEED_KPH),
+                    record.get(Tables.LAPS.IS_VALID),
+                    record.get(Tables.LAPS.IS_PERSONAL_BEST),
+                    record.get(Tables.LAPS.IS_SESSION_BEST),
+                    record.get(Tables.LAPS.INVALIDATION_REASON)
+            );
+
+            // Add to driver's lap times list
+            driverLapTimesMap.computeIfAbsent(driverId, k -> new ArrayList<>()).add(lapTimeDetail);
+
+            // Store driver info (will be the same for all laps of the same driver)
+            if (!driverInfoMap.containsKey(driverId)) {
+                driverInfoMap.put(driverId, new DriverInfo(
+                        record.get("driver_name", String.class),
+                        record.get("car_number", String.class),
+                        record.get("team_name", String.class),
+                        record.get("car_model", String.class),
+                        record.get("class_name", String.class)
+                ));
+            }
+        }
+
+        // Create DriverLapTimesDTO for each driver
+        List<DriverLapTimesDTO> driverLapTimes = new ArrayList<>();
+        for (Long driverId : driverIds) {
+            List<LapTimeDetailDTO> lapTimes = driverLapTimesMap.get(driverId);
+            DriverInfo driverInfo = driverInfoMap.get(driverId);
+
+            if (lapTimes != null && driverInfo != null) {
+                DriverLapTimesDTO driverLapTimesDTO = new DriverLapTimesDTO(
+                        driverId,
+                        driverInfo.driverName,
+                        driverInfo.carNumber,
+                        driverInfo.teamName,
+                        driverInfo.carModel,
+                        driverInfo.className,
+                        lapTimes
+                );
+                driverLapTimes.add(driverLapTimesDTO);
+            }
+        }
+
+        return driverLapTimes;
+    }
+
+    /**
+     * Helper class to store driver information.
+     */
+    private static class DriverInfo {
+        final String driverName;
+        final String carNumber;
+        final String teamName;
+        final String carModel;
+        final String className;
+
+        DriverInfo(String driverName, String carNumber, String teamName, String carModel, String className) {
+            this.driverName = driverName;
+            this.carNumber = carNumber;
+            this.teamName = teamName;
+            this.carModel = carModel;
+            this.className = className;
+        }
     }
 
     /**
