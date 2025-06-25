@@ -1,39 +1,31 @@
 src/main/resources/timecardjson/*
 
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+api/.gradle
+api/build/
+!api/gradle/wrapper/gradle-wrapper.jar
+!api/**/src/main/**/build/
+!api/**/src/test/**/build/
 
 ### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+api/.apt_generated
+api/.classpath
+api/.factorypath
+api/.project
+api/.settings
+api/.springBeans
+api/.sts4-cache
+api/bin/
+!api/**/src/main/**/bin/
+!api/**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
 .idea
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+api/out/
+!api/**/src/main/**/out/
+!api/**/src/test/**/out/
 
 ### VS Code ###
 .vscode/
@@ -65,9 +57,9 @@ frontend/build
 *.pem
 
 # debug
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 frontend/.pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
