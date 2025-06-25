@@ -1,4 +1,4 @@
-src/main/resources/timecardjson/*
+api/src/main/resources/timecardjson/*
 
 api/.gradle
 api/build/
