@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import java.io.File;
 import java.io.FileReader;
@@ -52,7 +54,15 @@ public class ImportServiceImpl implements ImportService {
     private final SectorRepository sectorRepository;
 
     private final OkHttpClient httpClient;
-    private final Gson gson;
+
+    private final Cache<String, Series> seriesCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Circuit> circuitCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Team> teamCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Manufacturer> manufacturerCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Class> classCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, CarModel> carModelCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Event> eventCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+    private final Cache<String, Session> sessionCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
 
     /**
      * Constructor with repository dependency injection.
@@ -90,25 +100,6 @@ public class ImportServiceImpl implements ImportService {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .build();
-
-        // Initialize Gson with custom adapters for LocalDate and LocalDateTime
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>)
-                        (json, type, context) -> LocalDate.parse(json.getAsString(),
-                                DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>)
-                        (json, type, context) -> {
-                            String dateStr = json.getAsString();
-                            // Handle different date formats
-                            if (dateStr.contains("/")) {
-                                return LocalDateTime.parse(dateStr,
-                                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-                            } else {
-                                return LocalDateTime.parse(dateStr,
-                                        DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a"));
-                            }
-                        })
-                .create();
     }
 
     /**
@@ -348,14 +339,18 @@ public class ImportServiceImpl implements ImportService {
      * @return the series entity
      */
     private Series findOrCreateSeries(String seriesName) {
+        Series cached = seriesCache.getIfPresent(seriesName);
+        if (cached != null) return cached;
         Optional<Series> existingSeries = seriesRepository.findByName(seriesName);
         if (existingSeries.isPresent()) {
+            seriesCache.put(seriesName, existingSeries.get());
             return existingSeries.get();
         }
-
         Series newSeries = new Series();
         newSeries.setName(seriesName);
-        return seriesRepository.save(newSeries);
+        Series saved = seriesRepository.save(newSeries);
+        seriesCache.put(seriesName, saved);
+        return saved;
     }
 
     /**
@@ -366,16 +361,20 @@ public class ImportServiceImpl implements ImportService {
      */
     private Circuit findOrCreateCircuit(JsonObject circuitJson) {
         String name = circuitJson.get("name").getAsString();
+        Circuit cached = circuitCache.getIfPresent(name);
+        if (cached != null) return cached;
         Optional<Circuit> existingCircuit = circuitRepository.findByName(name);
         if (existingCircuit.isPresent()) {
+            circuitCache.put(name, existingCircuit.get());
             return existingCircuit.get();
         }
-
         Circuit newCircuit = new Circuit();
         newCircuit.setName(name);
         newCircuit.setLengthMeters(new BigDecimal(circuitJson.get("length").getAsString()));
         newCircuit.setCountry(circuitJson.get("country").getAsString());
-        return circuitRepository.save(newCircuit);
+        Circuit saved = circuitRepository.save(newCircuit);
+        circuitCache.put(name, saved);
+        return saved;
     }
 
     /**
@@ -387,20 +386,23 @@ public class ImportServiceImpl implements ImportService {
      * @return the event entity
      */
     private Event findOrCreateEvent(String eventName, Integer year, Long seriesId) {
-        // TODO: this should have a filter on series id as well probably
+        String key = eventName + ":" + year + ":" + seriesId;
+        Event cached = eventCache.getIfPresent(key);
+        if (cached != null) return cached;
         Optional<Event> existingEvent = eventRepository.findByNameAndYear(eventName, year);
         if (existingEvent.isPresent()) {
+            eventCache.put(key, existingEvent.get());
             return existingEvent.get();
         }
-
         Event newEvent = new Event();
         newEvent.setName(eventName);
         newEvent.setYear(year);
         newEvent.setSeriesId(seriesId);
-        // TODO: this should be pulling from the actual dates
-        newEvent.setStartDate(LocalDate.now()); // Default to current date
-        newEvent.setEndDate(LocalDate.now().plusDays(1)); // Default to next day
-        return eventRepository.save(newEvent);
+        newEvent.setStartDate(LocalDate.now());
+        newEvent.setEndDate(LocalDate.now().plusDays(1));
+        Event saved = eventRepository.save(newEvent);
+        eventCache.put(key, saved);
+        return saved;
     }
 
     /**
@@ -413,32 +415,28 @@ public class ImportServiceImpl implements ImportService {
      * @return the session entity
      */
     private Session createSession(JsonObject sessionJson, Long eventId, Long circuitId, String importUrl) {
-        // Check if a session with this import URL already exists
+        Session cached = sessionCache.getIfPresent(importUrl);
+        if (cached != null) return cached;
         Optional<Session> existingSession = sessionRepository.findByImportUrl(importUrl);
         if (existingSession.isPresent()) {
+            sessionCache.put(importUrl, existingSession.get());
             return existingSession.get();
         }
-
         Session newSession = new Session();
         newSession.setEventId(eventId);
         newSession.setCircuitId(circuitId);
         newSession.setName(sessionJson.get("session_name").getAsString());
         newSession.setType(sessionJson.get("session_type").getAsString());
-
-        // Parse session date
         String sessionDateStr = sessionJson.get("session_date").getAsString();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         LocalDateTime startDateTime = LocalDateTime.parse(sessionDateStr, formatter);
         newSession.setStartDatetime(startDateTime);
-
-        // Parse duration from finalize_type.time_in_seconds
         int durationSeconds;
         if (sessionJson.has("finalize_type") && sessionJson.get("finalize_type").isJsonObject()) {
             JsonObject finalizeType = sessionJson.getAsJsonObject("finalize_type");
             if (finalizeType.has("time_in_seconds")) {
                 durationSeconds = finalizeType.get("time_in_seconds").getAsInt();
-                LOGGER.info("Parsed session duration: {} seconds ({} hours)",
-                        durationSeconds, durationSeconds / 3600.0);
+                LOGGER.info("Parsed session duration: {} seconds ({} hours)", durationSeconds, durationSeconds / 3600.0);
             } else {
                 throw new IllegalArgumentException("finalize_type object found but time_in_seconds field is missing");
             }
@@ -446,8 +444,6 @@ public class ImportServiceImpl implements ImportService {
             throw new IllegalArgumentException("finalize_type object not found in session JSON");
         }
         newSession.setDurationSeconds(durationSeconds);
-
-        // Set weather data if available
         if (sessionJson.has("weather") && sessionJson.get("weather").isJsonObject()) {
             JsonObject weatherJson = sessionJson.getAsJsonObject("weather");
             if (weatherJson.has("air_temperature")) {
@@ -462,18 +458,15 @@ public class ImportServiceImpl implements ImportService {
                 newSession.setWeatherCondition(weatherJson.get("track_status").getAsString());
             }
         }
-
-        // Set report message if available
         if (sessionJson.has("report_message")) {
             newSession.setReportMessage(sessionJson.get("report_message").getAsString());
         }
-
-        // Set import URL and timestamp
         newSession.setImportUrl(importUrl);
         newSession.setImportTimestamp(LocalDateTime.now());
-
         LOGGER.info("Session parsed: " + newSession);
-        return sessionRepository.save(newSession);
+        Session saved = sessionRepository.save(newSession);
+        sessionCache.put(importUrl, saved);
+        return saved;
     }
 
     /**
@@ -533,14 +526,18 @@ public class ImportServiceImpl implements ImportService {
      * @return the team entity
      */
     private Team findOrCreateTeam(String teamName) {
+        Team cached = teamCache.getIfPresent(teamName);
+        if (cached != null) return cached;
         Optional<Team> existingTeam = teamRepository.findByName(teamName);
         if (existingTeam.isPresent()) {
+            teamCache.put(teamName, existingTeam.get());
             return existingTeam.get();
         }
-
         Team newTeam = new Team();
         newTeam.setName(teamName);
-        return teamRepository.save(newTeam);
+        Team saved = teamRepository.save(newTeam);
+        teamCache.put(teamName, saved);
+        return saved;
     }
 
     /**
@@ -550,14 +547,18 @@ public class ImportServiceImpl implements ImportService {
      * @return the manufacturer entity
      */
     private Manufacturer findOrCreateManufacturer(String manufacturerName) {
+        Manufacturer cached = manufacturerCache.getIfPresent(manufacturerName);
+        if (cached != null) return cached;
         Optional<Manufacturer> existingManufacturer = manufacturerRepository.findByName(manufacturerName);
         if (existingManufacturer.isPresent()) {
+            manufacturerCache.put(manufacturerName, existingManufacturer.get());
             return existingManufacturer.get();
         }
-
         Manufacturer newManufacturer = new Manufacturer();
         newManufacturer.setName(manufacturerName);
-        return manufacturerRepository.save(newManufacturer);
+        Manufacturer saved = manufacturerRepository.save(newManufacturer);
+        manufacturerCache.put(manufacturerName, saved);
+        return saved;
     }
 
     /**
@@ -567,16 +568,20 @@ public class ImportServiceImpl implements ImportService {
      * @return the class entity
      */
     private Class findOrCreateClass(Long seriesId, String className) {
-        //TODO add series id filter
-        Optional<Class> existingClass = classRepository.findByName(className);
+        String key = seriesId + ":" + className;
+        Class cached = classCache.getIfPresent(key);
+        if (cached != null) return cached;
+        Optional<Class> existingClass = classRepository.findByName(className); // TODO: add seriesId filter
         if (existingClass.isPresent()) {
+            classCache.put(key, existingClass.get());
             return existingClass.get();
         }
-
         Class newClass = new Class();
         newClass.setSeriesId(seriesId);
         newClass.setName(className);
-        return classRepository.save(newClass);
+        Class saved = classRepository.save(newClass);
+        classCache.put(key, saved);
+        return saved;
     }
 
     /**
@@ -630,21 +635,23 @@ public class ImportServiceImpl implements ImportService {
      * @return the car model entity
      */
     private CarModel findOrCreateCarModel(String vehicleModel, Long manufacturerId) {
-        // Try to find existing car model by manufacturer and name
+        String key = manufacturerId + ":" + vehicleModel;
+        CarModel cached = carModelCache.getIfPresent(key);
+        if (cached != null) return cached;
         Optional<CarModel> existingCarModel = carModelRepository.findByManufacturerIdAndName(manufacturerId, vehicleModel);
         if (existingCarModel.isPresent()) {
+            carModelCache.put(key, existingCarModel.get());
             return existingCarModel.get();
         }
-
-        // Create new car model
         CarModel newCarModel = new CarModel();
         newCarModel.setManufacturerId(manufacturerId);
         newCarModel.setName(vehicleModel);
-        newCarModel.setFullName(vehicleModel); // For now, use the same name as full name
-        newCarModel.setYearModel(null); // Year model not available in import data
+        newCarModel.setFullName(vehicleModel);
+        newCarModel.setYearModel(null);
         newCarModel.setDescription(null);
-
-        return carModelRepository.save(newCarModel);
+        CarModel saved = carModelRepository.save(newCarModel);
+        carModelCache.put(key, saved);
+        return saved;
     }
 
     /**
