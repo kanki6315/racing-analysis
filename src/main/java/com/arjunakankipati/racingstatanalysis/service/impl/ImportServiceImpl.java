@@ -866,7 +866,7 @@ public class ImportServiceImpl implements ImportService {
         } else {
             // For shorter races, expect 24-hour time format: "HH:mm:ss"
             try {
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
                 LocalTime time = LocalTime.parse(timestampStr, timeFormatter);
                 // Use the actual session start date
                 return LocalDateTime.of(sessionStartDateTime.toLocalDate(), time);
