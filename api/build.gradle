@@ -52,9 +52,9 @@ jooq {
             generationTool {
                 jdbc {
                     driver = 'org.postgresql.Driver'
-                    url = 'jdbc:postgresql://localhost:5432/statsdb'
-                    user = 'postgres'
-                    password = 'stats'
+                    url = System.getenv('SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/statsdb'
+                    user = System.getenv('SPRING_DATASOURCE_USERNAME') ?: 'postgres'
+                    password = System.getenv('SPRING_DATASOURCE_PASSWORD') ?: 'stats'
                 }
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
@@ -77,9 +77,9 @@ jooq {
 
 // Flyway configuration
 flyway {
-    url = 'jdbc:postgresql://localhost:5432/statsdb'
-    user = 'postgres'
-    password = 'stats'
+    url = System.getenv('SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/statsdb'
+    user = System.getenv('SPRING_DATASOURCE_USERNAME') ?: 'postgres'
+    password = System.getenv('SPRING_DATASOURCE_PASSWORD') ?: 'stats'
     driver = 'org.postgresql.Driver'
     locations = ['filesystem:src/main/resources/db/migration']
     baselineOnMigrate = true
