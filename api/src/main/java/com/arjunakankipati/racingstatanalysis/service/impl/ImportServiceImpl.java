@@ -141,6 +141,17 @@ public class ImportServiceImpl implements ImportService {
             }
         }
 
+        // Get current size of heap in bytes.
+        long heapSize = Runtime.getRuntime().totalMemory();
+
+        // Get maximum size of heap in bytes. The heap cannot grow beyond this size.
+        // Any attempt will result in an OutOfMemoryException.
+        long heapMaxSize = Runtime.getRuntime().maxMemory();
+
+        // Get amount of free memory within the heap in bytes. This size will
+        // increase after garbage collection and decrease as new objects are created.
+        long heapFreeSize = Runtime.getRuntime().freeMemory();
+        LOGGER.info("Heap size: {} bytes, free memory: {} bytes, max memory: {} bytes", heapSize, heapFreeSize, heapMaxSize);
         // Fetch data from URL
         Request request = new Request.Builder()
                 .url(url)
@@ -150,6 +161,11 @@ public class ImportServiceImpl implements ImportService {
             if (!response.isSuccessful()) {
                 throw new ReportURLNotValidException("Failed to fetch data from URL: " + response.code());
             }
+
+            heapSize = Runtime.getRuntime().totalMemory();
+            heapMaxSize = Runtime.getRuntime().maxMemory();
+            heapFreeSize = Runtime.getRuntime().freeMemory();
+            LOGGER.info("Heap size: {} bytes, free memory: {} bytes, max memory: {} bytes", heapSize, heapFreeSize, heapMaxSize);
 
             String jsonString = response.body().string();
             try {
