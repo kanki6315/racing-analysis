@@ -1,0 +1,49 @@
+name: racing-analysis
+services:
+  - name: api
+    github:
+      repo: kanki6315/racing-analysis
+      branch: main
+      deploy_on_push: true
+    source_dir: api
+    build_command: ./gradlew bootJar
+    run_command: java -jar build/libs/racing-stat-analysis-0.0.1-SNAPSHOT.jar
+    environment_slug: java
+    http_port: 8080
+    instance_size_slug: basic-xxs
+    envs:
+      - key: SPRING_PROFILES_ACTIVE
+        value: do
+      - key: SPRING_DATASOURCE_URL
+        value: ${DATABASE_URL}
+      - key: SPRING_DATASOURCE_USERNAME
+        value: ${DATABASE_USER}
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: ${DATABASE_PASSWORD}
+    routes:
+      - path: /api
+        preserve_path_prefix: true
+
+  - name: frontend
+    github:
+      repo: kanki6315/racing-analysis
+      branch: main
+      deploy_on_push: true
+    source_dir: frontend
+    build_command: npm install && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    http_port: 3000
+    instance_size_slug: basic-xxs
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://racing-analysis.ondigitalocean.app/api/v1"
+    routes:
+      - path: /
+        preserve_path_prefix: true
+
+databases:
+  - engine: PG
+    name: racing-analysis-db
+    version: latest
+    production: true
