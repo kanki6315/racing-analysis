@@ -1,7 +1,7 @@
 FROM gradle:8.7.0-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
-RUN ./gradlew bootJar -Dspring.profiles.active=build --no-daemon
+RUN ./gradlew bootJar --no-daemon
 
 # ---- Run Stage ----
 FROM eclipse-temurin:21-jre-alpine
