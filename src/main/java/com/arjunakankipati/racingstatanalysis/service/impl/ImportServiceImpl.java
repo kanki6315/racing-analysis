@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -479,9 +480,17 @@ public class ImportServiceImpl implements ImportService {
      * Processes the participants data.
      *
      * @param participantsJson the JSON data for the participants
+     * @param seriesId         the ID of the series
      * @param sessionId        the ID of the session
      */
     private void processParticipants(JsonArray participantsJson, Long seriesId, Long sessionId) {
+        // Get session to access duration and start date
+        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
+        if (!sessionOpt.isPresent()) {
+            throw new IllegalArgumentException("Session not found with ID: " + sessionId);
+        }
+        Session session = sessionOpt.get();
+        
         for (JsonElement participantElement : participantsJson) {
             JsonObject participantJson = participantElement.getAsJsonObject();
 
@@ -512,7 +521,7 @@ public class ImportServiceImpl implements ImportService {
             // Process laps
             if (participantJson.has("laps") && participantJson.get("laps").isJsonArray()) {
                 JsonArray lapsJson = participantJson.getAsJsonArray("laps");
-                processLaps(lapsJson, car.getId());
+                processLaps(lapsJson, car.getId(), session.getDurationSeconds(), session.getStartDatetime());
             }
         }
     }
@@ -722,8 +731,10 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param lapsJson the JSON data for the laps
      * @param carId    the ID of the car
+     * @param sessionDurationSeconds the duration of the session in seconds
+     * @param sessionStartDateTime the start date and time of the session
      */
-    private void processLaps(JsonArray lapsJson, Long carId) {
+    private void processLaps(JsonArray lapsJson, Long carId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
         for (JsonElement lapElement : lapsJson) {
             JsonObject lapJson = lapElement.getAsJsonObject();
 
@@ -738,7 +749,7 @@ public class ImportServiceImpl implements ImportService {
             }
 
             // Create lap
-            Lap lap = createLap(lapJson, carId, carDriver.get().getDriverId());
+            Lap lap = createLap(lapJson, carId, carDriver.get().getDriverId(), sessionDurationSeconds, sessionStartDateTime);
             LOGGER.info(lap.toString());
 
             // Process sector times
@@ -771,9 +782,11 @@ public class ImportServiceImpl implements ImportService {
      * @param lapJson  the JSON data for the lap
      * @param carId    the ID of the car
      * @param driverId the ID of the driver
+     * @param sessionDurationSeconds the duration of the session in seconds
+     * @param sessionStartDateTime the start date and time of the session
      * @return the lap entity
      */
-    private Lap createLap(JsonObject lapJson, Long carId, Long driverId) {
+    private Lap createLap(JsonObject lapJson, Long carId, Long driverId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
         // Parse lap number safely, handling both string and integer formats
         int lapNumber = parseJsonNumberAsInt(lapJson.get("number"), "lap number");
 
@@ -796,10 +809,10 @@ public class ImportServiceImpl implements ImportService {
         String sessionElapsedStr = lapJson.get("session_elapsed").getAsString();
         newLap.setSessionElapsedSeconds(parseLapTime(sessionElapsedStr));
 
-        // Parse timestamp
+        // Parse timestamp - handle both 24-hour and shorter races
         String timestampStr = lapJson.get("hour").getAsString();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
-        newLap.setTimestamp(LocalDateTime.parse(timestampStr, formatter));
+        LocalDateTime timestamp = parseTimestamp(timestampStr, sessionDurationSeconds, sessionStartDateTime);
+        newLap.setTimestamp(timestamp);
 
         // Set average speed if available
         if (lapJson.has("average_speed_kph") && !lapJson.get("average_speed_kph").isJsonNull()) {
@@ -830,6 +843,46 @@ public class ImportServiceImpl implements ImportService {
         double seconds = Double.parseDouble(parts[1]);
 
         return BigDecimal.valueOf(minutes * 60 + seconds);
+    }
+
+    /**
+     * Parses a timestamp string, handling both 24-hour and shorter races.
+     * For 24-hour races (session duration >= 24 hours), expects full date-time format.
+     * For shorter races, expects 24-hour time format without AM/PM.
+     *
+     * @param timestampStr           the timestamp string to parse
+     * @param sessionDurationSeconds the duration of the session in seconds
+     * @param sessionStartDateTime   the start date and time of the session
+     * @return the parsed LocalDateTime
+     */
+    private LocalDateTime parseTimestamp(String timestampStr, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
+        // Check if this is a 24-hour race (24 hours = 86400 seconds)
+        boolean is24HourRace = sessionDurationSeconds >= 86400;
+
+        if (is24HourRace) {
+            // For 24-hour races, expect full date-time format: "M/d/yyyy h:mm:ss a"
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
+            return LocalDateTime.parse(timestampStr, formatter);
+        } else {
+            // For shorter races, expect 24-hour time format: "HH:mm:ss"
+            try {
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime time = LocalTime.parse(timestampStr, timeFormatter);
+                // Use the actual session start date
+                return LocalDateTime.of(sessionStartDateTime.toLocalDate(), time);
+            } catch (Exception e) {
+                // If 24-hour time parsing fails, try the original full date-time format as fallback
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
+                    return LocalDateTime.parse(timestampStr, formatter);
+                } catch (Exception e2) {
+                    // If all parsing fails, use session start time as fallback
+                    LOGGER.warn("Failed to parse timestamp '{}' for session duration {} seconds, using session start time",
+                            timestampStr, sessionDurationSeconds);
+                    return sessionStartDateTime;
+                }
+            }
+        }
     }
 
     /**
