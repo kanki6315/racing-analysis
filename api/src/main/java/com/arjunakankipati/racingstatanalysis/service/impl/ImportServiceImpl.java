@@ -155,6 +155,7 @@ public class ImportServiceImpl implements ImportService {
             try {
                 return JsonParser.parseString(jsonString).getAsJsonObject();
             } catch (JsonParseException e) {
+                LOGGER.error("Failed to parse JSON data from URL: " + url, e);
                 throw new ReportURLNotValidException("Invalid JSON format in response", e);
             }
         }
