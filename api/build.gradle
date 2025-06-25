@@ -82,6 +82,3 @@ flyway {
     locations = ['filesystem:src/main/resources/db/migration']
     baselineOnMigrate = true
 }
-
-bootJar.dependsOn -= 'generateJooq'
-build.dependsOn -= 'generateJooq'
