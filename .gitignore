@@ -18,6 +18,7 @@ api/bin/
 !api/**/src/main/**/bin/
 !api/**/src/test/**/bin/
 !api/src/build/libs/racing-stat-analysis-latest.jar
+api/src/main/resources/certs/*
 
 ### IntelliJ IDEA ###
 .idea
