@@ -365,8 +365,8 @@ public class SeriesServiceImpl implements SeriesService {
                     .toList();
         }
 
-        // Get all drivers for these car entries
-        List<DriverDTO> driverDTOs = carEntries.stream()
+        // Get all drivers for these car entries with team and car information
+        List<DriverWithTeamDTO> driverWithTeamDTOs = carEntries.stream()
                 .flatMap(carEntry -> {
                     // Get car drivers for this car entry
                     List<CarDriver> carDrivers = carDriverRepository.findByCarId(carEntry.getId());
@@ -376,24 +376,62 @@ public class SeriesServiceImpl implements SeriesService {
                                 // Get driver information
                                 Driver driver = driverRepository.findById(carDriver.getDriverId()).orElse(null);
                                 if (driver != null) {
-                                    return new DriverDTO(
+                                    // Get team information
+                                    Team team = teamRepository.findById(carEntry.getTeamId()).orElse(null);
+                                    String teamName = team != null ? team.getName() : null;
+
+                                    // Get car model information
+                                    CarModel carModel = carModelRepository.findById(carEntry.getCarModelId()).orElse(null);
+                                    CarModelDTO carModelDTO = null;
+                                    if (carModel != null) {
+                                        // Get manufacturer information
+                                        Manufacturer manufacturer = null;
+                                        ManufacturerDTO manufacturerDTO = null;
+                                        if (carModel.getManufacturerId() != null) {
+                                            manufacturer = manufacturerRepository.findById(carModel.getManufacturerId()).orElse(null);
+                                            if (manufacturer != null) {
+                                                manufacturerDTO = new ManufacturerDTO(
+                                                        manufacturer.getId(),
+                                                        manufacturer.getName(),
+                                                        manufacturer.getCountry(),
+                                                        null // Manufacturer model doesn't have description field
+                                                );
+                                            }
+                                        }
+
+                                        carModelDTO = new CarModelDTO(
+                                                carModel.getId(),
+                                                carModel.getManufacturerId(),
+                                                carModel.getName(),
+                                                carModel.getFullName(),
+                                                carModel.getYearModel(),
+                                                carModel.getDescription()
+                                        );
+                                        carModelDTO.setManufacturer(manufacturerDTO);
+                                    }
+
+                                    return new DriverWithTeamDTO(
                                             driver.getId(),
                                             driver.getFirstName(),
                                             driver.getLastName(),
                                             driver.getNationality(),
                                             driver.getHometown(),
                                             driver.getLicenseType(),
-                                            carDriver.getDriverNumber()
+                                            carDriver.getDriverNumber(),
+                                            carEntry.getTeamId(),
+                                            teamName,
+                                            carEntry.getNumber(),
+                                            carModelDTO
                                     );
                                 }
                                 return null;
                             })
-                            .filter(driverDTO -> driverDTO != null);
+                            .filter(driverWithTeamDTO -> driverWithTeamDTO != null);
                 })
                 .distinct() // Remove duplicate drivers
                 .toList();
 
         // Create response DTO
-        return new DriversResponseDTO(event.getId(), event.getName(), driverDTOs);
+        return new DriversResponseDTO(event.getId(), event.getName(), driverWithTeamDTOs);
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 public class DriversResponseDTO {
     private Long eventId;
     private String eventName;
-    private List<DriverDTO> drivers;
+    private List<DriverWithTeamDTO> drivers;
 
     public DriversResponseDTO() {
         this.drivers = new ArrayList<>();
@@ -21,7 +21,7 @@ public class DriversResponseDTO {
         this.drivers = new ArrayList<>();
     }
 
-    public DriversResponseDTO(Long eventId, String eventName, List<DriverDTO> drivers) {
+    public DriversResponseDTO(Long eventId, String eventName, List<DriverWithTeamDTO> drivers) {
         this.eventId = eventId;
         this.eventName = eventName;
         this.drivers = drivers != null ? drivers : new ArrayList<>();
@@ -43,15 +43,15 @@ public class DriversResponseDTO {
         this.eventName = eventName;
     }
 
-    public List<DriverDTO> getDrivers() {
+    public List<DriverWithTeamDTO> getDrivers() {
         return drivers;
     }
 
-    public void setDrivers(List<DriverDTO> drivers) {
+    public void setDrivers(List<DriverWithTeamDTO> drivers) {
         this.drivers = drivers != null ? drivers : new ArrayList<>();
     }
 
-    public void addDriver(DriverDTO driver) {
+    public void addDriver(DriverWithTeamDTO driver) {
         if (this.drivers == null) {
             this.drivers = new ArrayList<>();
         }
