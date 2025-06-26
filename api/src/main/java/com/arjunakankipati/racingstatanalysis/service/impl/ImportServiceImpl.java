@@ -504,21 +504,22 @@ public class ImportServiceImpl implements ImportService {
             Class carClass = findOrCreateClass(seriesId, participantJson.get("class").getAsString());
             LOGGER.info(carClass.toString());
 
-            // Create car
-            CarEntry car = createCar(participantJson, sessionId, team.getId(),
+            // Create car entry
+            CarEntry carEntry = createCarEntry(participantJson, sessionId, team.getId(),
                     carClass.getId(), manufacturer.getId());
-            LOGGER.info(car.toString());
+            LOGGER.info(carEntry.toString());
 
             // Process drivers
+            List<CarDriver> carDrivers = new ArrayList<>();
             if (participantJson.has("drivers") && participantJson.get("drivers").isJsonArray()) {
                 JsonArray driversJson = participantJson.getAsJsonArray("drivers");
-                processDrivers(driversJson, car.getId());
+                carDrivers.addAll(processDrivers(driversJson, carEntry.getId()));
             }
 
             // Process laps
             if (participantJson.has("laps") && participantJson.get("laps").isJsonArray()) {
                 JsonArray lapsJson = participantJson.getAsJsonArray("laps");
-                processLaps(lapsJson, car.getId(), session.getDurationSeconds(), session.getStartDatetime());
+                processLaps(lapsJson, carEntry.getId(), carDrivers, session.getDurationSeconds(), session.getStartDatetime());
             }
         }
     }
@@ -598,20 +599,17 @@ public class ImportServiceImpl implements ImportService {
      * @param manufacturerId  the ID of the manufacturer
      * @return the car entry entity
      */
-    private CarEntry createCar(JsonObject participantJson, Long sessionId, Long teamId,
-                          Long classId, Long manufacturerId) {
+    private CarEntry createCarEntry(JsonObject participantJson, Long sessionId, Long teamId,
+                                    Long classId, Long manufacturerId) {
         // Parse car number safely, handling both string and integer formats
         String carNumber = parseJsonNumberAsString(participantJson.get("number"), "car number");
-        validateCarNumber(carNumber);
-        
-        String vehicleModel = participantJson.get("vehicle").getAsString();
-
         // Check if car entry already exists for this session and car number
         Optional<CarEntry> existingCarEntry = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
         if (existingCarEntry.isPresent()) {
             return existingCarEntry.get();
         }
 
+        String vehicleModel = participantJson.get("vehicle").getAsString();
         // Find or create car model
         CarModel carModel = findOrCreateCarModel(vehicleModel, manufacturerId);
 
@@ -662,9 +660,10 @@ public class ImportServiceImpl implements ImportService {
      * Processes the drivers data.
      *
      * @param driversJson the JSON data for the drivers
-     * @param carId       the ID of the car
+     * @param carEntryId       the ID of the car
      */
-    private void processDrivers(JsonArray driversJson, Long carId) {
+    private List<CarDriver> processDrivers(JsonArray driversJson, Long carEntryId) {
+        List<CarDriver> carDriverList = new ArrayList<>();
         for (JsonElement driverElement : driversJson) {
             JsonObject driverJson = driverElement.getAsJsonObject();
 
@@ -676,8 +675,9 @@ public class ImportServiceImpl implements ImportService {
             int driverNumber = parseJsonNumberAsInt(driverJson.get("number"), "driver number");
 
             // Create car-driver association
-            createCarDriver(carId, driver.getId(), driverNumber);
+            carDriverList.add(createCarDriver(carEntryId, driver.getId(), driverNumber));
         }
+        return carDriverList;
     }
 
     /**
@@ -717,20 +717,20 @@ public class ImportServiceImpl implements ImportService {
     /**
      * Creates a car-driver association.
      *
-     * @param carId        the ID of the car
+     * @param carEntryId        the ID of the car
      * @param driverId     the ID of the driver
      * @param driverNumber the driver number
      * @return the car-driver entity
      */
-    private CarDriver createCarDriver(Long carId, Long driverId, Integer driverNumber) {
+    private CarDriver createCarDriver(Long carEntryId, Long driverId, Integer driverNumber) {
         // Check if association already exists
-        Optional<CarDriver> existingCarDriver = carDriverRepository.findByCarIdAndDriverId(carId, driverId);
+        Optional<CarDriver> existingCarDriver = carDriverRepository.findByCarIdAndDriverId(carEntryId, driverId);
         if (existingCarDriver.isPresent()) {
             return existingCarDriver.get();
         }
 
         CarDriver newCarDriver = new CarDriver();
-        newCarDriver.setCarId(carId);
+        newCarDriver.setCarId(carEntryId);
         newCarDriver.setDriverId(driverId);
         newCarDriver.setDriverNumber(driverNumber);
 
@@ -745,15 +745,17 @@ public class ImportServiceImpl implements ImportService {
      * @param sessionDurationSeconds the duration of the session in seconds
      * @param sessionStartDateTime the start date and time of the session
      */
-    private void processLaps(JsonArray lapsJson, Long carId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
+    private void processLaps(JsonArray lapsJson, Long carId, List<CarDriver> carDrivers, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
         List<Lap> lapsToInsert = new ArrayList<>();
         List<JsonObject> lapJsons = new ArrayList<>();
+
         // First, parse all laps and collect unsaved Lap entities
         for (JsonElement lapElement : lapsJson) {
             JsonObject lapJson = lapElement.getAsJsonObject();
             int driverNumber = parseJsonNumberAsInt(lapJson.get("driver_number"), "driver_number");
-            Optional<CarDriver> carDriver = carDriverRepository.findByCarIdAndDriverNumber(carId, driverNumber);
+            Optional<CarDriver> carDriver = carDrivers.stream().filter(cd -> cd.getDriverNumber() == driverNumber).findFirst();
             if (!carDriver.isPresent()) {
+                LOGGER.warn("No car-driver association found for driver number {} in lap {}", driverNumber, lapJson);
                 continue;
             }
             Lap lap = createLapUnsaved(lapJson, carId, carDriver.get().getDriverId(), sessionDurationSeconds, sessionStartDateTime);
@@ -794,10 +796,6 @@ public class ImportServiceImpl implements ImportService {
     // Utility method to create an unsaved Lap entity
     private Lap createLapUnsaved(JsonObject lapJson, Long carId, Long driverId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
         int lapNumber = parseJsonNumberAsInt(lapJson.get("number"), "lap number");
-        Optional<Lap> existingLap = lapRepository.findByCarIdAndLapNumber(carId, lapNumber);
-        if (existingLap.isPresent()) {
-            return existingLap.get();
-        }
         Lap newLap = new Lap();
         newLap.setCarId(carId);
         newLap.setDriverId(driverId);
@@ -832,10 +830,6 @@ public class ImportServiceImpl implements ImportService {
     // Utility method to create an unsaved Sector entity
     private Sector createSectorUnsaved(JsonObject sectorJson, Long lapId) {
         int sectorNumber = parseJsonNumberAsInt(sectorJson.get("index"), "sector index");
-        Optional<Sector> existingSector = sectorRepository.findByLapIdAndSectorNumber(lapId, sectorNumber);
-        if (existingSector.isPresent()) {
-            return existingSector.get();
-        }
         Sector newSector = new Sector();
         newSector.setLapId(lapId);
         newSector.setSectorNumber(sectorNumber);
@@ -1019,32 +1013,5 @@ public class ImportServiceImpl implements ImportService {
         }
 
         throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
-    }
-
-    /**
-     * Validates that a car number is reasonable.
-     *
-     * @param carNumber the car number to validate
-     * @throws IllegalArgumentException if the car number is not reasonable
-     */
-    private void validateCarNumber(String carNumber) {
-        if (carNumber == null || carNumber.trim().isEmpty()) {
-            throw new IllegalArgumentException("Car number cannot be null or empty");
-        }
-
-        // Remove leading zeros for validation
-        String normalizedNumber = carNumber.replaceFirst("^0+", "");
-        if (normalizedNumber.isEmpty()) {
-            normalizedNumber = "0"; // Handle case where number is all zeros
-        }
-
-        try {
-            int numberValue = Integer.parseInt(normalizedNumber);
-            if (numberValue < 0 || numberValue > 999) {
-                throw new IllegalArgumentException("Car number must be between 0 and 999, got: " + carNumber);
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Car number must be a valid number, got: " + carNumber);
-        }
     }
 }
