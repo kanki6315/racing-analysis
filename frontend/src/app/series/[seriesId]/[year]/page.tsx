@@ -189,7 +189,7 @@ export default function YearPage() {
         </div>
 
         <div className="grid gap-8">
-          {events.map((event) => (
+          {(events.slice().sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())).map((event) => (
             <div
               key={event.eventId}
               className="bg-white rounded-lg shadow-md overflow-hidden"
