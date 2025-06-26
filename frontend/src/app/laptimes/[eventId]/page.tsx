@@ -109,7 +109,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingSessions(true);
       setSessionsError(null);
-      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/series/events/${eventId}/sessions`);
+      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/events/${eventId}/sessions`);
       setSessionsData(data);
       
       // Auto-select the first session

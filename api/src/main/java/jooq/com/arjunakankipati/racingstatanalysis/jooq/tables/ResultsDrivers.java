@@ -95,11 +95,9 @@ public class ResultsDrivers extends TableImpl<ResultsDriversRecord> {
     public static class ResultsDriversPath extends ResultsDrivers implements Path<ResultsDriversRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> ResultsDriversPath(Table<O> path, ForeignKey<O, ResultsDriversRecord> childPath, InverseForeignKey<O, ResultsDriversRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private ResultsDriversPath(Name alias, Table<ResultsDriversRecord> aliased) {
             super(alias, aliased);
         }

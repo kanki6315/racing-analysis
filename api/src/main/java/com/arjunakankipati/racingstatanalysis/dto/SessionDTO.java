@@ -14,8 +14,6 @@ public class SessionDTO {
     private String type;
     private LocalDateTime startDatetime;
     private Integer durationSeconds;
-    private String importUrl;
-    private LocalDateTime importTimestamp;
 
     /**
      * Default constructor.
@@ -33,11 +31,9 @@ public class SessionDTO {
      * @param type             the type of the session (e.g., "Race", "Practice", "Qualifying")
      * @param startDatetime    the start date and time of the session
      * @param durationSeconds  the duration of the session in seconds
-     * @param importUrl        the URL from which the session data was imported
-     * @param importTimestamp  the timestamp when the session data was imported
      */
     public SessionDTO(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime,
-                      Integer durationSeconds, String importUrl, LocalDateTime importTimestamp) {
+                      Integer durationSeconds) {
         this.id = id;
         this.eventId = eventId;
         this.circuitId = circuitId;
@@ -45,8 +41,6 @@ public class SessionDTO {
         this.type = type;
         this.startDatetime = startDatetime;
         this.durationSeconds = durationSeconds;
-        this.importUrl = importUrl;
-        this.importTimestamp = importTimestamp;
     }
 
     /**
@@ -175,42 +169,6 @@ public class SessionDTO {
         this.durationSeconds = durationSeconds;
     }
 
-    /**
-     * Gets the URL from which the session data was imported.
-     *
-     * @return the import URL
-     */
-    public String getImportUrl() {
-        return importUrl;
-    }
-
-    /**
-     * Sets the URL from which the session data was imported.
-     *
-     * @param importUrl the import URL to set
-     */
-    public void setImportUrl(String importUrl) {
-        this.importUrl = importUrl;
-    }
-
-    /**
-     * Gets the timestamp when the session data was imported.
-     *
-     * @return the import timestamp
-     */
-    public LocalDateTime getImportTimestamp() {
-        return importTimestamp;
-    }
-
-    /**
-     * Sets the timestamp when the session data was imported.
-     *
-     * @param importTimestamp the import timestamp to set
-     */
-    public void setImportTimestamp(LocalDateTime importTimestamp) {
-        this.importTimestamp = importTimestamp;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -222,14 +180,12 @@ public class SessionDTO {
                 Objects.equals(name, that.name) &&
                 Objects.equals(type, that.type) &&
                 Objects.equals(startDatetime, that.startDatetime) &&
-                Objects.equals(durationSeconds, that.durationSeconds) &&
-                Objects.equals(importUrl, that.importUrl) &&
-                Objects.equals(importTimestamp, that.importTimestamp);
+                Objects.equals(durationSeconds, that.durationSeconds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, eventId, circuitId, name, type, startDatetime, durationSeconds, importUrl, importTimestamp);
+        return Objects.hash(id, eventId, circuitId, name, type, startDatetime, durationSeconds);
     }
 
     @Override
@@ -242,8 +198,6 @@ public class SessionDTO {
                 ", type='" + type + '\'' +
                 ", startDatetime=" + startDatetime +
                 ", durationSeconds=" + durationSeconds +
-                ", importUrl='" + importUrl + '\'' +
-                ", importTimestamp=" + importTimestamp +
                 '}';
     }
 } 

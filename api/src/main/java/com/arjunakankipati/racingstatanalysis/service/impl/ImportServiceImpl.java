@@ -328,7 +328,7 @@ public class ImportServiceImpl implements ImportService {
         LOGGER.info(event.toString());
 
         // Create session
-        Session session = createSession(sessionJson, event.getId(), circuit.getId(), url);
+        Session session = createSession(sessionJson, event.getId(), circuit.getId());
         LOGGER.info(session.toString());
 
         // Process participants
@@ -417,17 +417,9 @@ public class ImportServiceImpl implements ImportService {
      * @param sessionJson the JSON data for the session
      * @param eventId     the ID of the event
      * @param circuitId   the ID of the circuit
-     * @param importUrl   the URL of the imported data
      * @return the session entity
      */
-    private Session createSession(JsonObject sessionJson, Long eventId, Long circuitId, String importUrl) {
-        Session cached = sessionCache.getIfPresent(importUrl);
-        if (cached != null) return cached;
-        Optional<Session> existingSession = sessionRepository.findByImportUrl(importUrl);
-        if (existingSession.isPresent()) {
-            sessionCache.put(importUrl, existingSession.get());
-            return existingSession.get();
-        }
+    private Session createSession(JsonObject sessionJson, Long eventId, Long circuitId) {
         Session newSession = new Session();
         newSession.setEventId(eventId);
         newSession.setCircuitId(circuitId);
@@ -450,11 +442,8 @@ public class ImportServiceImpl implements ImportService {
             throw new IllegalArgumentException("finalize_type object not found in session JSON");
         }
         newSession.setDurationSeconds(durationSeconds);
-        newSession.setImportUrl(importUrl);
-        newSession.setImportTimestamp(LocalDateTime.now());
         LOGGER.info("Session parsed: " + newSession);
         Session saved = sessionRepository.save(newSession);
-        sessionCache.put(importUrl, saved);
         return saved;
     }
 

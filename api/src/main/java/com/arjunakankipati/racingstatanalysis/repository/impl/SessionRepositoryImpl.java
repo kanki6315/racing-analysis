@@ -43,9 +43,7 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 sessionRec.getName(),
                 sessionRec.getType(),
                 sessionRec.getStartDatetime(),
-                sessionRec.getDurationSeconds(),
-                sessionRec.getImportUrl(),
-                sessionRec.getImportTimestamp()
+                sessionRec.getDurationSeconds()
         );
     }
 
@@ -58,9 +56,7 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                         Tables.SESSIONS.NAME,
                         Tables.SESSIONS.TYPE,
                         Tables.SESSIONS.START_DATETIME,
-                        Tables.SESSIONS.DURATION_SECONDS,
-                        Tables.SESSIONS.IMPORT_URL,
-                        Tables.SESSIONS.IMPORT_TIMESTAMP
+                        Tables.SESSIONS.DURATION_SECONDS
                 )
                 .values(
                         session.getEventId(),
@@ -68,9 +64,7 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                         session.getName(),
                         session.getType(),
                         session.getStartDatetime(),
-                        session.getDurationSeconds(),
-                        session.getImportUrl(),
-                        session.getImportTimestamp()
+                        session.getDurationSeconds()
                 )
                 .returning()
                 .fetchOne();
@@ -87,8 +81,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 .set(Tables.SESSIONS.TYPE, session.getType())
                 .set(Tables.SESSIONS.START_DATETIME, session.getStartDatetime())
                 .set(Tables.SESSIONS.DURATION_SECONDS, session.getDurationSeconds())
-                .set(Tables.SESSIONS.IMPORT_URL, session.getImportUrl())
-                .set(Tables.SESSIONS.IMPORT_TIMESTAMP, session.getImportTimestamp())
                 .where(idField.eq(session.getId()))
                 .execute();
     }
@@ -137,17 +129,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 .where(Tables.SESSIONS.START_DATETIME.ge(startFrom))
                 .and(Tables.SESSIONS.START_DATETIME.le(startTo))
                 .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public Optional<Session> findByImportUrl(String importUrl) {
-        Record record = dsl.select()
-                .from(table)
-                .where(Tables.SESSIONS.IMPORT_URL.eq(importUrl))
-                .fetchOne();
-
-        return Optional.ofNullable(record)
                 .map(this::mapToEntity);
     }
 

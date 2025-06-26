@@ -55,14 +55,6 @@ public interface SessionRepository extends BaseRepository<Session, Long> {
     List<Session> findByStartDatetimeBetween(LocalDateTime startFrom, LocalDateTime startTo);
 
     /**
-     * Find a session by its import URL.
-     *
-     * @param importUrl the import URL to find a session for
-     * @return an Optional containing the found session, or empty if not found
-     */
-    Optional<Session> findByImportUrl(String importUrl);
-
-    /**
      * Find a session by event ID, name, type, and start datetime.
      *
      * @param eventId       the event ID

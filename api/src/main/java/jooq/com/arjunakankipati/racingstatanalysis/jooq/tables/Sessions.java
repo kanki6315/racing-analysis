@@ -80,16 +80,6 @@ public class Sessions extends TableImpl<SessionsRecord> {
      */
     public final TableField<SessionsRecord, Integer> DURATION_SECONDS = createField(DSL.name("duration_seconds"), SQLDataType.INTEGER.nullable(false), this, "");
 
-    /**
-     * The column <code>public.sessions.import_url</code>.
-     */
-    public final TableField<SessionsRecord, String> IMPORT_URL = createField(DSL.name("import_url"), SQLDataType.VARCHAR(2048), this, "");
-
-    /**
-     * The column <code>public.sessions.import_timestamp</code>.
-     */
-    public final TableField<SessionsRecord, LocalDateTime> IMPORT_TIMESTAMP = createField(DSL.name("import_timestamp"), SQLDataType.LOCALDATETIME(6), this, "");
-
     private Sessions(Name alias, Table<SessionsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

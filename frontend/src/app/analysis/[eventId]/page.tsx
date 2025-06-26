@@ -128,7 +128,7 @@ export default function AnalysisPage() {
     try {
       setLoadingSessions(true);
       setSessionsError(null);
-      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/series/events/${eventId}/sessions`);
+      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/events/${eventId}/sessions`);
       setSessionsData(data);
       setSessionId(''); // Default to "none"
     } catch (err) {

@@ -231,37 +231,6 @@ public class SeriesServiceImpl implements SeriesService {
      * {@inheritDoc}
      */
     @Override
-    public SessionsResponseDTO findSessionsByEventId(Long eventId) {
-        // Find the event by ID
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(ResourceNotFoundException::new);
-
-        // Find all sessions for this event
-        List<Session> sessions = sessionRepository.findByEventId(eventId);
-
-        // Convert to DTOs
-        List<SessionDTO> sessionDTOs = sessions.stream()
-                .map(session -> new SessionDTO(
-                        session.getId(),
-                        session.getEventId(),
-                        session.getCircuitId(),
-                        session.getName(),
-                        session.getType(),
-                        session.getStartDatetime(),
-                        session.getDurationSeconds(),
-                        session.getImportUrl(),
-                        session.getImportTimestamp()
-                ))
-                .toList();
-
-        // Create response DTO
-        return new SessionsResponseDTO(event.getId(), event.getName(), sessionDTOs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public CarModelsResponseDTO findCarModelsByEventIdAndClassId(Long eventId, Long classId) {
         // Find the event by ID
         Event event = eventRepository.findById(eventId)

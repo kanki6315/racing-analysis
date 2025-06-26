@@ -117,34 +117,6 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
         return (Integer) get(6);
     }
 
-    /**
-     * Setter for <code>public.sessions.import_url</code>.
-     */
-    public void setImportUrl(String value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.import_url</code>.
-     */
-    public String getImportUrl() {
-        return (String) get(7);
-    }
-
-    /**
-     * Setter for <code>public.sessions.import_timestamp</code>.
-     */
-    public void setImportTimestamp(LocalDateTime value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.import_timestamp</code>.
-     */
-    public LocalDateTime getImportTimestamp() {
-        return (LocalDateTime) get(8);
-    }
-
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -168,7 +140,7 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     /**
      * Create a detached, initialised SessionsRecord
      */
-    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds, String importUrl, LocalDateTime importTimestamp) {
+    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds) {
         super(Sessions.SESSIONS);
 
         setId(id);
@@ -178,8 +150,6 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
         setType(type);
         setStartDatetime(startDatetime);
         setDurationSeconds(durationSeconds);
-        setImportUrl(importUrl);
-        setImportTimestamp(importTimestamp);
         resetChangedOnNotNull();
     }
 }

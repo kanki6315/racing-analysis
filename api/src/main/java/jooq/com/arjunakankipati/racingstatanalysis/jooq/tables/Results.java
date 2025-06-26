@@ -154,11 +154,9 @@ public class Results extends TableImpl<ResultsRecord> {
     public static class ResultsPath extends Results implements Path<ResultsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> ResultsPath(Table<O> path, ForeignKey<O, ResultsRecord> childPath, InverseForeignKey<O, ResultsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private ResultsPath(Name alias, Table<ResultsRecord> aliased) {
             super(alias, aliased);
         }
