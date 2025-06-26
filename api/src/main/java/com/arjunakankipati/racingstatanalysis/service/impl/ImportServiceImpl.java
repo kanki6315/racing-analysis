@@ -902,7 +902,10 @@ public class ImportServiceImpl implements ImportService {
                     result.setFlLapnum(parseInteger(getValueByHeader(headers, values, "FL_LAPNUM")));
                     result.setFlTime(getValueByHeader(headers, values, "FL_TIME"));
                     result.setFlKph(parseBigDecimal(getValueByHeader(headers, values, "FL_KPH")));
-                    result.setPosition(parseInteger(getValueByHeader(headers, values, "POSITION")));
+                    // csv files are prone to having BOM and java decided NOPE LETS NOT FIX
+                    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4508058
+                    // Position is guaranteed to be position 0 in csvs, so we hardcode.
+                    result.setPosition(parseInteger(values[0]));
                     resultsToSave.add(result);
                 }
                 // Save all results (batch)
