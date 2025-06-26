@@ -14,6 +14,7 @@ public class CarEntryDTO {
     private String tireSupplier;
     private Long classId;
     private Long teamId;
+    private String teamName;
     private List<DriverDTO> drivers;
 
     public CarEntryDTO() {
@@ -21,13 +22,14 @@ public class CarEntryDTO {
     }
 
     public CarEntryDTO(Long carId, String number, CarModelDTO carModel, String tireSupplier,
-                       Long classId, Long teamId) {
+                       Long classId, Long teamId, String teamName) {
         this.carId = carId;
         this.number = number;
         this.carModel = carModel;
         this.tireSupplier = tireSupplier;
         this.classId = classId;
         this.teamId = teamId;
+        this.teamName = teamName;
         this.drivers = new ArrayList<>();
     }
 
@@ -77,6 +79,14 @@ public class CarEntryDTO {
 
     public void setTeamId(Long teamId) {
         this.teamId = teamId;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
     }
 
     public List<DriverDTO> getDrivers() {

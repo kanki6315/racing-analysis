@@ -22,14 +22,16 @@ public class ResultsController {
     private final CarDriverRepository carDriverRepository;
     private final DriverRepository driverRepository;
     private final CarModelRepository carModelRepository;
+    private final TeamRepository teamRepository;
 
     @Autowired
-    public ResultsController(ResultRepository resultRepository, CarEntryRepository carEntryRepository, CarDriverRepository carDriverRepository, DriverRepository driverRepository, CarModelRepository carModelRepository) {
+    public ResultsController(ResultRepository resultRepository, CarEntryRepository carEntryRepository, CarDriverRepository carDriverRepository, DriverRepository driverRepository, CarModelRepository carModelRepository, TeamRepository teamRepository) {
         this.resultRepository = resultRepository;
         this.carEntryRepository = carEntryRepository;
         this.carDriverRepository = carDriverRepository;
         this.driverRepository = driverRepository;
         this.carModelRepository = carModelRepository;
+        this.teamRepository = teamRepository;
     }
 
     @GetMapping("/api/v1/sessions/{sessionId}/results")
@@ -58,13 +60,21 @@ public class ResultsController {
                         );
                     }
                 }
+                String teamName = null;
+                if (carEntry.getTeamId() != null) {
+                    Team team = teamRepository.findById(carEntry.getTeamId()).orElse(null);
+                    if (team != null) {
+                        teamName = team.getName();
+                    }
+                }
                 carEntryDTO = new CarEntryDTO(
                         carEntry.getId(),
                         carEntry.getNumber(),
                         carModelDTO,
                         carEntry.getTireSupplier(),
                         carEntry.getClassId(),
-                        carEntry.getTeamId()
+                        carEntry.getTeamId(),
+                        teamName
                 );
                 // Get drivers for this car entry
                 List<CarDriver> carDrivers = carDriverRepository.findByCarId(carEntry.getId());

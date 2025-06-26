@@ -197,7 +197,8 @@ public class SeriesServiceImpl implements SeriesService {
                             carModelDTO,
                             carEntry.getTireSupplier(),
                             carEntry.getClassId(),
-                            carEntry.getTeamId()
+                            carEntry.getTeamId(),
+                            null
                     );
                 })
                 .toList();

@@ -138,7 +138,8 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
                                 carModelDTO,
                                 carTireSupplier,
                                 carClassId,
-                                teamId
+                                teamId,
+                                teamName
                         );
                         teamDTO.addCar(car);
                         return car;
