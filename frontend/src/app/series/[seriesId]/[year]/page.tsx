@@ -65,45 +65,42 @@ export default function YearPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [eventTeams, setEventTeams] = useState<Record<number, TeamsResponse>>({});
   const [eventClasses, setEventClasses] = useState<Record<number, ClassesResponseDTO>>({});
-  const [loading, setLoading] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingEventDetails, setLoadingEventDetails] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEvents = async () => {
       try {
         // Fetch events for the series and year
         const eventsData: Event[] = await apiRequest<Event[]>(`/series/${seriesId}/${year}/events`);
         setEvents(eventsData);
+        setLoadingEvents(false);
 
-        // Fetch teams and classes for each event
-        const teamsData: Record<number, TeamsResponse> = {};
-        const classesData: Record<number, ClassesResponseDTO> = {};
-        
-        for (const event of eventsData) {
+        // For each event, fetch teams and classes in parallel
+        eventsData.forEach(async (event) => {
+          setLoadingEventDetails(prev => ({ ...prev, [event.eventId]: true }));
           try {
-            // Fetch teams
-            const teamsResult: TeamsResponse = await apiRequest<TeamsResponse>(`/series/events/${event.eventId}/teams`);
-            teamsData[event.eventId] = teamsResult;
-            
-            // Fetch classes
-            const classesResult: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/series/events/${event.eventId}/classes`);
-            classesData[event.eventId] = classesResult;
+            const [teamsResult, classesResult] = await Promise.all([
+              apiRequest<TeamsResponse>(`/series/events/${event.eventId}/teams`),
+              apiRequest<ClassesResponseDTO>(`/series/events/${event.eventId}/classes`)
+            ]);
+            setEventTeams(prev => ({ ...prev, [event.eventId]: teamsResult }));
+            setEventClasses(prev => ({ ...prev, [event.eventId]: classesResult }));
           } catch (err) {
             console.error(`Failed to fetch data for event ${event.eventId}:`, err);
+          } finally {
+            setLoadingEventDetails(prev => ({ ...prev, [event.eventId]: false }));
           }
-        }
-        
-        setEventTeams(teamsData);
-        setEventClasses(classesData);
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+        setLoadingEvents(false);
       }
     };
 
     if (seriesId && year) {
-      fetchData();
+      fetchEvents();
     }
   }, [seriesId, year]);
 
@@ -149,7 +146,7 @@ export default function YearPage() {
     });
   };
 
-  if (loading) {
+  if (loadingEvents) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading events...</div>
@@ -225,7 +222,14 @@ export default function YearPage() {
               </div>
 
               {/* Teams Table */}
-              {eventTeams[event.eventId] && (
+              {loadingEventDetails[event.eventId] ? (
+                <div className="p-6 flex items-center justify-center min-h-[120px]">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-2"></div>
+                    <div className="text-gray-500">Loading teams and classes...</div>
+                  </div>
+                </div>
+              ) : eventTeams[event.eventId] ? (
                 <div className="p-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-4">
                     Participating Teams ({eventTeams[event.eventId].teams.reduce((sum, team) => sum + (team.cars?.length || 0), 0)} cars)
@@ -332,9 +336,7 @@ export default function YearPage() {
                     </div>
                   </div>
                 </div>
-              )}
-
-              {!eventTeams[event.eventId] && (
+              ) : (
                 <div className="p-6">
                   <p className="text-gray-500 text-center">No team data available for this event</p>
                 </div>
