@@ -118,6 +118,7 @@ public class ImportServiceImpl implements ImportService {
             processData(jsonData, request.getUrl());
             importJobService.markCompleted(jobId);
         } catch (Exception e) {
+            LOGGER.error("Failed to process import for URL: " + request.getUrl(), e);
             importJobService.markFailed(jobId, e.getMessage());
         }
     }
@@ -451,12 +452,20 @@ public class ImportServiceImpl implements ImportService {
         if (sessionJson.has("weather") && sessionJson.get("weather").isJsonObject()) {
             JsonObject weatherJson = sessionJson.getAsJsonObject("weather");
             if (weatherJson.has("air_temperature")) {
-                String airTempStr = weatherJson.get("air_temperature").getAsString().replace(" ºC", "");
-                newSession.setWeatherAirTemp(new BigDecimal(airTempStr));
+                String airTempStr = weatherJson.get("air_temperature").getAsString().replace(" ºC", "").trim();
+                if (!airTempStr.isEmpty()) {
+                    newSession.setWeatherAirTemp(new BigDecimal(airTempStr));
+                } else {
+                    newSession.setWeatherAirTemp(null);
+                }
             }
             if (weatherJson.has("track_temperature")) {
-                String trackTempStr = weatherJson.get("track_temperature").getAsString().replace(" ºC", "");
-                newSession.setWeatherTrackTemp(new BigDecimal(trackTempStr));
+                String trackTempStr = weatherJson.get("track_temperature").getAsString().replace(" ºC", "").trim();
+                if (!trackTempStr.isEmpty()) {
+                    newSession.setWeatherTrackTemp(new BigDecimal(trackTempStr));
+                } else {
+                    newSession.setWeatherTrackTemp(null);
+                }
             }
             if (weatherJson.has("track_status")) {
                 newSession.setWeatherCondition(weatherJson.get("track_status").getAsString());
