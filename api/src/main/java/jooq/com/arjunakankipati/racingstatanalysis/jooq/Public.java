@@ -82,11 +82,6 @@ public class Public extends SchemaImpl {
     public final Results RESULTS = Results.RESULTS;
 
     /**
-     * The table <code>public.results_drivers</code>.
-     */
-    public final ResultsDrivers RESULTS_DRIVERS = ResultsDrivers.RESULTS_DRIVERS;
-
-    /**
      * The table <code>public.sectors</code>.
      */
     public final Sectors SECTORS = Sectors.SECTORS;
@@ -133,7 +128,6 @@ public class Public extends SchemaImpl {
             ImportJobs.IMPORT_JOBS,
             Laps.LAPS,
                 Results.RESULTS,
-                ResultsDrivers.RESULTS_DRIVERS,
             Sectors.SECTORS,
             Series.SERIES,
             Sessions.SESSIONS,

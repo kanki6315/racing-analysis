@@ -8,8 +8,6 @@ import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers.CarDriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps.LapsPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ResultsDrivers.ResultsDriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
 import org.jooq.*;
 import org.jooq.Record;
@@ -176,27 +174,6 @@ public class Drivers extends TableImpl<DriversRecord> {
             _laps = new LapsPath(this, null, Keys.LAPS__LAPS_DRIVER_ID_FKEY.getInverseKey());
 
         return _laps;
-    }
-
-    private transient ResultsDriversPath _resultsDrivers;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>public.results_drivers</code> table
-     */
-    public ResultsDriversPath resultsDrivers() {
-        if (_resultsDrivers == null)
-            _resultsDrivers = new ResultsDriversPath(this, null, Keys.RESULTS_DRIVERS__RESULTS_DRIVERS_DRIVER_ID_FKEY.getInverseKey());
-
-        return _resultsDrivers;
-    }
-
-    /**
-     * Get the implicit many-to-many join path to the
-     * <code>public.results</code> table
-     */
-    public ResultsPath results() {
-        return resultsDrivers().results();
     }
 
     @Override

@@ -53,6 +53,7 @@ public class ImportServiceImpl implements ImportService {
     private final LapRepository lapRepository;
     private final SectorRepository sectorRepository;
     private final ImportJobService importJobService;
+    private final ResultRepository resultRepository;
 
     private final OkHttpClient httpClient;
 
@@ -80,7 +81,8 @@ public class ImportServiceImpl implements ImportService {
                              CarDriverRepository carDriverRepository,
                              LapRepository lapRepository,
                              SectorRepository sectorRepository,
-                             ImportJobService importJobService) {
+                             ImportJobService importJobService,
+                             ResultRepository resultRepository) {
         this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
         this.circuitRepository = circuitRepository;
@@ -94,6 +96,7 @@ public class ImportServiceImpl implements ImportService {
         this.lapRepository = lapRepository;
         this.sectorRepository = sectorRepository;
         this.importJobService = importJobService;
+        this.resultRepository = resultRepository;
 
         // Initialize OkHttpClient with reasonable timeouts
         this.httpClient = new OkHttpClient.Builder()
@@ -839,6 +842,7 @@ public class ImportServiceImpl implements ImportService {
 
                 // 4. For each row, ensure car model, car entry, team, drivers exist
                 String row;
+                List<Result> resultsToSave = new ArrayList<>();
                 while ((row = reader.readLine()) != null) {
                     if (row.trim().isEmpty()) continue;
                     String[] values = row.split(";");
@@ -883,7 +887,26 @@ public class ImportServiceImpl implements ImportService {
                         // Create car-driver association
                         createCarDriver(carEntry.getId(), driver.getId(), i);
                     }
+
+                    // --- Parse and save result row ---
+                    Result result = new Result();
+                    result.setSessionId(session.getId());
+                    result.setCarEntryId(carEntry.getId());
+                    result.setCarNumber(carNumber);
+                    result.setTires(tireSupplier);
+                    result.setStatus(getValueByHeader(headers, values, "STATUS"));
+                    result.setLaps(parseInteger(getValueByHeader(headers, values, "LAPS")));
+                    result.setTotalTime(getValueByHeader(headers, values, "TOTAL_TIME"));
+                    result.setGapFirst(getValueByHeader(headers, values, "GAP_FIRST"));
+                    result.setGapPrevious(getValueByHeader(headers, values, "GAP_PREVIOUS"));
+                    result.setFlLapnum(parseInteger(getValueByHeader(headers, values, "FL_LAPNUM")));
+                    result.setFlTime(getValueByHeader(headers, values, "FL_TIME"));
+                    result.setFlKph(parseBigDecimal(getValueByHeader(headers, values, "FL_KPH")));
+                    result.setPosition(parseInteger(getValueByHeader(headers, values, "POSITION")));
+                    resultsToSave.add(result);
                 }
+                // Save all results (batch)
+                resultRepository.batchSave(resultsToSave);
                 reader.close();
                 return new ProcessResultsResponseDTO(session.getId(), "SUCCESS", null);
             }
@@ -952,5 +975,23 @@ public class ImportServiceImpl implements ImportService {
         driver.setLastName(lastName);
         // Leave other fields blank as per requirements
         return driverRepository.save(driver);
+    }
+
+    private Integer parseInteger(String value) {
+        try {
+            if (value == null || value.isBlank()) return null;
+            return Integer.parseInt(value.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private java.math.BigDecimal parseBigDecimal(String value) {
+        try {
+            if (value == null || value.isBlank()) return null;
+            return new java.math.BigDecimal(value.trim());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

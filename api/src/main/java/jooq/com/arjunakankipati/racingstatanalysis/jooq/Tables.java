@@ -69,11 +69,6 @@ public class Tables {
     public static final Results RESULTS = Results.RESULTS;
 
     /**
-     * The table <code>public.results_drivers</code>.
-     */
-    public static final ResultsDrivers RESULTS_DRIVERS = ResultsDrivers.RESULTS_DRIVERS;
-
-    /**
      * The table <code>public.sectors</code>.
      */
     public static final Sectors SECTORS = Sectors.SECTORS;

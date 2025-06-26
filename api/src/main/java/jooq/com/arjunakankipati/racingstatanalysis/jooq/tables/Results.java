@@ -8,8 +8,6 @@ import com.arjunakankipati.racingstatanalysis.jooq.Indexes;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers.DriversPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ResultsDrivers.ResultsDriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions.SessionsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ResultsRecord;
 import org.jooq.*;
@@ -224,27 +222,6 @@ public class Results extends TableImpl<ResultsRecord> {
             _sessions = new SessionsPath(this, Keys.RESULTS__RESULTS_SESSION_ID_FKEY, null);
 
         return _sessions;
-    }
-
-    private transient ResultsDriversPath _resultsDrivers;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>public.results_drivers</code> table
-     */
-    public ResultsDriversPath resultsDrivers() {
-        if (_resultsDrivers == null)
-            _resultsDrivers = new ResultsDriversPath(this, null, Keys.RESULTS_DRIVERS__RESULTS_DRIVERS_RESULT_ID_FKEY.getInverseKey());
-
-        return _resultsDrivers;
-    }
-
-    /**
-     * Get the implicit many-to-many join path to the
-     * <code>public.drivers</code> table
-     */
-    public DriversPath drivers() {
-        return resultsDrivers().drivers();
     }
 
     @Override
