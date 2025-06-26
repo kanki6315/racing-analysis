@@ -10,21 +10,12 @@ import java.util.List;
 public interface SeriesService {
 
     /**
-     * Finds all series.
+     * Finds all series, including the years for each series.
      *
-     * @return a list of all series
+     * @return a list of all series with their years
      * @throws UnsupportedOperationException if the operation is not implemented
      */
     List<SeriesResponseDTO> findAll();
-
-    /**
-     * Finds all years for a specific series.
-     *
-     * @param seriesId the ID of the series
-     * @return a response containing the years for the series
-     * @throws UnsupportedOperationException if the operation is not implemented
-     */
-    YearsResponseDTO findYearsBySeries(Long seriesId);
 
     List<EventsResponseDTO> findEventsForSeriesByYear(Long seriesId, Integer year);
 

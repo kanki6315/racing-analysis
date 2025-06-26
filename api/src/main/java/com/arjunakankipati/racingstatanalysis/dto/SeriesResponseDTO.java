@@ -1,5 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
+import java.util.List;
+
 /**
  * Data Transfer Object for series responses.
  * Contains information about a racing series.
@@ -8,6 +10,7 @@ public class SeriesResponseDTO {
     private Long id;
     private String name;
     private Integer eventCount;
+    private List<Integer> years;
 
     /**
      * Default constructor.
@@ -21,11 +24,13 @@ public class SeriesResponseDTO {
      * @param id the ID of the series
      * @param name the name of the series
      * @param eventCount the number of events in the series
+     * @param years the list of years for the series
      */
-    public SeriesResponseDTO(Long id, String name, Integer eventCount) {
+    public SeriesResponseDTO(Long id, String name, Integer eventCount, List<Integer> years) {
         this.id = id;
         this.name = name;
         this.eventCount = eventCount;
+        this.years = years;
     }
 
     /**
@@ -80,5 +85,23 @@ public class SeriesResponseDTO {
      */
     public void setEventCount(Integer eventCount) {
         this.eventCount = eventCount;
+    }
+
+    /**
+     * Gets the list of years for the series.
+     *
+     * @return the list of years
+     */
+    public List<Integer> getYears() {
+        return years;
+    }
+
+    /**
+     * Sets the list of years for the series.
+     *
+     * @param years the list of years to set
+     */
+    public void setYears(List<Integer> years) {
+        this.years = years;
     }
 }

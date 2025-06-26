@@ -34,26 +34,14 @@ public class SeriesController {
     }
 
     /**
-     * Gets all series.
+     * Gets all series, including the years for each series.
      *
-     * @return a response entity containing a list of all series
+     * @return a response entity containing a list of all series with their years
      */
     @GetMapping
     public ResponseEntity<List<SeriesResponseDTO>> getAllSeries() {
         List<SeriesResponseDTO> series = seriesService.findAll();
         return ResponseEntity.ok(series);
-    }
-
-    /**
-     * Gets all years for a specific series.
-     *
-     * @param seriesId the ID of the series
-     * @return a response entity containing the years for the series
-     */
-    @GetMapping("/{seriesId}/years")
-    public ResponseEntity<YearsResponseDTO> getYearsForSeries(@PathVariable Long seriesId) {
-        YearsResponseDTO years = seriesService.findYearsBySeries(seriesId);
-        return ResponseEntity.ok(years);
     }
 
     @GetMapping("/{seriesId}/{year}/events")

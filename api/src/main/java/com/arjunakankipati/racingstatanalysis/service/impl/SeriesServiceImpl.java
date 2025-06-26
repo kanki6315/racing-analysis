@@ -76,13 +76,17 @@ public class SeriesServiceImpl implements SeriesService {
         return seriesList.stream()
                 .map(series -> {
                     // Count events for this series
-                    long eventCount = eventRepository.findBySeriesId(series.getId()).size();
-
-                    // Create DTO with series data and event count
+                    // TODO - make one query and return event count and years
+                    var events = eventRepository.findBySeriesId(series.getId());
+                    // Create DTO with series data, event count, and years
                     return new SeriesResponseDTO(
                             series.getId(),
                             series.getName(),
-                            (int) eventCount
+                            events.size(),
+                            events.stream()
+                                    .map(Event::getYear)
+                                    .distinct()
+                                    .toList()
                     );
                 })
                 .toList();
@@ -91,23 +95,6 @@ public class SeriesServiceImpl implements SeriesService {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public YearsResponseDTO findYearsBySeries(Long seriesId) {
-        // Find the series by ID
-        Series series = seriesRepository.findById(seriesId)
-                .orElseThrow(ResourceNotFoundException::new);
-
-        // Get years for this series
-        List<Integer> years = eventRepository.findYearsBySeriesId(seriesId);
-
-        // Create response DTO
-        return new YearsResponseDTO(
-                series.getId(),
-                series.getName(),
-                years
-        );
-    }
-
     @Override
     public List<EventsResponseDTO> findEventsForSeriesByYear(Long seriesId, Integer year) {
         // Find the series by ID
