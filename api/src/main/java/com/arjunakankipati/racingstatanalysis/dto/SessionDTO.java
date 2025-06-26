@@ -1,6 +1,5 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -15,10 +14,6 @@ public class SessionDTO {
     private String type;
     private LocalDateTime startDatetime;
     private Integer durationSeconds;
-    private BigDecimal weatherAirTemp;
-    private BigDecimal weatherTrackTemp;
-    private String weatherCondition;
-    private String reportMessage;
     private String importUrl;
     private LocalDateTime importTimestamp;
 
@@ -38,16 +33,11 @@ public class SessionDTO {
      * @param type             the type of the session (e.g., "Race", "Practice", "Qualifying")
      * @param startDatetime    the start date and time of the session
      * @param durationSeconds  the duration of the session in seconds
-     * @param weatherAirTemp   the air temperature during the session
-     * @param weatherTrackTemp the track temperature during the session
-     * @param weatherCondition the weather condition during the session
-     * @param reportMessage    any report message for the session
      * @param importUrl        the URL from which the session data was imported
      * @param importTimestamp  the timestamp when the session data was imported
      */
     public SessionDTO(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime,
-                      Integer durationSeconds, BigDecimal weatherAirTemp, BigDecimal weatherTrackTemp,
-                      String weatherCondition, String reportMessage, String importUrl, LocalDateTime importTimestamp) {
+                      Integer durationSeconds, String importUrl, LocalDateTime importTimestamp) {
         this.id = id;
         this.eventId = eventId;
         this.circuitId = circuitId;
@@ -55,10 +45,6 @@ public class SessionDTO {
         this.type = type;
         this.startDatetime = startDatetime;
         this.durationSeconds = durationSeconds;
-        this.weatherAirTemp = weatherAirTemp;
-        this.weatherTrackTemp = weatherTrackTemp;
-        this.weatherCondition = weatherCondition;
-        this.reportMessage = reportMessage;
         this.importUrl = importUrl;
         this.importTimestamp = importTimestamp;
     }
@@ -190,78 +176,6 @@ public class SessionDTO {
     }
 
     /**
-     * Gets the air temperature during the session.
-     *
-     * @return the air temperature
-     */
-    public BigDecimal getWeatherAirTemp() {
-        return weatherAirTemp;
-    }
-
-    /**
-     * Sets the air temperature during the session.
-     *
-     * @param weatherAirTemp the air temperature to set
-     */
-    public void setWeatherAirTemp(BigDecimal weatherAirTemp) {
-        this.weatherAirTemp = weatherAirTemp;
-    }
-
-    /**
-     * Gets the track temperature during the session.
-     *
-     * @return the track temperature
-     */
-    public BigDecimal getWeatherTrackTemp() {
-        return weatherTrackTemp;
-    }
-
-    /**
-     * Sets the track temperature during the session.
-     *
-     * @param weatherTrackTemp the track temperature to set
-     */
-    public void setWeatherTrackTemp(BigDecimal weatherTrackTemp) {
-        this.weatherTrackTemp = weatherTrackTemp;
-    }
-
-    /**
-     * Gets the weather condition during the session.
-     *
-     * @return the weather condition
-     */
-    public String getWeatherCondition() {
-        return weatherCondition;
-    }
-
-    /**
-     * Sets the weather condition during the session.
-     *
-     * @param weatherCondition the weather condition to set
-     */
-    public void setWeatherCondition(String weatherCondition) {
-        this.weatherCondition = weatherCondition;
-    }
-
-    /**
-     * Gets any report message for the session.
-     *
-     * @return the report message
-     */
-    public String getReportMessage() {
-        return reportMessage;
-    }
-
-    /**
-     * Sets any report message for the session.
-     *
-     * @param reportMessage the report message to set
-     */
-    public void setReportMessage(String reportMessage) {
-        this.reportMessage = reportMessage;
-    }
-
-    /**
      * Gets the URL from which the session data was imported.
      *
      * @return the import URL
@@ -309,18 +223,13 @@ public class SessionDTO {
                 Objects.equals(type, that.type) &&
                 Objects.equals(startDatetime, that.startDatetime) &&
                 Objects.equals(durationSeconds, that.durationSeconds) &&
-                Objects.equals(weatherAirTemp, that.weatherAirTemp) &&
-                Objects.equals(weatherTrackTemp, that.weatherTrackTemp) &&
-                Objects.equals(weatherCondition, that.weatherCondition) &&
-                Objects.equals(reportMessage, that.reportMessage) &&
                 Objects.equals(importUrl, that.importUrl) &&
                 Objects.equals(importTimestamp, that.importTimestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, eventId, circuitId, name, type, startDatetime, durationSeconds,
-                weatherAirTemp, weatherTrackTemp, weatherCondition, reportMessage, importUrl, importTimestamp);
+        return Objects.hash(id, eventId, circuitId, name, type, startDatetime, durationSeconds, importUrl, importTimestamp);
     }
 
     @Override
@@ -333,10 +242,6 @@ public class SessionDTO {
                 ", type='" + type + '\'' +
                 ", startDatetime=" + startDatetime +
                 ", durationSeconds=" + durationSeconds +
-                ", weatherAirTemp=" + weatherAirTemp +
-                ", weatherTrackTemp=" + weatherTrackTemp +
-                ", weatherCondition='" + weatherCondition + '\'' +
-                ", reportMessage='" + reportMessage + '\'' +
                 ", importUrl='" + importUrl + '\'' +
                 ", importTimestamp=" + importTimestamp +
                 '}';

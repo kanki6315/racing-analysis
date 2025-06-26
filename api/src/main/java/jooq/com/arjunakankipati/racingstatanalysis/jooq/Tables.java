@@ -4,21 +4,7 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
 
 
 /**
@@ -81,6 +67,16 @@ public class Tables {
      * The table <code>public.manufacturers</code>.
      */
     public static final Manufacturers MANUFACTURERS = Manufacturers.MANUFACTURERS;
+
+    /**
+     * The table <code>public.results</code>.
+     */
+    public static final Results RESULTS = Results.RESULTS;
+
+    /**
+     * The table <code>public.results_drivers</code>.
+     */
+    public static final ResultsDrivers RESULTS_DRIVERS = ResultsDrivers.RESULTS_DRIVERS;
 
     /**
      * The table <code>public.sectors</code>.

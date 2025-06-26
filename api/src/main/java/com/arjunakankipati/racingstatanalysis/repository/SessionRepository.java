@@ -61,4 +61,15 @@ public interface SessionRepository extends BaseRepository<Session, Long> {
      * @return an Optional containing the found session, or empty if not found
      */
     Optional<Session> findByImportUrl(String importUrl);
+
+    /**
+     * Find a session by event ID, name, type, and start datetime.
+     *
+     * @param eventId       the event ID
+     * @param name          the session name
+     * @param type          the session type
+     * @param startDatetime the session start datetime
+     * @return an Optional containing the found session, or empty if not found
+     */
+    Optional<Session> findByEventIdAndNameAndTypeAndStartDatetime(Long eventId, String name, String type, LocalDateTime startDatetime);
 }

@@ -249,10 +249,6 @@ public class SeriesServiceImpl implements SeriesService {
                         session.getType(),
                         session.getStartDatetime(),
                         session.getDurationSeconds(),
-                        session.getWeatherAirTemp(),
-                        session.getWeatherTrackTemp(),
-                        session.getWeatherCondition(),
-                        session.getReportMessage(),
                         session.getImportUrl(),
                         session.getImportTimestamp()
                 ))

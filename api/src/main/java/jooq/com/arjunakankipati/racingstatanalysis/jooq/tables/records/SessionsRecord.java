@@ -5,12 +5,10 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.time.LocalDateTime;
 
 
 /**
@@ -120,87 +118,31 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     }
 
     /**
-     * Setter for <code>public.sessions.weather_air_temp</code>.
-     */
-    public void setWeatherAirTemp(BigDecimal value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_air_temp</code>.
-     */
-    public BigDecimal getWeatherAirTemp() {
-        return (BigDecimal) get(7);
-    }
-
-    /**
-     * Setter for <code>public.sessions.weather_track_temp</code>.
-     */
-    public void setWeatherTrackTemp(BigDecimal value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_track_temp</code>.
-     */
-    public BigDecimal getWeatherTrackTemp() {
-        return (BigDecimal) get(8);
-    }
-
-    /**
-     * Setter for <code>public.sessions.weather_condition</code>.
-     */
-    public void setWeatherCondition(String value) {
-        set(9, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_condition</code>.
-     */
-    public String getWeatherCondition() {
-        return (String) get(9);
-    }
-
-    /**
-     * Setter for <code>public.sessions.report_message</code>.
-     */
-    public void setReportMessage(String value) {
-        set(10, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.report_message</code>.
-     */
-    public String getReportMessage() {
-        return (String) get(10);
-    }
-
-    /**
      * Setter for <code>public.sessions.import_url</code>.
      */
     public void setImportUrl(String value) {
-        set(11, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.sessions.import_url</code>.
      */
     public String getImportUrl() {
-        return (String) get(11);
+        return (String) get(7);
     }
 
     /**
      * Setter for <code>public.sessions.import_timestamp</code>.
      */
     public void setImportTimestamp(LocalDateTime value) {
-        set(12, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>public.sessions.import_timestamp</code>.
      */
     public LocalDateTime getImportTimestamp() {
-        return (LocalDateTime) get(12);
+        return (LocalDateTime) get(8);
     }
 
     // -------------------------------------------------------------------------
@@ -226,7 +168,7 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     /**
      * Create a detached, initialised SessionsRecord
      */
-    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds, BigDecimal weatherAirTemp, BigDecimal weatherTrackTemp, String weatherCondition, String reportMessage, String importUrl, LocalDateTime importTimestamp) {
+    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds, String importUrl, LocalDateTime importTimestamp) {
         super(Sessions.SESSIONS);
 
         setId(id);
@@ -236,10 +178,6 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
         setType(type);
         setStartDatetime(startDatetime);
         setDurationSeconds(durationSeconds);
-        setWeatherAirTemp(weatherAirTemp);
-        setWeatherTrackTemp(weatherTrackTemp);
-        setWeatherCondition(weatherCondition);
-        setReportMessage(reportMessage);
         setImportUrl(importUrl);
         setImportTimestamp(importTimestamp);
         resetChangedOnNotNull();

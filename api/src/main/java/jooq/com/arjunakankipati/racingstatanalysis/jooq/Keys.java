@@ -4,37 +4,8 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarDriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarEntriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarModelsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CircuitsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ClassesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.EventsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.FlywaySchemaHistoryRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ImportJobsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ManufacturersRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SectorsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SeriesRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.records.TeamsRecord;
-
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.records.*;
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
@@ -66,6 +37,8 @@ public class Keys {
     public static final UniqueKey<ImportJobsRecord> IMPORT_JOBS_PKEY = Internal.createUniqueKey(ImportJobs.IMPORT_JOBS, DSL.name("import_jobs_pkey"), new TableField[] { ImportJobs.IMPORT_JOBS.ID }, true);
     public static final UniqueKey<LapsRecord> LAPS_PKEY = Internal.createUniqueKey(Laps.LAPS, DSL.name("laps_pkey"), new TableField[] { Laps.LAPS.ID }, true);
     public static final UniqueKey<ManufacturersRecord> MANUFACTURERS_PKEY = Internal.createUniqueKey(Manufacturers.MANUFACTURERS, DSL.name("manufacturers_pkey"), new TableField[] { Manufacturers.MANUFACTURERS.ID }, true);
+    public static final UniqueKey<ResultsRecord> RESULTS_PKEY = Internal.createUniqueKey(Results.RESULTS, DSL.name("results_pkey"), new TableField[]{Results.RESULTS.ID}, true);
+    public static final UniqueKey<ResultsDriversRecord> RESULTS_DRIVERS_PKEY = Internal.createUniqueKey(ResultsDrivers.RESULTS_DRIVERS, DSL.name("results_drivers_pkey"), new TableField[]{ResultsDrivers.RESULTS_DRIVERS.RESULT_ID, ResultsDrivers.RESULTS_DRIVERS.DRIVER_ID}, true);
     public static final UniqueKey<SectorsRecord> SECTORS_PKEY = Internal.createUniqueKey(Sectors.SECTORS, DSL.name("sectors_pkey"), new TableField[] { Sectors.SECTORS.ID }, true);
     public static final UniqueKey<SeriesRecord> SERIES_PKEY = Internal.createUniqueKey(Series.SERIES, DSL.name("series_pkey"), new TableField[] { Series.SERIES.ID }, true);
     public static final UniqueKey<SessionsRecord> SESSIONS_PKEY = Internal.createUniqueKey(Sessions.SESSIONS, DSL.name("sessions_pkey"), new TableField[] { Sessions.SESSIONS.ID }, true);
@@ -87,6 +60,10 @@ public class Keys {
     public static final ForeignKey<LapsRecord, CarEntriesRecord> LAPS__LAPS_CAR_ENTRY_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_car_entry_id_fkey"), new TableField[] { Laps.LAPS.CAR_ID }, Keys.CAR_ENTRIES_PKEY, new TableField[] { CarEntries.CAR_ENTRIES.ID }, true);
     public static final ForeignKey<LapsRecord, CarEntriesRecord> LAPS__LAPS_CAR_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_car_id_fkey"), new TableField[] { Laps.LAPS.CAR_ID }, Keys.CAR_ENTRIES_PKEY, new TableField[] { CarEntries.CAR_ENTRIES.ID }, true);
     public static final ForeignKey<LapsRecord, DriversRecord> LAPS__LAPS_DRIVER_ID_FKEY = Internal.createForeignKey(Laps.LAPS, DSL.name("laps_driver_id_fkey"), new TableField[] { Laps.LAPS.DRIVER_ID }, Keys.DRIVERS_PKEY, new TableField[] { Drivers.DRIVERS.ID }, true);
+    public static final ForeignKey<ResultsRecord, CarEntriesRecord> RESULTS__RESULTS_CAR_ENTRY_ID_FKEY = Internal.createForeignKey(Results.RESULTS, DSL.name("results_car_entry_id_fkey"), new TableField[]{Results.RESULTS.CAR_ENTRY_ID}, Keys.CAR_ENTRIES_PKEY, new TableField[]{CarEntries.CAR_ENTRIES.ID}, true);
+    public static final ForeignKey<ResultsRecord, SessionsRecord> RESULTS__RESULTS_SESSION_ID_FKEY = Internal.createForeignKey(Results.RESULTS, DSL.name("results_session_id_fkey"), new TableField[]{Results.RESULTS.SESSION_ID}, Keys.SESSIONS_PKEY, new TableField[]{Sessions.SESSIONS.ID}, true);
+    public static final ForeignKey<ResultsDriversRecord, DriversRecord> RESULTS_DRIVERS__RESULTS_DRIVERS_DRIVER_ID_FKEY = Internal.createForeignKey(ResultsDrivers.RESULTS_DRIVERS, DSL.name("results_drivers_driver_id_fkey"), new TableField[]{ResultsDrivers.RESULTS_DRIVERS.DRIVER_ID}, Keys.DRIVERS_PKEY, new TableField[]{Drivers.DRIVERS.ID}, true);
+    public static final ForeignKey<ResultsDriversRecord, ResultsRecord> RESULTS_DRIVERS__RESULTS_DRIVERS_RESULT_ID_FKEY = Internal.createForeignKey(ResultsDrivers.RESULTS_DRIVERS, DSL.name("results_drivers_result_id_fkey"), new TableField[]{ResultsDrivers.RESULTS_DRIVERS.RESULT_ID}, Keys.RESULTS_PKEY, new TableField[]{Results.RESULTS.ID}, true);
     public static final ForeignKey<SectorsRecord, LapsRecord> SECTORS__SECTORS_LAP_ID_FKEY = Internal.createForeignKey(Sectors.SECTORS, DSL.name("sectors_lap_id_fkey"), new TableField[] { Sectors.SECTORS.LAP_ID }, Keys.LAPS_PKEY, new TableField[] { Laps.LAPS.ID }, true);
     public static final ForeignKey<SessionsRecord, CircuitsRecord> SESSIONS__SESSIONS_CIRCUIT_ID_FKEY = Internal.createForeignKey(Sessions.SESSIONS, DSL.name("sessions_circuit_id_fkey"), new TableField[] { Sessions.SESSIONS.CIRCUIT_ID }, Keys.CIRCUITS_PKEY, new TableField[] { Circuits.CIRCUITS.ID }, true);
     public static final ForeignKey<SessionsRecord, EventsRecord> SESSIONS__SESSIONS_EVENT_ID_FKEY = Internal.createForeignKey(Sessions.SESSIONS, DSL.name("sessions_event_id_fkey"), new TableField[] { Sessions.SESSIONS.EVENT_ID }, Keys.EVENTS_PKEY, new TableField[] { Events.EVENTS.ID }, true);

@@ -15,10 +15,6 @@ public class LapTimeDetailDTO {
     private BigDecimal sessionElapsedSeconds;
     private LocalDateTime timestamp;
     private BigDecimal averageSpeedKph;
-    private Boolean isValid;
-    private Boolean isPersonalBest;
-    private Boolean isSessionBest;
-    private String invalidationReason;
 
     /**
      * Default constructor.
@@ -36,14 +32,9 @@ public class LapTimeDetailDTO {
      * @param sessionElapsedSeconds the session elapsed time in seconds
      * @param timestamp             the timestamp when the lap was completed
      * @param averageSpeedKph       the average speed in kilometers per hour
-     * @param isValid               whether the lap is valid
-     * @param isPersonalBest        whether the lap is the personal best for the driver
-     * @param isSessionBest         whether the lap is the best in the session
-     * @param invalidationReason    the reason for invalidation if the lap is invalid
      */
     public LapTimeDetailDTO(Long lapId, Integer lapNumber, String lapTime, BigDecimal lapTimeSeconds,
-                            BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph,
-                            Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason) {
+                            BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph) {
         this.lapId = lapId;
         this.lapNumber = lapNumber;
         this.lapTime = lapTime;
@@ -51,10 +42,6 @@ public class LapTimeDetailDTO {
         this.sessionElapsedSeconds = sessionElapsedSeconds;
         this.timestamp = timestamp;
         this.averageSpeedKph = averageSpeedKph;
-        this.isValid = isValid;
-        this.isPersonalBest = isPersonalBest;
-        this.isSessionBest = isSessionBest;
-        this.invalidationReason = invalidationReason;
     }
 
     /**
@@ -181,77 +168,5 @@ public class LapTimeDetailDTO {
      */
     public void setAverageSpeedKph(BigDecimal averageSpeedKph) {
         this.averageSpeedKph = averageSpeedKph;
-    }
-
-    /**
-     * Gets whether the lap is valid.
-     *
-     * @return whether the lap is valid
-     */
-    public Boolean getIsValid() {
-        return isValid;
-    }
-
-    /**
-     * Sets whether the lap is valid.
-     *
-     * @param isValid whether the lap is valid to set
-     */
-    public void setIsValid(Boolean isValid) {
-        this.isValid = isValid;
-    }
-
-    /**
-     * Gets whether the lap is the personal best for the driver.
-     *
-     * @return whether the lap is the personal best
-     */
-    public Boolean getIsPersonalBest() {
-        return isPersonalBest;
-    }
-
-    /**
-     * Sets whether the lap is the personal best for the driver.
-     *
-     * @param isPersonalBest whether the lap is the personal best to set
-     */
-    public void setIsPersonalBest(Boolean isPersonalBest) {
-        this.isPersonalBest = isPersonalBest;
-    }
-
-    /**
-     * Gets whether the lap is the best in the session.
-     *
-     * @return whether the lap is the session best
-     */
-    public Boolean getIsSessionBest() {
-        return isSessionBest;
-    }
-
-    /**
-     * Sets whether the lap is the best in the session.
-     *
-     * @param isSessionBest whether the lap is the session best to set
-     */
-    public void setIsSessionBest(Boolean isSessionBest) {
-        this.isSessionBest = isSessionBest;
-    }
-
-    /**
-     * Gets the reason for invalidation if the lap is invalid.
-     *
-     * @return the invalidation reason
-     */
-    public String getInvalidationReason() {
-        return invalidationReason;
-    }
-
-    /**
-     * Sets the reason for invalidation if the lap is invalid.
-     *
-     * @param invalidationReason the invalidation reason to set
-     */
-    public void setInvalidationReason(String invalidationReason) {
-        this.invalidationReason = invalidationReason;
     }
 } 

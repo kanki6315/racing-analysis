@@ -5,12 +5,11 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
+import org.jooq.Record1;
+import org.jooq.impl.UpdatableRecordImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
-import org.jooq.Record1;
-import org.jooq.impl.UpdatableRecordImpl;
 
 
 /**
@@ -120,73 +119,17 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
     }
 
     /**
-     * Setter for <code>public.laps.is_valid</code>.
-     */
-    public void setIsValid(Boolean value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.laps.is_valid</code>.
-     */
-    public Boolean getIsValid() {
-        return (Boolean) get(7);
-    }
-
-    /**
-     * Setter for <code>public.laps.is_personal_best</code>.
-     */
-    public void setIsPersonalBest(Boolean value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>public.laps.is_personal_best</code>.
-     */
-    public Boolean getIsPersonalBest() {
-        return (Boolean) get(8);
-    }
-
-    /**
-     * Setter for <code>public.laps.is_session_best</code>.
-     */
-    public void setIsSessionBest(Boolean value) {
-        set(9, value);
-    }
-
-    /**
-     * Getter for <code>public.laps.is_session_best</code>.
-     */
-    public Boolean getIsSessionBest() {
-        return (Boolean) get(9);
-    }
-
-    /**
-     * Setter for <code>public.laps.invalidation_reason</code>.
-     */
-    public void setInvalidationReason(String value) {
-        set(10, value);
-    }
-
-    /**
-     * Getter for <code>public.laps.invalidation_reason</code>.
-     */
-    public String getInvalidationReason() {
-        return (String) get(10);
-    }
-
-    /**
      * Setter for <code>public.laps.car_id</code>.
      */
     public void setCarId(Long value) {
-        set(11, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.laps.car_id</code>.
      */
     public Long getCarId() {
-        return (Long) get(11);
+        return (Long) get(7);
     }
 
     // -------------------------------------------------------------------------
@@ -212,7 +155,7 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
     /**
      * Create a detached, initialised LapsRecord
      */
-    public LapsRecord(Long id, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds, BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph, Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason, Long carId) {
+    public LapsRecord(Long id, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds, BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph, Long carId) {
         super(Laps.LAPS);
 
         setId(id);
@@ -222,10 +165,6 @@ public class LapsRecord extends UpdatableRecordImpl<LapsRecord> {
         setSessionElapsedSeconds(sessionElapsedSeconds);
         setTimestamp(timestamp);
         setAverageSpeedKph(averageSpeedKph);
-        setIsValid(isValid);
-        setIsPersonalBest(isPersonalBest);
-        setIsSessionBest(isSessionBest);
-        setInvalidationReason(invalidationReason);
         setCarId(carId);
         resetChangedOnNotNull();
     }

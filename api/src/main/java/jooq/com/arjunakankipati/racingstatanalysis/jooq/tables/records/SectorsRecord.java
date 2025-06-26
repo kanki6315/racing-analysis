@@ -5,11 +5,10 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-
-import java.math.BigDecimal;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.math.BigDecimal;
 
 
 /**
@@ -104,34 +103,6 @@ public class SectorsRecord extends UpdatableRecordImpl<SectorsRecord> {
         return (Boolean) get(5);
     }
 
-    /**
-     * Setter for <code>public.sectors.is_valid</code>.
-     */
-    public void setIsValid(Boolean value) {
-        set(6, value);
-    }
-
-    /**
-     * Getter for <code>public.sectors.is_valid</code>.
-     */
-    public Boolean getIsValid() {
-        return (Boolean) get(6);
-    }
-
-    /**
-     * Setter for <code>public.sectors.invalidation_reason</code>.
-     */
-    public void setInvalidationReason(String value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.sectors.invalidation_reason</code>.
-     */
-    public String getInvalidationReason() {
-        return (String) get(7);
-    }
-
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -155,7 +126,7 @@ public class SectorsRecord extends UpdatableRecordImpl<SectorsRecord> {
     /**
      * Create a detached, initialised SectorsRecord
      */
-    public SectorsRecord(Long id, Long lapId, Integer sectorNumber, BigDecimal sectorTimeSeconds, Boolean isPersonalBest, Boolean isSessionBest, Boolean isValid, String invalidationReason) {
+    public SectorsRecord(Long id, Long lapId, Integer sectorNumber, BigDecimal sectorTimeSeconds, Boolean isPersonalBest, Boolean isSessionBest) {
         super(Sectors.SECTORS);
 
         setId(id);
@@ -164,8 +135,6 @@ public class SectorsRecord extends UpdatableRecordImpl<SectorsRecord> {
         setSectorTimeSeconds(sectorTimeSeconds);
         setIsPersonalBest(isPersonalBest);
         setIsSessionBest(isSessionBest);
-        setIsValid(isValid);
-        setInvalidationReason(invalidationReason);
         resetChangedOnNotNull();
     }
 }

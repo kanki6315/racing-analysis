@@ -8,35 +8,17 @@ import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps.LapsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SectorsRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Check;
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.Internal;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -89,16 +71,6 @@ public class Sectors extends TableImpl<SectorsRecord> {
      * The column <code>public.sectors.is_session_best</code>.
      */
     public final TableField<SectorsRecord, Boolean> IS_SESSION_BEST = createField(DSL.name("is_session_best"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "");
-
-    /**
-     * The column <code>public.sectors.is_valid</code>.
-     */
-    public final TableField<SectorsRecord, Boolean> IS_VALID = createField(DSL.name("is_valid"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
-
-    /**
-     * The column <code>public.sectors.invalidation_reason</code>.
-     */
-    public final TableField<SectorsRecord, String> INVALIDATION_REASON = createField(DSL.name("invalidation_reason"), SQLDataType.VARCHAR(100), this, "");
 
     private Sectors(Name alias, Table<SectorsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

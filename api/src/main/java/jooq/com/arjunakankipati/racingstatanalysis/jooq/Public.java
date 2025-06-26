@@ -4,28 +4,13 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
-
-import java.util.Arrays;
-import java.util.List;
-
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -97,6 +82,16 @@ public class Public extends SchemaImpl {
     public final Manufacturers MANUFACTURERS = Manufacturers.MANUFACTURERS;
 
     /**
+     * The table <code>public.results</code>.
+     */
+    public final Results RESULTS = Results.RESULTS;
+
+    /**
+     * The table <code>public.results_drivers</code>.
+     */
+    public final ResultsDrivers RESULTS_DRIVERS = ResultsDrivers.RESULTS_DRIVERS;
+
+    /**
      * The table <code>public.sectors</code>.
      */
     public final Sectors SECTORS = Sectors.SECTORS;
@@ -143,6 +138,8 @@ public class Public extends SchemaImpl {
             ImportJobs.IMPORT_JOBS,
             Laps.LAPS,
             Manufacturers.MANUFACTURERS,
+                Results.RESULTS,
+                ResultsDrivers.RESULTS_DRIVERS,
             Sectors.SECTORS,
             Series.SERIES,
             Sessions.SESSIONS,

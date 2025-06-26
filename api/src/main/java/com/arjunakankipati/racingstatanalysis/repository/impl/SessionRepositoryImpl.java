@@ -44,10 +44,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 sessionRec.getType(),
                 sessionRec.getStartDatetime(),
                 sessionRec.getDurationSeconds(),
-                sessionRec.getWeatherAirTemp(),
-                sessionRec.getWeatherTrackTemp(),
-                sessionRec.getWeatherCondition(),
-                sessionRec.getReportMessage(),
                 sessionRec.getImportUrl(),
                 sessionRec.getImportTimestamp()
         );
@@ -63,10 +59,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                         Tables.SESSIONS.TYPE,
                         Tables.SESSIONS.START_DATETIME,
                         Tables.SESSIONS.DURATION_SECONDS,
-                        Tables.SESSIONS.WEATHER_AIR_TEMP,
-                        Tables.SESSIONS.WEATHER_TRACK_TEMP,
-                        Tables.SESSIONS.WEATHER_CONDITION,
-                        Tables.SESSIONS.REPORT_MESSAGE,
                         Tables.SESSIONS.IMPORT_URL,
                         Tables.SESSIONS.IMPORT_TIMESTAMP
                 )
@@ -77,10 +69,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                         session.getType(),
                         session.getStartDatetime(),
                         session.getDurationSeconds(),
-                        session.getWeatherAirTemp(),
-                        session.getWeatherTrackTemp(),
-                        session.getWeatherCondition(),
-                        session.getReportMessage(),
                         session.getImportUrl(),
                         session.getImportTimestamp()
                 )
@@ -99,10 +87,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 .set(Tables.SESSIONS.TYPE, session.getType())
                 .set(Tables.SESSIONS.START_DATETIME, session.getStartDatetime())
                 .set(Tables.SESSIONS.DURATION_SECONDS, session.getDurationSeconds())
-                .set(Tables.SESSIONS.WEATHER_AIR_TEMP, session.getWeatherAirTemp())
-                .set(Tables.SESSIONS.WEATHER_TRACK_TEMP, session.getWeatherTrackTemp())
-                .set(Tables.SESSIONS.WEATHER_CONDITION, session.getWeatherCondition())
-                .set(Tables.SESSIONS.REPORT_MESSAGE, session.getReportMessage())
                 .set(Tables.SESSIONS.IMPORT_URL, session.getImportUrl())
                 .set(Tables.SESSIONS.IMPORT_TIMESTAMP, session.getImportTimestamp())
                 .where(idField.eq(session.getId()))
@@ -164,6 +148,18 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 .fetchOne();
 
         return Optional.ofNullable(record)
+                .map(this::mapToEntity);
+    }
+
+    @Override
+    public Optional<Session> findByEventIdAndNameAndTypeAndStartDatetime(Long eventId, String name, String type, LocalDateTime startDatetime) {
+        return Optional.ofNullable(dsl.select()
+                        .from(table)
+                        .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
+                        .and(Tables.SESSIONS.TYPE.eq(type))
+                        .and(Tables.SESSIONS.NAME.eq(name)
+                                .and(Tables.SESSIONS.START_DATETIME.eq(startDatetime)))
+                        .fetchOne())
                 .map(this::mapToEntity);
     }
 }

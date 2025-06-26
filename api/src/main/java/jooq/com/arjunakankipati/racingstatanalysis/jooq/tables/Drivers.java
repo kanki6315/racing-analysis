@@ -8,31 +8,16 @@ import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers.CarDriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps.LapsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.ResultsDrivers.ResultsDriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.DriversRecord;
-
-import java.util.Collection;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import java.util.Collection;
 
 
 /**
@@ -191,6 +176,27 @@ public class Drivers extends TableImpl<DriversRecord> {
             _laps = new LapsPath(this, null, Keys.LAPS__LAPS_DRIVER_ID_FKEY.getInverseKey());
 
         return _laps;
+    }
+
+    private transient ResultsDriversPath _resultsDrivers;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.results_drivers</code> table
+     */
+    public ResultsDriversPath resultsDrivers() {
+        if (_resultsDrivers == null)
+            _resultsDrivers = new ResultsDriversPath(this, null, Keys.RESULTS_DRIVERS__RESULTS_DRIVERS_DRIVER_ID_FKEY.getInverseKey());
+
+        return _resultsDrivers;
+    }
+
+    /**
+     * Get the implicit many-to-many join path to the
+     * <code>public.results</code> table
+     */
+    public ResultsPath results() {
+        return resultsDrivers().results();
     }
 
     @Override

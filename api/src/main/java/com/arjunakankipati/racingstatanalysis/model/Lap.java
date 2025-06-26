@@ -17,10 +17,6 @@ public class Lap implements BaseEntity<Long> {
     private BigDecimal sessionElapsedSeconds;
     private LocalDateTime timestamp;
     private BigDecimal averageSpeedKph;
-    private Boolean isValid;
-    private Boolean isPersonalBest;
-    private Boolean isSessionBest;
-    private String invalidationReason;
 
     /**
      * Default constructor.
@@ -39,14 +35,9 @@ public class Lap implements BaseEntity<Long> {
      * @param sessionElapsedSeconds the elapsed time of the session when the lap was completed in seconds
      * @param timestamp the timestamp when the lap was completed
      * @param averageSpeedKph the average speed of the lap in kilometers per hour
-     * @param isValid whether the lap is valid
-     * @param isPersonalBest whether the lap is the personal best for the driver
-     * @param isSessionBest whether the lap is the best in the session
-     * @param invalidationReason the reason for invalidation if the lap is invalid
      */
     public Lap(Long id, Long carId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds,
-              BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph,
-              Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason) {
+               BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph) {
         this.id = id;
         this.carId = carId;
         this.driverId = driverId;
@@ -55,10 +46,6 @@ public class Lap implements BaseEntity<Long> {
         this.sessionElapsedSeconds = sessionElapsedSeconds;
         this.timestamp = timestamp;
         this.averageSpeedKph = averageSpeedKph;
-        this.isValid = isValid;
-        this.isPersonalBest = isPersonalBest;
-        this.isSessionBest = isSessionBest;
-        this.invalidationReason = invalidationReason;
     }
 
     /**
@@ -207,78 +194,6 @@ public class Lap implements BaseEntity<Long> {
         this.averageSpeedKph = averageSpeedKph;
     }
 
-    /**
-     * Gets whether the lap is valid.
-     *
-     * @return true if the lap is valid, false otherwise
-     */
-    public Boolean getIsValid() {
-        return isValid;
-    }
-
-    /**
-     * Sets whether the lap is valid.
-     *
-     * @param isValid true if the lap is valid, false otherwise
-     */
-    public void setIsValid(Boolean isValid) {
-        this.isValid = isValid;
-    }
-
-    /**
-     * Gets whether the lap is the personal best for the driver.
-     *
-     * @return true if the lap is the personal best, false otherwise
-     */
-    public Boolean getIsPersonalBest() {
-        return isPersonalBest;
-    }
-
-    /**
-     * Sets whether the lap is the personal best for the driver.
-     *
-     * @param isPersonalBest true if the lap is the personal best, false otherwise
-     */
-    public void setIsPersonalBest(Boolean isPersonalBest) {
-        this.isPersonalBest = isPersonalBest;
-    }
-
-    /**
-     * Gets whether the lap is the best in the session.
-     *
-     * @return true if the lap is the session best, false otherwise
-     */
-    public Boolean getIsSessionBest() {
-        return isSessionBest;
-    }
-
-    /**
-     * Sets whether the lap is the best in the session.
-     *
-     * @param isSessionBest true if the lap is the session best, false otherwise
-     */
-    public void setIsSessionBest(Boolean isSessionBest) {
-        this.isSessionBest = isSessionBest;
-    }
-
-    /**
-     * Gets the reason for invalidation if the lap is invalid.
-     *
-     * @return the invalidation reason
-     */
-    public String getInvalidationReason() {
-        return invalidationReason;
-    }
-
-    /**
-     * Sets the reason for invalidation if the lap is invalid.
-     *
-     * @param invalidationReason the invalidation reason to set
-     */
-    public void setInvalidationReason(String invalidationReason) {
-        this.invalidationReason = invalidationReason;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -291,17 +206,13 @@ public class Lap implements BaseEntity<Long> {
                 Objects.equals(lapTimeSeconds, lap.lapTimeSeconds) &&
                 Objects.equals(sessionElapsedSeconds, lap.sessionElapsedSeconds) &&
                 Objects.equals(timestamp, lap.timestamp) &&
-                Objects.equals(averageSpeedKph, lap.averageSpeedKph) &&
-                Objects.equals(isValid, lap.isValid) &&
-                Objects.equals(isPersonalBest, lap.isPersonalBest) &&
-                Objects.equals(isSessionBest, lap.isSessionBest) &&
-                Objects.equals(invalidationReason, lap.invalidationReason);
+                Objects.equals(averageSpeedKph, lap.averageSpeedKph);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, carId, driverId, lapNumber, lapTimeSeconds, sessionElapsedSeconds,
-                timestamp, averageSpeedKph, isValid, isPersonalBest, isSessionBest, invalidationReason);
+                timestamp, averageSpeedKph);
     }
 
     @Override
@@ -314,11 +225,7 @@ public class Lap implements BaseEntity<Long> {
                 ", lapTimeSeconds=" + lapTimeSeconds +
                 ", sessionElapsedSeconds=" + sessionElapsedSeconds +
                 ", timestamp=" + timestamp +
-                ", averageSpeedKph=" + averageSpeedKph +
-                ", isValid=" + isValid +
-                ", isPersonalBest=" + isPersonalBest +
-                ", isSessionBest=" + isSessionBest +
-                ", invalidationReason='" + invalidationReason + '\'' +
+                ", averageSpeedKph=" + averageSpeedKph + '\'' +
                 '}';
     }
 }

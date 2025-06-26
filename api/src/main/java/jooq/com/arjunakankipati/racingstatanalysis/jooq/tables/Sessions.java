@@ -10,36 +10,18 @@ import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits.CircuitsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Events.EventsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.Index;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -97,26 +79,6 @@ public class Sessions extends TableImpl<SessionsRecord> {
      * The column <code>public.sessions.duration_seconds</code>.
      */
     public final TableField<SessionsRecord, Integer> DURATION_SECONDS = createField(DSL.name("duration_seconds"), SQLDataType.INTEGER.nullable(false), this, "");
-
-    /**
-     * The column <code>public.sessions.weather_air_temp</code>.
-     */
-    public final TableField<SessionsRecord, BigDecimal> WEATHER_AIR_TEMP = createField(DSL.name("weather_air_temp"), SQLDataType.NUMERIC(5, 2), this, "");
-
-    /**
-     * The column <code>public.sessions.weather_track_temp</code>.
-     */
-    public final TableField<SessionsRecord, BigDecimal> WEATHER_TRACK_TEMP = createField(DSL.name("weather_track_temp"), SQLDataType.NUMERIC(5, 2), this, "");
-
-    /**
-     * The column <code>public.sessions.weather_condition</code>.
-     */
-    public final TableField<SessionsRecord, String> WEATHER_CONDITION = createField(DSL.name("weather_condition"), SQLDataType.VARCHAR(50), this, "");
-
-    /**
-     * The column <code>public.sessions.report_message</code>.
-     */
-    public final TableField<SessionsRecord, String> REPORT_MESSAGE = createField(DSL.name("report_message"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>public.sessions.import_url</code>.
@@ -250,6 +212,19 @@ public class Sessions extends TableImpl<SessionsRecord> {
             _carEntries = new CarEntriesPath(this, null, Keys.CAR_ENTRIES__CAR_ENTRIES_SESSION_ID_FKEY.getInverseKey());
 
         return _carEntries;
+    }
+
+    private transient ResultsPath _results;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.results</code>
+     * table
+     */
+    public ResultsPath results() {
+        if (_results == null)
+            _results = new ResultsPath(this, null, Keys.RESULTS__RESULTS_SESSION_ID_FKEY.getInverseKey());
+
+        return _results;
     }
 
     @Override

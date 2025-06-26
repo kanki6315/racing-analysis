@@ -2,6 +2,8 @@ package com.arjunakankipati.racingstatanalysis.controller;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsRequestDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.model.ImportJob;
 import com.arjunakankipati.racingstatanalysis.service.ImportJobService;
 import com.arjunakankipati.racingstatanalysis.service.ImportService;
@@ -73,5 +75,25 @@ public class ImportController {
                 job.getError()
         );
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Processes a results CSV to ensure all required records exist before timecard import.
+     */
+    @PostMapping("/process-results")
+    public ResponseEntity<ProcessResultsResponseDTO> processResults(
+            @RequestBody ProcessResultsRequestDTO request,
+            @RequestHeader(value = "X-API-Key", required = false) String apiKey) {
+        if (apiKey == null || !apiKey.equals(expectedApiKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            // This should call a new service method to process the results CSV and create/ensure all required records
+            ProcessResultsResponseDTO response = importService.processResultsCsv(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ProcessResultsResponseDTO(null, "FAILED", e.getMessage()));
+        }
     }
 }

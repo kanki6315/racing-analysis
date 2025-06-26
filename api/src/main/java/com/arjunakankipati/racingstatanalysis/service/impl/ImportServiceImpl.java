@@ -1,6 +1,8 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsRequestDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsResponseDTO;
 import com.arjunakankipati.racingstatanalysis.exceptions.ReportURLNotValidException;
 import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
@@ -19,10 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -449,31 +450,6 @@ public class ImportServiceImpl implements ImportService {
             throw new IllegalArgumentException("finalize_type object not found in session JSON");
         }
         newSession.setDurationSeconds(durationSeconds);
-        if (sessionJson.has("weather") && sessionJson.get("weather").isJsonObject()) {
-            JsonObject weatherJson = sessionJson.getAsJsonObject("weather");
-            if (weatherJson.has("air_temperature")) {
-                String airTempStr = weatherJson.get("air_temperature").getAsString().replace(" ºC", "").trim();
-                if (!airTempStr.isEmpty()) {
-                    newSession.setWeatherAirTemp(new BigDecimal(airTempStr));
-                } else {
-                    newSession.setWeatherAirTemp(null);
-                }
-            }
-            if (weatherJson.has("track_temperature")) {
-                String trackTempStr = weatherJson.get("track_temperature").getAsString().replace(" ºC", "").trim();
-                if (!trackTempStr.isEmpty()) {
-                    newSession.setWeatherTrackTemp(new BigDecimal(trackTempStr));
-                } else {
-                    newSession.setWeatherTrackTemp(null);
-                }
-            }
-            if (weatherJson.has("track_status")) {
-                newSession.setWeatherCondition(weatherJson.get("track_status").getAsString());
-            }
-        }
-        if (sessionJson.has("report_message")) {
-            newSession.setReportMessage(sessionJson.get("report_message").getAsString());
-        }
         newSession.setImportUrl(importUrl);
         newSession.setImportTimestamp(LocalDateTime.now());
         LOGGER.info("Session parsed: " + newSession);
@@ -585,7 +561,7 @@ public class ImportServiceImpl implements ImportService {
         String key = seriesId + ":" + className;
         Class cached = classCache.getIfPresent(key);
         if (cached != null) return cached;
-        Optional<Class> existingClass = classRepository.findByName(className); // TODO: add seriesId filter
+        Optional<Class> existingClass = classRepository.findBySeriesIdAndName(seriesId, className);
         if (existingClass.isPresent()) {
             classCache.put(key, existingClass.get());
             return existingClass.get();
@@ -782,20 +758,6 @@ public class ImportServiceImpl implements ImportService {
                 JsonArray sectorTimesJson = lapJson.getAsJsonArray("sector_times");
                 List<Sector> sectors = processSectorTimesUnsaved(sectorTimesJson, lap.getId());
                 sectorsToInsert.addAll(sectors);
-                // Update lap validity based on sector validity
-                boolean allSectorsValid = true;
-                for (Sector sector : sectors) {
-                    if (sector.getIsValid() == null || !sector.getIsValid()) {
-                        allSectorsValid = false;
-                        break;
-                    }
-                }
-                if (!allSectorsValid && lap.getIsValid()) {
-                    lap.setIsValid(false);
-                    lap.setInvalidationReason("One or more invalid sector times");
-                    lapRepository.save(lap);
-                    LOGGER.info("Lap " + lap.getLapNumber() + " invalidated due to invalid sector times");
-                }
             }
         }
         // Batch insert all sectors
@@ -819,9 +781,6 @@ public class ImportServiceImpl implements ImportService {
         if (lapJson.has("average_speed_kph") && !lapJson.get("average_speed_kph").isJsonNull()) {
             newLap.setAverageSpeedKph(new BigDecimal(lapJson.get("average_speed_kph").getAsString()));
         }
-        newLap.setIsValid(lapJson.get("is_valid").getAsBoolean());
-        newLap.setIsPersonalBest(lapJson.get("is_personal_best").getAsBoolean());
-        newLap.setIsSessionBest(lapJson.get("is_session_best").getAsBoolean());
         return newLap;
     }
 
@@ -845,17 +804,6 @@ public class ImportServiceImpl implements ImportService {
         String sectorTimeStr = sectorJson.get("time").getAsString();
         BigDecimal sectorTime = parseSectorTime(sectorTimeStr);
         newSector.setSectorTimeSeconds(sectorTime);
-        boolean isValid = sectorTime != null;
-        newSector.setIsValid(isValid);
-        if (!isValid) {
-            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
-                newSector.setInvalidationReason("Missing sector time");
-            } else if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
-                newSector.setInvalidationReason("Unreasonably large sector time");
-            } else {
-                newSector.setInvalidationReason("Invalid sector time format");
-            }
-        }
         return newSector;
     }
 
@@ -1022,5 +970,170 @@ public class ImportServiceImpl implements ImportService {
         }
 
         throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
+    }
+
+    @Override
+    public ProcessResultsResponseDTO processResultsCsv(ProcessResultsRequestDTO request) {
+        var importType = request.getImporterType();
+        try {
+            // 1. Download the CSV file using OkHttp
+            Request httpRequest = new Request.Builder()
+                    .url(request.getResultsUrl())
+                    .build();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    return new ProcessResultsResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
+                }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
+
+                // 2. Parse the CSV header
+                String headerLine = reader.readLine();
+                if (headerLine == null) {
+                    return new ProcessResultsResponseDTO(null, "FAILED", "CSV is empty");
+                }
+                String[] headers = headerLine.split(";");
+
+                // 3. Ensure series, event, session exist (using provided metadata)
+                Series series = seriesRepository.findById(request.getSeriesId())
+                        .orElseThrow(() -> new IllegalArgumentException("Series not found: " + request.getSeriesId()));
+                Event event = eventRepository.findById(request.getEventId())
+                        .orElseThrow(() -> new IllegalArgumentException("Event not found: " + request.getEventId()));
+                Session session = findOrCreateSession(request.getSessionName(), request.getSessionType(), request.getSessionDate(), request.getSessionDuration(), request.getCircuitId(), event.getId());
+
+                // 4. For each row, ensure car model, car entry, team, drivers exist
+                String row;
+                while ((row = reader.readLine()) != null) {
+                    if (row.trim().isEmpty()) continue;
+                    String[] values = row.split(";");
+
+                    // --- Parse team, manufacturer, class, car model, car number, tire supplier ---
+                    String teamName = getValueByHeader(headers, values, "TEAM");
+                    String manufacturerName = getValueByHeader(headers, values, "MANUFACTURER");
+                    String className = getValueByHeader(headers, values, "CLASS");
+                    String carModelName = getValueByHeader(headers, values, "VEHICLE");
+                    String carNumber = getValueByHeader(headers, values, "NUMBER");
+                    String tireSupplier = getValueByHeader(headers, values,
+                            importType.equals(ProcessResultsRequestDTO.ImporterType.WEC) ? "TYRES" : "TIRES");
+
+                    // --- Find or create team, manufacturer, class, car model ---
+                    Team team = findOrCreateTeam(teamName);
+                    Manufacturer manufacturer = findOrCreateManufacturer(manufacturerName);
+                    Class carClass = findOrCreateClass(series.getId(), className);
+                    CarModel carModel = findOrCreateCarModel(carModelName, manufacturer.getId());
+
+                    // --- Create car entry ---
+                    CarEntry carEntry = findOrCreateCarEntry(session.getId(), team.getId(), carClass.getId(), carModel.getId(), carNumber, tireSupplier);
+
+                    // --- Parse and create drivers ---
+                    List<Long> driverIds = new ArrayList<>();
+                    for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
+                        String[] names;
+                        if (importType == ProcessResultsRequestDTO.ImporterType.WEC) {
+                            String driverCol = "DRIVER_" + i;
+                            String driverName = getValueByHeader(headers, values, driverCol);
+                            if (driverName == null || driverName.isBlank()) continue;
+                            names = parseWECName(driverName);
+                        } else if (importType == ProcessResultsRequestDTO.ImporterType.IMSA) { // IMSA splits up names into two columns
+                            String driverFirstNameCol = String.format("DRIVER%d_FIRSTNAME", i);
+                            String driverSecondNameCol = String.format("DRIVER%d_SECONDNAME", i);
+                            String driverFirstName = getValueByHeader(headers, values, driverFirstNameCol);
+                            String driverSecondName = getValueByHeader(headers, values, driverSecondNameCol);
+
+                            if (driverFirstName == null || driverFirstName.isBlank()
+                                    || driverSecondName == null || driverSecondName.isBlank()) continue;
+                            names = new String[]{driverFirstName, driverSecondName};
+                        } else {
+                            throw new IllegalArgumentException("Unsupported importer type: " + importType);
+                        }
+                        Driver driver = findOrCreateDriverFromCsvName(names[0], names[1]);
+                        driverIds.add(driver.getId());
+                        // Create car-driver association (driver number left blank for now)
+                        createCarDriver(carEntry.getId(), driver.getId(), null);
+                    }
+                }
+                reader.close();
+                return new ProcessResultsResponseDTO(session.getId(), "SUCCESS", null);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to process results CSV", e);
+            return new ProcessResultsResponseDTO(null, "FAILED", e.getMessage());
+        }
+    }
+
+    public static String[] parseWECName(String fullName) {
+        String[] parts = fullName.split(" ");
+        StringBuilder firstName = new StringBuilder();
+        StringBuilder lastName = new StringBuilder();
+
+        for (String part : parts) {
+            // Check if the part is fully uppercase (indicating last name)
+            if (part.equals(part.toUpperCase()) && !part.isEmpty()) {
+                // Add space if not the first part of the last name
+                if (!lastName.isEmpty()) {
+                    lastName.append(" ");
+                }
+                lastName.append(part);
+            } else {
+                // Add space if not the first part of the first name
+                if (!firstName.isEmpty()) {
+                    firstName.append(" ");
+                }
+                firstName.append(part);
+            }
+        }
+
+        return new String[]{firstName.toString(), lastName.toString()};
+    }
+
+
+    // Helper to robustly get a value by header name
+    private String getValueByHeader(String[] headers, String[] values, String key) {
+        for (int i = 0; i < headers.length; i++) {
+            if (headers[i].trim().equalsIgnoreCase(key) && i < values.length) {
+                return values[i].trim();
+            }
+        }
+        return null;
+    }
+
+    // Helper to find or create a car entry (by session, team, class, car model, number, tire supplier)
+    private CarEntry findOrCreateCarEntry(Long sessionId, Long teamId, Long classId, Long carModelId, String carNumber, String tireSupplier) {
+        Optional<CarEntry> existing = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
+        if (existing.isPresent()) return existing.get();
+        CarEntry entry = new CarEntry();
+        entry.setSessionId(sessionId);
+        entry.setTeamId(teamId);
+        entry.setClassId(classId);
+        entry.setCarModelId(carModelId);
+        entry.setNumber(carNumber);
+        entry.setTireSupplier(tireSupplier);
+        return carEntryRepository.save(entry);
+    }
+
+    // Helper to find or create a driver from a CSV name ("Firstname Lastname")
+    private Driver findOrCreateDriverFromCsvName(String firstName, String lastName) {
+        Optional<Driver> existing = driverRepository.findByFirstNameAndLastName(firstName, lastName);
+        if (existing.isPresent()) return existing.get();
+        Driver driver = new Driver();
+        driver.setFirstName(firstName);
+        driver.setLastName(lastName);
+        // Leave other fields blank as per requirements
+        return driverRepository.save(driver);
+    }
+
+    // Utility to find or create a session using the request metadata
+    private Session findOrCreateSession(String sessionName, String sessionType, LocalDateTime sessionDate, Integer durationSeconds, Long circuitId, Long eventId) {
+        // Try to find by event, name, type, and start date
+        Optional<Session> existing = sessionRepository.findByEventIdAndNameAndTypeAndStartDatetime(
+                eventId, sessionName, sessionType, sessionDate);
+        if (existing.isPresent()) return existing.get();
+        Session session = new Session();
+        session.setEventId(eventId);
+        session.setName(sessionName);
+        session.setType(sessionType);
+        session.setStartDatetime(sessionDate);
+        session.setDurationSeconds(durationSeconds);
+        session.setCircuitId(circuitId);
+        return sessionRepository.save(session);
     }
 }

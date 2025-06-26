@@ -4,42 +4,23 @@
 package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.Indexes;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers.DriversPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors.SectorsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.LapsRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.Index;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -97,26 +78,6 @@ public class Laps extends TableImpl<LapsRecord> {
      * The column <code>public.laps.average_speed_kph</code>.
      */
     public final TableField<LapsRecord, BigDecimal> AVERAGE_SPEED_KPH = createField(DSL.name("average_speed_kph"), SQLDataType.NUMERIC(7, 3), this, "");
-
-    /**
-     * The column <code>public.laps.is_valid</code>.
-     */
-    public final TableField<LapsRecord, Boolean> IS_VALID = createField(DSL.name("is_valid"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
-
-    /**
-     * The column <code>public.laps.is_personal_best</code>.
-     */
-    public final TableField<LapsRecord, Boolean> IS_PERSONAL_BEST = createField(DSL.name("is_personal_best"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "");
-
-    /**
-     * The column <code>public.laps.is_session_best</code>.
-     */
-    public final TableField<LapsRecord, Boolean> IS_SESSION_BEST = createField(DSL.name("is_session_best"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "");
-
-    /**
-     * The column <code>public.laps.invalidation_reason</code>.
-     */
-    public final TableField<LapsRecord, String> INVALIDATION_REASON = createField(DSL.name("invalidation_reason"), SQLDataType.VARCHAR(100), this, "");
 
     /**
      * The column <code>public.laps.car_id</code>.
@@ -188,11 +149,6 @@ public class Laps extends TableImpl<LapsRecord> {
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
-    }
-
-    @Override
-    public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.IDX_LAPS_CAR_VALID_TIME, Indexes.IDX_LAPS_DRIVER_VALID_TIME);
     }
 
     @Override

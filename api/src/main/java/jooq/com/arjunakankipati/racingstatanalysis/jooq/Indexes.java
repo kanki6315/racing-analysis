@@ -4,15 +4,7 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-
+import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
 import org.jooq.Index;
 import org.jooq.OrderField;
 import org.jooq.impl.DSL;
@@ -36,7 +28,6 @@ public class Indexes {
     public static final Index IDX_CLASSES_SERIES_ID = Internal.createIndex(DSL.name("idx_classes_series_id"), Classes.CLASSES, new OrderField[] { Classes.CLASSES.SERIES_ID }, false);
     public static final Index IDX_EVENTS_SERIES_ID_YEAR = Internal.createIndex(DSL.name("idx_events_series_id_year"), Events.EVENTS, new OrderField[] { Events.EVENTS.SERIES_ID, Events.EVENTS.YEAR }, false);
     public static final Index IDX_IMPORT_JOBS_STATUS = Internal.createIndex(DSL.name("idx_import_jobs_status"), ImportJobs.IMPORT_JOBS, new OrderField[] { ImportJobs.IMPORT_JOBS.STATUS }, false);
-    public static final Index IDX_LAPS_CAR_VALID_TIME = Internal.createIndex(DSL.name("idx_laps_car_valid_time"), Laps.LAPS, new OrderField[] { Laps.LAPS.CAR_ID, Laps.LAPS.IS_VALID, Laps.LAPS.LAP_TIME_SECONDS }, false);
-    public static final Index IDX_LAPS_DRIVER_VALID_TIME = Internal.createIndex(DSL.name("idx_laps_driver_valid_time"), Laps.LAPS, new OrderField[] { Laps.LAPS.DRIVER_ID, Laps.LAPS.IS_VALID, Laps.LAPS.LAP_TIME_SECONDS }, false);
+    public static final Index IDX_RESULTS_SESSION_ID = Internal.createIndex(DSL.name("idx_results_session_id"), Results.RESULTS, new OrderField[]{Results.RESULTS.SESSION_ID}, false);
     public static final Index IDX_SESSIONS_EVENT_ID = Internal.createIndex(DSL.name("idx_sessions_event_id"), Sessions.SESSIONS, new OrderField[] { Sessions.SESSIONS.EVENT_ID }, false);
 }
