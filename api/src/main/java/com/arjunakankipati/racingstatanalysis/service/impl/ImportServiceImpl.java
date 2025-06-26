@@ -297,8 +297,22 @@ public class ImportServiceImpl implements ImportService {
 
         // Extract year from session_date (format: "25/01/2025 01:40")
         String sessionDateStr = sessionJson.get("session_date").getAsString();
-        int year = Integer.parseInt(sessionDateStr.substring(6, 10));
-
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime sessionStartDateTime = LocalDateTime.parse(sessionDateStr, formatter);
+        int year = sessionStartDateTime.getYear();
+        LocalDate eventStartDate = sessionStartDateTime.toLocalDate();
+        int durationSeconds = 0;
+        if (sessionJson.has("finalize_type") && sessionJson.get("finalize_type").isJsonObject()) {
+            JsonObject finalizeType = sessionJson.getAsJsonObject("finalize_type");
+            if (finalizeType.has("time_in_seconds")) {
+                durationSeconds = finalizeType.get("time_in_seconds").getAsInt();
+            }
+        }
+        LocalDate eventEndDate = eventStartDate;
+        if (durationSeconds > 0) {
+            LocalDateTime sessionEndDateTime = sessionStartDateTime.plusSeconds(durationSeconds);
+            eventEndDate = sessionEndDateTime.toLocalDate();
+        }
         // Find or create series
         Series series = findOrCreateSeries(seriesName);
         LOGGER.info(series.toString());
@@ -308,7 +322,7 @@ public class ImportServiceImpl implements ImportService {
         LOGGER.info(circuit.toString());
 
         // Find or create event
-        Event event = findOrCreateEvent(eventName, year, series.getId());
+        Event event = findOrCreateEvent(eventName, year, series.getId(), eventStartDate, eventEndDate);
         LOGGER.info(event.toString());
 
         // Create session
@@ -371,9 +385,11 @@ public class ImportServiceImpl implements ImportService {
      * @param eventName the name of the event
      * @param year      the year of the event
      * @param seriesId  the ID of the series
+     * @param startDate the start date of the event
+     * @param endDate   the end date of the event
      * @return the event entity
      */
-    private Event findOrCreateEvent(String eventName, Integer year, Long seriesId) {
+    private Event findOrCreateEvent(String eventName, Integer year, Long seriesId, LocalDate startDate, LocalDate endDate) {
         String key = eventName + ":" + year + ":" + seriesId;
         Event cached = eventCache.getIfPresent(key);
         if (cached != null) return cached;
@@ -386,8 +402,8 @@ public class ImportServiceImpl implements ImportService {
         newEvent.setName(eventName);
         newEvent.setYear(year);
         newEvent.setSeriesId(seriesId);
-        newEvent.setStartDate(LocalDate.now());
-        newEvent.setEndDate(LocalDate.now().plusDays(1));
+        newEvent.setStartDate(startDate);
+        newEvent.setEndDate(endDate);
         Event saved = eventRepository.save(newEvent);
         eventCache.put(key, saved);
         return saved;
