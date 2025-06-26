@@ -207,6 +207,12 @@ export default function YearPage() {
                   </div>
                   <div className="flex gap-2">
                     <Link
+                      href={`/series/${seriesId}/${year}/results/${event.eventId}`}
+                      className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors"
+                    >
+                      View Results
+                    </Link>
+                    <Link
                       href={`/analysis/${event.eventId}`}
                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                     >
