@@ -8,7 +8,6 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -75,46 +74,6 @@ public class CarModelRepositoryImpl extends BaseRepositoryImpl<CarModel, Long> i
     }
 
     @Override
-    public List<CarModel> findByManufacturerId(Long manufacturerId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_MODELS.MANUFACTURER_ID.eq(manufacturerId))
-                .orderBy(Tables.CAR_MODELS.NAME)
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarModel> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_MODELS.NAME.containsIgnoreCase(nameContains))
-                .orderBy(Tables.CAR_MODELS.NAME)
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarModel> findByFullNameContaining(String fullNameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_MODELS.FULL_NAME.containsIgnoreCase(fullNameContains))
-                .orderBy(Tables.CAR_MODELS.FULL_NAME)
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarModel> findByYearModel(Integer yearModel) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_MODELS.YEAR_MODEL.eq(yearModel))
-                .orderBy(Tables.CAR_MODELS.NAME)
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
     public Optional<CarModel> findByManufacturerIdAndName(Long manufacturerId, String name) {
         Record record = dsl.select()
                 .from(table)
@@ -123,17 +82,6 @@ public class CarModelRepositoryImpl extends BaseRepositoryImpl<CarModel, Long> i
                 .fetchOne();
 
         return Optional.ofNullable(record)
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarModel> findByManufacturerIdAndYearModel(Long manufacturerId, Integer yearModel) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_MODELS.MANUFACTURER_ID.eq(manufacturerId))
-                .and(Tables.CAR_MODELS.YEAR_MODEL.eq(yearModel))
-                .orderBy(Tables.CAR_MODELS.NAME)
-                .fetch()
                 .map(this::mapToEntity);
     }
 } 

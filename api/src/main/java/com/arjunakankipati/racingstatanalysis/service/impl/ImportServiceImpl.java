@@ -963,7 +963,7 @@ public class ImportServiceImpl implements ImportService {
 
     @Override
     public ProcessResultsResponseDTO processResultsCsv(ProcessResultsRequestDTO request) {
-        var importType = request.getImporterType();
+        var importType = request.getImportType();
         try {
             // 1. Download the CSV file using OkHttp
             Request httpRequest = new Request.Builder()
@@ -982,12 +982,16 @@ public class ImportServiceImpl implements ImportService {
                 }
                 String[] headers = headerLine.split(";");
 
-                // 3. Ensure series, event, session exist (using provided metadata)
-                Series series = seriesRepository.findById(request.getSeriesId())
-                        .orElseThrow(() -> new IllegalArgumentException("Series not found: " + request.getSeriesId()));
-                Event event = eventRepository.findById(request.getEventId())
-                        .orElseThrow(() -> new IllegalArgumentException("Event not found: " + request.getEventId()));
-                Session session = findOrCreateSession(request.getSessionName(), request.getSessionType(), request.getSessionDate(), request.getSessionDuration(), request.getCircuitId(), event.getId());
+                // 3. Ensure session exist (using provided metadata)
+                Session session;
+                if (request.getSessionId() != null) {
+                    session = sessionRepository.findById(request.getSessionId())
+                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
+                } else {
+                    throw new IllegalArgumentException("sessionId is required in the request");
+                }
+
+                var event = eventRepository.findById(session.getEventId()).get();
 
                 // 4. For each row, ensure car model, car entry, team, drivers exist
                 String row;
@@ -1002,12 +1006,12 @@ public class ImportServiceImpl implements ImportService {
                     String carModelName = getValueByHeader(headers, values, "VEHICLE");
                     String carNumber = getValueByHeader(headers, values, "NUMBER");
                     String tireSupplier = getValueByHeader(headers, values,
-                            importType.equals(ProcessResultsRequestDTO.ImporterType.WEC) ? "TYRES" : "TIRES");
+                            importType.equals(ProcessResultsRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
 
                     // --- Find or create team, manufacturer, class, car model ---
                     Team team = findOrCreateTeam(teamName);
                     Manufacturer manufacturer = findOrCreateManufacturer(manufacturerName);
-                    Class carClass = findOrCreateClass(series.getId(), className);
+                    Class carClass = findOrCreateClass(event.getSeriesId(), className);
                     CarModel carModel = findOrCreateCarModel(carModelName, manufacturer.getId());
 
                     // --- Create car entry ---
@@ -1017,12 +1021,12 @@ public class ImportServiceImpl implements ImportService {
                     List<Long> driverIds = new ArrayList<>();
                     for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
                         String[] names;
-                        if (importType == ProcessResultsRequestDTO.ImporterType.WEC) {
+                        if (importType == ProcessResultsRequestDTO.ImportType.WEC) {
                             String driverCol = "DRIVER_" + i;
                             String driverName = getValueByHeader(headers, values, driverCol);
                             if (driverName == null || driverName.isBlank()) continue;
                             names = parseWECName(driverName);
-                        } else if (importType == ProcessResultsRequestDTO.ImporterType.IMSA) { // IMSA splits up names into two columns
+                        } else if (importType == ProcessResultsRequestDTO.ImportType.IMSA) { // IMSA splits up names into two columns
                             String driverFirstNameCol = String.format("DRIVER%d_FIRSTNAME", i);
                             String driverSecondNameCol = String.format("DRIVER%d_SECONDNAME", i);
                             String driverFirstName = getValueByHeader(headers, values, driverFirstNameCol);
@@ -1108,21 +1112,5 @@ public class ImportServiceImpl implements ImportService {
         driver.setLastName(lastName);
         // Leave other fields blank as per requirements
         return driverRepository.save(driver);
-    }
-
-    // Utility to find or create a session using the request metadata
-    private Session findOrCreateSession(String sessionName, String sessionType, LocalDateTime sessionDate, Integer durationSeconds, Long circuitId, Long eventId) {
-        // Try to find by event, name, type, and start date
-        Optional<Session> existing = sessionRepository.findByEventIdAndNameAndTypeAndStartDatetime(
-                eventId, sessionName, sessionType, sessionDate);
-        if (existing.isPresent()) return existing.get();
-        Session session = new Session();
-        session.setEventId(eventId);
-        session.setName(sessionName);
-        session.setType(sessionType);
-        session.setStartDatetime(sessionDate);
-        session.setDurationSeconds(durationSeconds);
-        session.setCircuitId(circuitId);
-        return sessionRepository.save(session);
     }
 }

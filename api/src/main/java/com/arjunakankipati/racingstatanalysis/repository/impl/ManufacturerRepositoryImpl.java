@@ -8,7 +8,6 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -75,24 +74,6 @@ public class ManufacturerRepositoryImpl extends BaseRepositoryImpl<Manufacturer,
                 .fetchOne();
 
         return Optional.ofNullable(record)
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Manufacturer> findByCountry(String country) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.MANUFACTURERS.COUNTRY.eq(country))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Manufacturer> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.MANUFACTURERS.NAME.like("%" + nameContains + "%"))
-                .fetch()
                 .map(this::mapToEntity);
     }
 }

@@ -87,42 +87,6 @@ public class CarEntryRepositoryImpl extends BaseRepositoryImpl<CarEntry, Long> i
                 .map(this::mapToEntity);
     }
 
-    @Override
-    public List<CarEntry> findByTeamId(Long teamId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_ENTRIES.TEAM_ID.eq(teamId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarEntry> findByClassId(Long classId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_ENTRIES.CLASS_ID.eq(classId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarEntry> findByCarModelId(Long carModelId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_ENTRIES.CAR_MODEL_ID.eq(carModelId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarEntry> findBySessionIdAndClassId(Long sessionId, Long classId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_ENTRIES.SESSION_ID.eq(sessionId))
-                .and(Tables.CAR_ENTRIES.CLASS_ID.eq(classId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
 
     @Override
     public List<CarEntry> findByEventIdAndClassId(Long eventId, Long classId) {
@@ -144,15 +108,6 @@ public class CarEntryRepositoryImpl extends BaseRepositoryImpl<CarEntry, Long> i
                 .fetchOne();
 
         return Optional.ofNullable(record)
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<CarEntry> findByTireSupplier(String tireSupplier) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_ENTRIES.TIRE_SUPPLIER.eq(tireSupplier))
-                .fetch()
                 .map(this::mapToEntity);
     }
 } 

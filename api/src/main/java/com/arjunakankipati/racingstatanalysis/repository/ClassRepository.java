@@ -37,14 +37,6 @@ public interface ClassRepository extends BaseRepository<Class, Long> {
     Optional<Class> findBySeriesIdAndName(Long seriesId, String name);
 
     /**
-     * Find classes by name containing the given string.
-     *
-     * @param nameContains the string to search for in class names
-     * @return a list of classes with names containing the given string
-     */
-    List<Class> findByNameContaining(String nameContains);
-
-    /**
      * Find classes that competed in a specific event.
      * This is done by finding all sessions for the event, then all cars in those sessions,
      * and finally getting the unique classes from those cars.

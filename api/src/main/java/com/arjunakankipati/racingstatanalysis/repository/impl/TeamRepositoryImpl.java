@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -83,27 +82,6 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
 
         return Optional.ofNullable(record)
                 .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Team> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.TEAMS.NAME.like("%" + nameContains + "%"))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Record> findTeamsCarsAndDriversByEventId(Long eventId) {
-        return dsl.select()
-                .from(Tables.TEAMS)
-                .join(Tables.CAR_ENTRIES).on(Tables.CAR_ENTRIES.TEAM_ID.eq(Tables.TEAMS.ID))
-                .join(Tables.SESSIONS).on(Tables.CAR_ENTRIES.SESSION_ID.eq(Tables.SESSIONS.ID))
-                .join(Tables.CAR_DRIVERS).on(Tables.CAR_DRIVERS.CAR_ID.eq(Tables.CAR_ENTRIES.ID))
-                .join(Tables.DRIVERS).on(Tables.DRIVERS.ID.eq(Tables.CAR_DRIVERS.DRIVER_ID))
-                .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
-                .fetch();
     }
 
     @Override

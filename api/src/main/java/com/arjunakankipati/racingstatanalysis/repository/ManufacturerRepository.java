@@ -2,7 +2,6 @@ package com.arjunakankipati.racingstatanalysis.repository;
 
 import com.arjunakankipati.racingstatanalysis.model.Manufacturer;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,20 +17,4 @@ public interface ManufacturerRepository extends BaseRepository<Manufacturer, Lon
      * @return an Optional containing the found manufacturer, or empty if not found
      */
     Optional<Manufacturer> findByName(String name);
-
-    /**
-     * Find manufacturers by country.
-     *
-     * @param country the country to find manufacturers for
-     * @return a list of manufacturers from the given country
-     */
-    List<Manufacturer> findByCountry(String country);
-
-    /**
-     * Find manufacturers by name containing the given string.
-     *
-     * @param nameContains the string to search for in manufacturer names
-     * @return a list of manufacturers with names containing the given string
-     */
-    List<Manufacturer> findByNameContaining(String nameContains);
 }

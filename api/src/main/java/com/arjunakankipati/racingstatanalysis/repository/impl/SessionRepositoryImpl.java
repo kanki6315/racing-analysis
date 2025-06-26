@@ -8,9 +8,7 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Implementation of the SessionRepository interface using JOOQ.
@@ -91,56 +89,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 .from(table)
                 .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
                 .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Session> findByCircuitId(Long circuitId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.SESSIONS.CIRCUIT_ID.eq(circuitId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Session> findByType(String type) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.SESSIONS.TYPE.eq(type))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Session> findByEventIdAndType(Long eventId, String type) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
-                .and(Tables.SESSIONS.TYPE.eq(type))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Session> findByStartDatetimeBetween(LocalDateTime startFrom, LocalDateTime startTo) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.SESSIONS.START_DATETIME.ge(startFrom))
-                .and(Tables.SESSIONS.START_DATETIME.le(startTo))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public Optional<Session> findByEventIdAndNameAndTypeAndStartDatetime(Long eventId, String name, String type, LocalDateTime startDatetime) {
-        return Optional.ofNullable(dsl.select()
-                        .from(table)
-                        .where(Tables.SESSIONS.EVENT_ID.eq(eventId))
-                        .and(Tables.SESSIONS.TYPE.eq(type))
-                        .and(Tables.SESSIONS.NAME.eq(name)
-                                .and(Tables.SESSIONS.START_DATETIME.eq(startDatetime)))
-                        .fetchOne())
                 .map(this::mapToEntity);
     }
 }

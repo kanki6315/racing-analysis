@@ -8,7 +8,6 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -88,24 +87,6 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
                 .fetchOne();
 
         return Optional.ofNullable(record)
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Circuit> findByCountry(String country) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CIRCUITS.COUNTRY.eq(country))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Circuit> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CIRCUITS.NAME.like("%" + nameContains + "%"))
-                .fetch()
                 .map(this::mapToEntity);
     }
 }
