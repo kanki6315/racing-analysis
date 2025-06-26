@@ -370,50 +370,6 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Finds or creates a team with the given name.
-     *
-     * @param teamName the name of the team
-     * @return the team entity
-     */
-    private Team findOrCreateTeam(String teamName) {
-        Team cached = teamCache.getIfPresent(teamName);
-        if (cached != null) return cached;
-        Optional<Team> existingTeam = teamRepository.findByName(teamName);
-        if (existingTeam.isPresent()) {
-            teamCache.put(teamName, existingTeam.get());
-            return existingTeam.get();
-        }
-        Team newTeam = new Team();
-        newTeam.setName(teamName);
-        Team saved = teamRepository.save(newTeam);
-        teamCache.put(teamName, saved);
-        return saved;
-    }
-
-    /**
-     * Finds or creates a class with the given name.
-     *
-     * @param className the name of the class
-     * @return the class entity
-     */
-    private Class findOrCreateClass(Long seriesId, String className) {
-        String key = seriesId + ":" + className;
-        Class cached = classCache.getIfPresent(key);
-        if (cached != null) return cached;
-        Optional<Class> existingClass = classRepository.findBySeriesIdAndName(seriesId, className);
-        if (existingClass.isPresent()) {
-            classCache.put(key, existingClass.get());
-            return existingClass.get();
-        }
-        Class newClass = new Class();
-        newClass.setSeriesId(seriesId);
-        newClass.setName(className);
-        Class saved = classRepository.save(newClass);
-        classCache.put(key, saved);
-        return saved;
-    }
-
-    /**
      * Creates a car entry with the given data.
      *
      * @param participantJson the JSON data for the participant
@@ -450,31 +406,6 @@ public class ImportServiceImpl implements ImportService {
 
         LOGGER.info("Created car entry: {} - {}", carNumber, vehicleModel);
         return carEntryRepository.save(newCarEntry);
-    }
-
-    /**
-     * Finds or creates a car model with the given data.
-     *
-     * @param vehicleModel   the vehicle model name
-     * @return the car model entity
-     */
-    private CarModel findOrCreateCarModel(String vehicleModel) {
-        String key = vehicleModel;
-        CarModel cached = carModelCache.getIfPresent(key);
-        if (cached != null) return cached;
-        Optional<CarModel> existingCarModel = carModelRepository.findByName(vehicleModel);
-        if (existingCarModel.isPresent()) {
-            carModelCache.put(key, existingCarModel.get());
-            return existingCarModel.get();
-        }
-        CarModel newCarModel = new CarModel();
-        newCarModel.setName(vehicleModel);
-        newCarModel.setFullName(vehicleModel);
-        newCarModel.setYearModel(null);
-        newCarModel.setDescription(null);
-        CarModel saved = carModelRepository.save(newCarModel);
-        carModelCache.put(key, saved);
-        return saved;
     }
 
     /**
@@ -989,12 +920,81 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
-    private java.math.BigDecimal parseBigDecimal(String value) {
+    private BigDecimal parseBigDecimal(String value) {
         try {
             if (value == null || value.isBlank()) return null;
-            return new java.math.BigDecimal(value.trim());
+            return new BigDecimal(value.trim());
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Finds or creates a car model with the given data.
+     *
+     * @param vehicleModel the vehicle model name
+     * @return the car model entity
+     */
+    private CarModel findOrCreateCarModel(String vehicleModel) {
+        String key = vehicleModel;
+        CarModel cached = carModelCache.getIfPresent(key);
+        if (cached != null) return cached;
+        Optional<CarModel> existingCarModel = carModelRepository.findByName(vehicleModel);
+        if (existingCarModel.isPresent()) {
+            carModelCache.put(key, existingCarModel.get());
+            return existingCarModel.get();
+        }
+        CarModel newCarModel = new CarModel();
+        newCarModel.setName(vehicleModel);
+        newCarModel.setFullName(vehicleModel);
+        newCarModel.setYearModel(null);
+        newCarModel.setDescription(null);
+        CarModel saved = carModelRepository.save(newCarModel);
+        carModelCache.put(key, saved);
+        return saved;
+    }
+
+    /**
+     * Finds or creates a team with the given name.
+     *
+     * @param teamName the name of the team
+     * @return the team entity
+     */
+    private Team findOrCreateTeam(String teamName) {
+        Team cached = teamCache.getIfPresent(teamName);
+        if (cached != null) return cached;
+        Optional<Team> existingTeam = teamRepository.findByName(teamName);
+        if (existingTeam.isPresent()) {
+            teamCache.put(teamName, existingTeam.get());
+            return existingTeam.get();
+        }
+        Team newTeam = new Team();
+        newTeam.setName(teamName);
+        Team saved = teamRepository.save(newTeam);
+        teamCache.put(teamName, saved);
+        return saved;
+    }
+
+    /**
+     * Finds or creates a class with the given name.
+     *
+     * @param className the name of the class
+     * @return the class entity
+     */
+    private Class findOrCreateClass(Long seriesId, String className) {
+        String key = seriesId + ":" + className;
+        Class cached = classCache.getIfPresent(key);
+        if (cached != null) return cached;
+        Optional<Class> existingClass = classRepository.findBySeriesIdAndName(seriesId, className);
+        if (existingClass.isPresent()) {
+            classCache.put(key, existingClass.get());
+            return existingClass.get();
+        }
+        Class newClass = new Class();
+        newClass.setSeriesId(seriesId);
+        newClass.setName(className);
+        Class saved = classRepository.save(newClass);
+        classCache.put(key, saved);
+        return saved;
     }
 }
