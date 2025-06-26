@@ -8,39 +8,20 @@ interface Series {
   id: number;
   name: string;
   eventCount: number;
-}
-
-interface YearsResponse {
-  seriesId: number;
-  seriesName: string;
   years: number[];
 }
 
 export default function Home() {
   const [series, setSeries] = useState<Series[]>([]);
-  const [seriesYears, setSeriesYears] = useState<Record<number, number[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all series
+        // Fetch all series (now includes years)
         const seriesData: Series[] = await apiRequest<Series[]>('/series');
         setSeries(seriesData);
-
-        // Fetch years for each series
-        const yearsData: Record<number, number[]> = {};
-        for (const seriesItem of seriesData) {
-          try {
-            const yearsResult: YearsResponse = await apiRequest<YearsResponse>(`/series/${seriesItem.id}/years`);
-            yearsData[seriesItem.id] = yearsResult.years;
-          } catch (err) {
-            console.error(`Failed to fetch years for series ${seriesItem.id}:`, err);
-            yearsData[seriesItem.id] = [];
-          }
-        }
-        setSeriesYears(yearsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -94,11 +75,11 @@ export default function Home() {
                 </span>
               </div>
 
-              {seriesYears[seriesItem.id] && seriesYears[seriesItem.id].length > 0 ? (
+              {seriesItem.years && seriesItem.years.length > 0 ? (
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-3">Available Years:</h3>
                   <div className="flex flex-wrap gap-3">
-                    {seriesYears[seriesItem.id].map((year) => (
+                    {seriesItem.years.map((year) => (
                       <Link
                         key={year}
                         href={`/series/${seriesItem.id}/${year}`}
