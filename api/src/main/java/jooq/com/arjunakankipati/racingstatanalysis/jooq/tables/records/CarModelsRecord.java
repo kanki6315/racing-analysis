@@ -5,7 +5,6 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
@@ -33,73 +32,59 @@ public class CarModelsRecord extends UpdatableRecordImpl<CarModelsRecord> {
     }
 
     /**
-     * Setter for <code>public.car_models.manufacturer_id</code>.
-     */
-    public void setManufacturerId(Long value) {
-        set(1, value);
-    }
-
-    /**
-     * Getter for <code>public.car_models.manufacturer_id</code>.
-     */
-    public Long getManufacturerId() {
-        return (Long) get(1);
-    }
-
-    /**
      * Setter for <code>public.car_models.name</code>.
      */
     public void setName(String value) {
-        set(2, value);
+        set(1, value);
     }
 
     /**
      * Getter for <code>public.car_models.name</code>.
      */
     public String getName() {
-        return (String) get(2);
+        return (String) get(1);
     }
 
     /**
      * Setter for <code>public.car_models.full_name</code>.
      */
     public void setFullName(String value) {
-        set(3, value);
+        set(2, value);
     }
 
     /**
      * Getter for <code>public.car_models.full_name</code>.
      */
     public String getFullName() {
-        return (String) get(3);
+        return (String) get(2);
     }
 
     /**
      * Setter for <code>public.car_models.year_model</code>.
      */
     public void setYearModel(Integer value) {
-        set(4, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.car_models.year_model</code>.
      */
     public Integer getYearModel() {
-        return (Integer) get(4);
+        return (Integer) get(3);
     }
 
     /**
      * Setter for <code>public.car_models.description</code>.
      */
     public void setDescription(String value) {
-        set(5, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.car_models.description</code>.
      */
     public String getDescription() {
-        return (String) get(5);
+        return (String) get(4);
     }
 
     // -------------------------------------------------------------------------
@@ -125,11 +110,10 @@ public class CarModelsRecord extends UpdatableRecordImpl<CarModelsRecord> {
     /**
      * Create a detached, initialised CarModelsRecord
      */
-    public CarModelsRecord(Long id, Long manufacturerId, String name, String fullName, Integer yearModel, String description) {
+    public CarModelsRecord(Long id, String name, String fullName, Integer yearModel, String description) {
         super(CarModels.CAR_MODELS);
 
         setId(id);
-        setManufacturerId(manufacturerId);
         setName(name);
         setFullName(fullName);
         setYearModel(yearModel);

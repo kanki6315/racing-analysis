@@ -7,34 +7,14 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers.ManufacturersPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarModelsRecord;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import java.util.Collection;
 
 
 /**
@@ -62,11 +42,6 @@ public class CarModels extends TableImpl<CarModelsRecord> {
      * The column <code>public.car_models.id</code>.
      */
     public final TableField<CarModelsRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
-
-    /**
-     * The column <code>public.car_models.manufacturer_id</code>.
-     */
-    public final TableField<CarModelsRecord, Long> MANUFACTURER_ID = createField(DSL.name("manufacturer_id"), SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>public.car_models.name</code>.
@@ -163,29 +138,6 @@ public class CarModels extends TableImpl<CarModelsRecord> {
     @Override
     public UniqueKey<CarModelsRecord> getPrimaryKey() {
         return Keys.CAR_MODELS_PKEY;
-    }
-
-    @Override
-    public List<UniqueKey<CarModelsRecord>> getUniqueKeys() {
-        return Arrays.asList(Keys.CAR_MODELS_MANUFACTURER_ID_NAME_YEAR_MODEL_KEY);
-    }
-
-    @Override
-    public List<ForeignKey<CarModelsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.CAR_MODELS__CAR_MODELS_MANUFACTURER_ID_FKEY);
-    }
-
-    private transient ManufacturersPath _manufacturers;
-
-    /**
-     * Get the implicit join path to the <code>public.manufacturers</code>
-     * table.
-     */
-    public ManufacturersPath manufacturers() {
-        if (_manufacturers == null)
-            _manufacturers = new ManufacturersPath(this, Keys.CAR_MODELS__CAR_MODELS_MANUFACTURER_ID_FKEY, null);
-
-        return _manufacturers;
     }
 
     private transient CarEntriesPath _carEntries;

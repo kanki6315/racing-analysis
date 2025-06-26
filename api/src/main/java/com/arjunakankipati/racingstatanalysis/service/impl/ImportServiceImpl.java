@@ -45,7 +45,6 @@ public class ImportServiceImpl implements ImportService {
     private final CircuitRepository circuitRepository;
     private final SessionRepository sessionRepository;
     private final TeamRepository teamRepository;
-    private final ManufacturerRepository manufacturerRepository;
     private final ClassRepository classRepository;
     private final DriverRepository driverRepository;
     private final CarEntryRepository carEntryRepository;
@@ -60,7 +59,6 @@ public class ImportServiceImpl implements ImportService {
     private final Cache<String, Series> seriesCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Circuit> circuitCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Team> teamCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
-    private final Cache<String, Manufacturer> manufacturerCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Class> classCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, CarModel> carModelCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Event> eventCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
@@ -75,7 +73,6 @@ public class ImportServiceImpl implements ImportService {
                              CircuitRepository circuitRepository,
                              SessionRepository sessionRepository,
                              TeamRepository teamRepository,
-                             ManufacturerRepository manufacturerRepository,
                              ClassRepository classRepository,
                              DriverRepository driverRepository,
                              CarEntryRepository carEntryRepository,
@@ -89,7 +86,6 @@ public class ImportServiceImpl implements ImportService {
         this.circuitRepository = circuitRepository;
         this.sessionRepository = sessionRepository;
         this.teamRepository = teamRepository;
-        this.manufacturerRepository = manufacturerRepository;
         this.classRepository = classRepository;
         this.driverRepository = driverRepository;
         this.carEntryRepository = carEntryRepository;
@@ -113,10 +109,8 @@ public class ImportServiceImpl implements ImportService {
         try {
             // Fetch JSON data from URL
             JsonObject jsonData = fetchJsonData(request.getUrl());
-            // Validate JSON structure
-            validateJsonStructure(jsonData);
             // Process and store the data
-            processData(jsonData, request.getUrl());
+            processJSONData(jsonData, request.getUrl());
             importJobService.markCompleted(jobId);
         } catch (Exception e) {
             LOGGER.error("Failed to process import for URL: " + request.getUrl(), e);
@@ -142,18 +136,6 @@ public class ImportServiceImpl implements ImportService {
                 throw new ReportURLNotValidException("Invalid JSON format in temp.json", e);
             }
         }
-
-        // Get current size of heap in bytes.
-        long heapSize = Runtime.getRuntime().totalMemory();
-
-        // Get maximum size of heap in bytes. The heap cannot grow beyond this size.
-        // Any attempt will result in an OutOfMemoryException.
-        long heapMaxSize = Runtime.getRuntime().maxMemory();
-
-        // Get amount of free memory within the heap in bytes. This size will
-        // increase after garbage collection and decrease as new objects are created.
-        long heapFreeSize = Runtime.getRuntime().freeMemory();
-        LOGGER.info("Heap size: {} bytes, free memory: {} bytes, max memory: {} bytes", heapSize, heapFreeSize, heapMaxSize);
         // Fetch data from URL
         Request request = new Request.Builder()
                 .url(url)
@@ -163,12 +145,6 @@ public class ImportServiceImpl implements ImportService {
             if (!response.isSuccessful()) {
                 throw new ReportURLNotValidException("Failed to fetch data from URL: " + response.code());
             }
-
-            heapSize = Runtime.getRuntime().totalMemory();
-            heapMaxSize = Runtime.getRuntime().maxMemory();
-            heapFreeSize = Runtime.getRuntime().freeMemory();
-            LOGGER.info("Heap size: {} bytes, free memory: {} bytes, max memory: {} bytes", heapSize, heapFreeSize, heapMaxSize);
-
             String jsonString = response.body().string();
             try {
                 return JsonParser.parseString(jsonString).getAsJsonObject();
@@ -180,115 +156,12 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Validates the JSON structure to ensure it contains the required fields.
-     *
-     * @param jsonData the JSON data to validate
-     * @throws ReportURLNotValidException if the JSON structure is not valid
-     */
-    private void validateJsonStructure(JsonObject jsonData) {
-        // Check if the JSON has the required top-level fields
-        if (!jsonData.has("session") || !jsonData.has("participants")) {
-            throw new ReportURLNotValidException("JSON data must contain 'session' and 'participants' fields");
-        }
-
-        // Check if the session field is an object
-        if (!jsonData.get("session").isJsonObject()) {
-            throw new ReportURLNotValidException("'session' field must be an object");
-        }
-
-        // Check if the participants field is an array
-        if (!jsonData.get("participants").isJsonArray()) {
-            throw new ReportURLNotValidException("'participants' field must be an array");
-        }
-
-        // Check if the session object has the required fields
-        JsonObject session = jsonData.getAsJsonObject("session");
-        String[] requiredSessionFields = {"championship_name", "event_name", "session_name", "session_type", "session_date"};
-        for (String field : requiredSessionFields) {
-            if (!session.has(field)) {
-                throw new ReportURLNotValidException("Session object must contain '" + field + "' field");
-            }
-        }
-
-        // Check if the session object has a circuit object with required fields
-        if (!session.has("circuit") || !session.get("circuit").isJsonObject()) {
-            throw new ReportURLNotValidException("Session object must contain a 'circuit' object");
-        }
-
-        JsonObject circuit = session.getAsJsonObject("circuit");
-        String[] requiredCircuitFields = {"name", "length", "country"};
-        for (String field : requiredCircuitFields) {
-            if (!circuit.has(field)) {
-                throw new ReportURLNotValidException("Circuit object must contain '" + field + "' field");
-            }
-        }
-
-        // Validate finalize_type structure
-        if (!session.has("finalize_type") || !session.get("finalize_type").isJsonObject()) {
-            throw new ReportURLNotValidException("Session object must contain a 'finalize_type' object");
-        }
-
-        JsonObject finalizeType = session.getAsJsonObject("finalize_type");
-        if (!finalizeType.has("time_in_seconds")) {
-            throw new ReportURLNotValidException("finalize_type object must contain 'time_in_seconds' field");
-        }
-
-        // Validate participants structure
-        JsonArray participants = jsonData.getAsJsonArray("participants");
-        for (JsonElement participantElement : participants) {
-            if (!participantElement.isJsonObject()) {
-                throw new ReportURLNotValidException("Each participant must be an object");
-            }
-
-            JsonObject participant = participantElement.getAsJsonObject();
-
-            // Check required participant fields
-            String[] requiredParticipantFields = {"number", "team", "class", "vehicle", "manufacturer"};
-            for (String field : requiredParticipantFields) {
-                if (!participant.has(field)) {
-                    throw new ReportURLNotValidException("Participant object must contain '" + field + "' field");
-                }
-            }
-
-            // Validate that number field is not null or empty
-            JsonElement numberElement = participant.get("number");
-            if (numberElement == null || numberElement.isJsonNull()) {
-                throw new ReportURLNotValidException("Participant number field cannot be null");
-            }
-
-            // Validate drivers array if present
-            if (participant.has("drivers") && participant.get("drivers").isJsonArray()) {
-                JsonArray drivers = participant.getAsJsonArray("drivers");
-                for (JsonElement driverElement : drivers) {
-                    if (!driverElement.isJsonObject()) {
-                        throw new ReportURLNotValidException("Each driver must be an object");
-                    }
-
-                    JsonObject driver = driverElement.getAsJsonObject();
-                    String[] requiredDriverFields = {"number", "firstname", "surname"};
-                    for (String field : requiredDriverFields) {
-                        if (!driver.has(field)) {
-                            throw new ReportURLNotValidException("Driver object must contain '" + field + "' field");
-                        }
-                    }
-
-                    // Validate that driver number field is not null or empty
-                    JsonElement driverNumberElement = driver.get("number");
-                    if (driverNumberElement == null || driverNumberElement.isJsonNull()) {
-                        throw new ReportURLNotValidException("Driver number field cannot be null");
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Processes and stores the data from the JSON.
      *
      * @param jsonData the JSON data to process
      * @param url      the URL of the imported data
      */
-    private void processData(JsonObject jsonData, String url) {
+    private void processJSONData(JsonObject jsonData, String url) {
         // Extract session data
         JsonObject sessionJson = jsonData.getAsJsonObject("session");
         JsonObject circuitJson = sessionJson.getAsJsonObject("circuit");
@@ -469,18 +342,13 @@ public class ImportServiceImpl implements ImportService {
             Team team = findOrCreateTeam(participantJson.get("team").getAsString());
             LOGGER.info(team.toString());
 
-            // Find or create manufacturer
-            Manufacturer manufacturer = findOrCreateManufacturer(
-                    participantJson.get("manufacturer").getAsString());
-            LOGGER.info(manufacturer.toString());
-
             // Find or create class
             Class carClass = findOrCreateClass(seriesId, participantJson.get("class").getAsString());
             LOGGER.info(carClass.toString());
 
             // Create car entry
             CarEntry carEntry = createCarEntry(participantJson, sessionId, team.getId(),
-                    carClass.getId(), manufacturer.getId());
+                    carClass.getId());
             LOGGER.info(carEntry.toString());
 
             // Process drivers
@@ -520,27 +388,6 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Finds or creates a manufacturer with the given name.
-     *
-     * @param manufacturerName the name of the manufacturer
-     * @return the manufacturer entity
-     */
-    private Manufacturer findOrCreateManufacturer(String manufacturerName) {
-        Manufacturer cached = manufacturerCache.getIfPresent(manufacturerName);
-        if (cached != null) return cached;
-        Optional<Manufacturer> existingManufacturer = manufacturerRepository.findByName(manufacturerName);
-        if (existingManufacturer.isPresent()) {
-            manufacturerCache.put(manufacturerName, existingManufacturer.get());
-            return existingManufacturer.get();
-        }
-        Manufacturer newManufacturer = new Manufacturer();
-        newManufacturer.setName(manufacturerName);
-        Manufacturer saved = manufacturerRepository.save(newManufacturer);
-        manufacturerCache.put(manufacturerName, saved);
-        return saved;
-    }
-
-    /**
      * Finds or creates a class with the given name.
      *
      * @param className the name of the class
@@ -570,11 +417,10 @@ public class ImportServiceImpl implements ImportService {
      * @param sessionId       the ID of the session
      * @param teamId          the ID of the team
      * @param classId         the ID of the class
-     * @param manufacturerId  the ID of the manufacturer
      * @return the car entry entity
      */
     private CarEntry createCarEntry(JsonObject participantJson, Long sessionId, Long teamId,
-                                    Long classId, Long manufacturerId) {
+                                    Long classId) {
         // Parse car number safely, handling both string and integer formats
         String carNumber = parseJsonNumberAsString(participantJson.get("number"), "car number");
         // Check if car entry already exists for this session and car number
@@ -585,7 +431,7 @@ public class ImportServiceImpl implements ImportService {
 
         String vehicleModel = participantJson.get("vehicle").getAsString();
         // Find or create car model
-        CarModel carModel = findOrCreateCarModel(vehicleModel, manufacturerId);
+        CarModel carModel = findOrCreateCarModel(vehicleModel);
 
         // Create car entry
         CarEntry newCarEntry = new CarEntry();
@@ -607,20 +453,18 @@ public class ImportServiceImpl implements ImportService {
      * Finds or creates a car model with the given data.
      *
      * @param vehicleModel   the vehicle model name
-     * @param manufacturerId the ID of the manufacturer
      * @return the car model entity
      */
-    private CarModel findOrCreateCarModel(String vehicleModel, Long manufacturerId) {
-        String key = manufacturerId + ":" + vehicleModel;
+    private CarModel findOrCreateCarModel(String vehicleModel) {
+        String key = vehicleModel;
         CarModel cached = carModelCache.getIfPresent(key);
         if (cached != null) return cached;
-        Optional<CarModel> existingCarModel = carModelRepository.findByManufacturerIdAndName(manufacturerId, vehicleModel);
+        Optional<CarModel> existingCarModel = carModelRepository.findByName(vehicleModel);
         if (existingCarModel.isPresent()) {
             carModelCache.put(key, existingCarModel.get());
             return existingCarModel.get();
         }
         CarModel newCarModel = new CarModel();
-        newCarModel.setManufacturerId(manufacturerId);
         newCarModel.setName(vehicleModel);
         newCarModel.setFullName(vehicleModel);
         newCarModel.setYearModel(null);
@@ -999,26 +843,23 @@ public class ImportServiceImpl implements ImportService {
                     if (row.trim().isEmpty()) continue;
                     String[] values = row.split(";");
 
-                    // --- Parse team, manufacturer, class, car model, car number, tire supplier ---
+                    // --- Parse team, class, car model, car number, tire supplier ---
                     String teamName = getValueByHeader(headers, values, "TEAM");
-                    String manufacturerName = getValueByHeader(headers, values, "MANUFACTURER");
                     String className = getValueByHeader(headers, values, "CLASS");
                     String carModelName = getValueByHeader(headers, values, "VEHICLE");
                     String carNumber = getValueByHeader(headers, values, "NUMBER");
                     String tireSupplier = getValueByHeader(headers, values,
                             importType.equals(ProcessResultsRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
 
-                    // --- Find or create team, manufacturer, class, car model ---
+                    // --- Find or create team, class, car model ---
                     Team team = findOrCreateTeam(teamName);
-                    Manufacturer manufacturer = findOrCreateManufacturer(manufacturerName);
                     Class carClass = findOrCreateClass(event.getSeriesId(), className);
-                    CarModel carModel = findOrCreateCarModel(carModelName, manufacturer.getId());
+                    CarModel carModel = findOrCreateCarModel(carModelName);
 
                     // --- Create car entry ---
                     CarEntry carEntry = findOrCreateCarEntry(session.getId(), team.getId(), carClass.getId(), carModel.getId(), carNumber, tireSupplier);
 
                     // --- Parse and create drivers ---
-                    List<Long> driverIds = new ArrayList<>();
                     for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
                         String[] names;
                         if (importType == ProcessResultsRequestDTO.ImportType.WEC) {
@@ -1039,9 +880,8 @@ public class ImportServiceImpl implements ImportService {
                             throw new IllegalArgumentException("Unsupported importer type: " + importType);
                         }
                         Driver driver = findOrCreateDriverFromCsvName(names[0], names[1]);
-                        driverIds.add(driver.getId());
-                        // Create car-driver association (driver number left blank for now)
-                        createCarDriver(carEntry.getId(), driver.getId(), null);
+                        // Create car-driver association
+                        createCarDriver(carEntry.getId(), driver.getId(), i);
                     }
                 }
                 reader.close();

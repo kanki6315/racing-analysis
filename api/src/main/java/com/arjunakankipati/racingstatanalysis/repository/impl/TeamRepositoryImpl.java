@@ -1,6 +1,6 @@
 package com.arjunakankipati.racingstatanalysis.repository.impl;
 
-import com.arjunakankipati.racingstatanalysis.dto.CarDTO;
+import com.arjunakankipati.racingstatanalysis.dto.CarEntryDTO;
 import com.arjunakankipati.racingstatanalysis.dto.CarModelDTO;
 import com.arjunakankipati.racingstatanalysis.dto.DriverDTO;
 import com.arjunakankipati.racingstatanalysis.dto.TeamDTO;
@@ -88,7 +88,7 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
     public Map<Long, TeamDTO> findTeamsWithCarsAndDriversByEventId(Long eventId) {
         // Map to store unique teams
         Map<Long, TeamDTO> teamMap = new HashMap<>();
-        Map<Long, CarDTO> carMap = new HashMap<>();
+        Map<Long, CarEntryDTO> carMap = new HashMap<>();
 
         // Fetch all teams, cars, and drivers for the event in a single query
         Result<Record> records = dsl.select()
@@ -119,22 +119,20 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
             String carTireSupplier = record.get(Tables.CAR_ENTRIES.TIRE_SUPPLIER);
             Long carClassId = record.get(Tables.CAR_ENTRIES.CLASS_ID);
             Long carModelId = record.get(Tables.CAR_MODELS.ID);
-            Long carManufacturerId = record.get(Tables.CAR_MODELS.MANUFACTURER_ID);
 
             // Create or get the car DTO
-            CarDTO carDTO = carMap.computeIfAbsent(carId,
+            CarEntryDTO carEntryDTO = carMap.computeIfAbsent(carId,
                     id -> {
                         // Create CarModelDTO
                         CarModelDTO carModelDTO = new CarModelDTO(
                                 carModelId,
-                                carManufacturerId,
                                 carModelName,
                                 carModelName, // For now, use name as fullName
                                 null, // yearModel not available
                                 null  // description not available
                         );
-                        
-                        CarDTO car = new CarDTO(
+
+                        CarEntryDTO car = new CarEntryDTO(
                                 carId,
                                 carNumber,
                                 carModelDTO,
@@ -167,7 +165,7 @@ public class TeamRepositoryImpl extends BaseRepositoryImpl<Team, Long> implement
             );
 
             // Add driver to car
-            carDTO.addDriver(driverDTO);
+            carEntryDTO.addDriver(driverDTO);
         }
 
         return teamMap;

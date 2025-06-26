@@ -64,11 +64,6 @@ public class Tables {
     public static final Laps LAPS = Laps.LAPS;
 
     /**
-     * The table <code>public.manufacturers</code>.
-     */
-    public static final Manufacturers MANUFACTURERS = Manufacturers.MANUFACTURERS;
-
-    /**
      * The table <code>public.results</code>.
      */
     public static final Results RESULTS = Results.RESULTS;

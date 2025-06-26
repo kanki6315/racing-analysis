@@ -77,11 +77,6 @@ public class Public extends SchemaImpl {
     public final Laps LAPS = Laps.LAPS;
 
     /**
-     * The table <code>public.manufacturers</code>.
-     */
-    public final Manufacturers MANUFACTURERS = Manufacturers.MANUFACTURERS;
-
-    /**
      * The table <code>public.results</code>.
      */
     public final Results RESULTS = Results.RESULTS;
@@ -137,7 +132,6 @@ public class Public extends SchemaImpl {
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
             ImportJobs.IMPORT_JOBS,
             Laps.LAPS,
-            Manufacturers.MANUFACTURERS,
                 Results.RESULTS,
                 ResultsDrivers.RESULTS_DRIVERS,
             Sectors.SECTORS,
