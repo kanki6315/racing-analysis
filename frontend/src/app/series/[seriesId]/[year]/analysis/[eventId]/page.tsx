@@ -51,7 +51,7 @@ interface LapTimeAnalysisResponse {
 
 export default function AnalysisPage() {
   const params = useParams();
-  const eventId = params.eventId as string;
+  const { seriesId, year, eventId } = params;
   
   const [analysisData, setAnalysisData] = useState<LapTimeAnalysisResponse | null>(null);
   const [classesData, setClassesData] = useState<ClassesResponseDTO | null>(null);
@@ -259,10 +259,10 @@ export default function AnalysisPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
-            href="/"
+            href={`/series/${seriesId}/${year}`}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
-            ← Back to Series
+            ← Back to Events
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Lap Time Analysis

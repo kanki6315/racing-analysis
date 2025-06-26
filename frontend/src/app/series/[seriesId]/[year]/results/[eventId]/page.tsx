@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { apiRequest, ClassesResponseDTO, SessionsResponseDTO, ResultsResponseDTO, ResultEntryDTO } from "@/lib/api";
 import Spinner from "@/app/components/Spinner";
+import Link from "next/link";
 
 interface ResultEntry {
   position: number;
@@ -112,16 +113,19 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-4">
-          <a
+        <div className="mb-8">
+          <Link
             href={`/series/${seriesId}/${year}`}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mb-4"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
-            ← Back to Series
-          </a>
+            ← Back to Events
+          </Link>
         </div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Results</h1>
+          {sessions?.eventName && (
+            <p className="text-lg text-gray-600">{sessions.eventName}</p>
+          )}
         </div>
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">

@@ -213,13 +213,13 @@ export default function YearPage() {
                       View Results
                     </Link>
                     <Link
-                      href={`/analysis/${event.eventId}`}
+                      href={`/series/${seriesId}/${year}/analysis/${event.eventId}`}
                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                     >
                       View Analysis
                     </Link>
                     <Link
-                      href={`/laptimes/${event.eventId}`}
+                      href={`/series/${seriesId}/${year}/laptimes/${event.eventId}`}
                       className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
                     >
                       Lap Time Visualizer
