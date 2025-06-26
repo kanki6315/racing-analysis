@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiRequest, ClassesResponseDTO, ManufacturerDTO } from '@/lib/api';
+import Spinner from '@/app/components/Spinner';
 
 interface Event {
   eventId: number;
@@ -148,8 +149,8 @@ export default function YearPage() {
 
   if (loadingEvents) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading events...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Spinner />
       </div>
     );
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
+import Spinner from './components/Spinner';
 
 interface Series {
   id: number;
@@ -34,8 +35,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading racing series...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Spinner />
       </div>
     );
   }

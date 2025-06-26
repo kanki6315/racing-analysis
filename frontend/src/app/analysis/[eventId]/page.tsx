@@ -10,6 +10,7 @@ import {
   CarModelsResponseDTO, 
   SessionsResponseDTO 
 } from '@/lib/api';
+import Spinner from '@/app/components/Spinner';
 
 interface DriverAnalysis {
   driverId: number;
@@ -229,8 +230,8 @@ export default function AnalysisPage() {
 
   if (loadingClasses || loadingSessions) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading event data...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Spinner />
       </div>
     );
   }

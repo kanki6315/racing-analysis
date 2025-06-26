@@ -22,6 +22,7 @@ import {
   DriversResponseDTO,
   LapTimesResponseDTO
 } from '@/lib/api';
+import Spinner from '@/app/components/Spinner';
 
 const COLORS = [
   '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#ff0000',
@@ -277,8 +278,8 @@ export default function LapTimeVisualizerPage() {
 
   if (loadingClasses || loadingSessions) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading event data...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Spinner />
       </div>
     );
   }

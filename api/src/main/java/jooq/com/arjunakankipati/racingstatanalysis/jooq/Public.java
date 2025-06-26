@@ -4,13 +4,28 @@
 package com.arjunakankipati.racingstatanalysis.jooq;
 
 
-import com.arjunakankipati.racingstatanalysis.jooq.tables.*;
-import org.jooq.Catalog;
-import org.jooq.Table;
-import org.jooq.impl.SchemaImpl;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Drivers;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.FlywaySchemaHistory;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Manufacturers;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Sectors;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Series;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams;
 
 import java.util.Arrays;
 import java.util.List;
+
+import org.jooq.Catalog;
+import org.jooq.Table;
+import org.jooq.impl.SchemaImpl;
 
 
 /**
@@ -125,7 +140,7 @@ public class Public extends SchemaImpl {
             Drivers.DRIVERS,
             Events.EVENTS,
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
-                ImportJobs.IMPORT_JOBS,
+            ImportJobs.IMPORT_JOBS,
             Laps.LAPS,
             Manufacturers.MANUFACTURERS,
             Sectors.SECTORS,
