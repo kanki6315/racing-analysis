@@ -76,4 +76,12 @@ public interface SeriesService {
      * @throws com.arjunakankipati.racingstatanalysis.exceptions.ResourceNotFoundException if the event is not found
      */
     DriversResponseDTO findDriversByEventId(Long eventId, Long carModelId, Long classId);
+
+    /**
+     * Creates a new series.
+     *
+     * @param seriesDTO the series data
+     * @return the created series as a response DTO
+     */
+    SeriesResponseDTO createSeries(SeriesDTO seriesDTO);
 }

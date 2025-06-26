@@ -4,6 +4,8 @@ import com.arjunakankipati.racingstatanalysis.dto.*;
 import com.arjunakankipati.racingstatanalysis.repository.LapRepository;
 import com.arjunakankipati.racingstatanalysis.service.SeriesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +22,9 @@ public class SeriesController {
 
     private final SeriesService seriesService;
     private final LapRepository lapRepository;
+
+    @Value("${api.key}")
+    private String expectedApiKey;
 
     /**
      * Constructor with SeriesService and LapRepository dependency injection.
@@ -203,5 +208,16 @@ public class SeriesController {
         LapTimesResponseDTO response = new LapTimesResponseDTO(eventId, sessionId, driverLapTimes);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    public ResponseEntity<SeriesResponseDTO> createSeries(
+            @RequestBody SeriesDTO seriesDTO,
+            @RequestHeader(value = "X-API-Key", required = false) String apiKey) {
+        if (apiKey == null || !apiKey.equals(expectedApiKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        SeriesResponseDTO created = seriesService.createSeries(seriesDTO);
+        return ResponseEntity.ok(created);
     }
 }

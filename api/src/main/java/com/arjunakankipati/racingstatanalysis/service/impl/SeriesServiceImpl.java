@@ -421,4 +421,16 @@ public class SeriesServiceImpl implements SeriesService {
         // Create response DTO
         return new DriversResponseDTO(event.getId(), event.getName(), driverWithTeamDTOs);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SeriesResponseDTO createSeries(SeriesDTO seriesDTO) {
+        Series series = new Series();
+        series.setName(seriesDTO.getName());
+        series.setDescription(seriesDTO.getDescription());
+        Series saved = seriesRepository.save(series);
+        return new SeriesResponseDTO(saved.getId(), saved.getName(), 0, null);
+    }
 }
