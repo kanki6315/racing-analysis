@@ -36,6 +36,8 @@ public class CircuitServiceImpl implements CircuitService {
 
     @Override
     public CircuitDTO createCircuit(CircuitDTO circuitDTO) {
+        var existing = circuitRepository.findByName(circuitDTO.getName());
+        if (existing.isPresent()) throw new ResourceNotFoundException();
         Circuit circuit = toEntity(circuitDTO);
         circuit.setId(null); // Ensure ID is not set for new entity
         Circuit saved = circuitRepository.save(circuit);

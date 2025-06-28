@@ -25,7 +25,7 @@ public class SessionServiceImpl implements SessionService {
         Session session = new Session();
         session.setEventId(sessionDTO.getEventId());
         session.setCircuitId(sessionDTO.getCircuitId());
-        session.setName(sessionDTO.getName());
+        session.setName(sessionDTO.getType());
         session.setType(sessionDTO.getType());
         session.setStartDatetime(sessionDTO.getStartDatetime());
         session.setDurationSeconds(sessionDTO.getDurationSeconds());
