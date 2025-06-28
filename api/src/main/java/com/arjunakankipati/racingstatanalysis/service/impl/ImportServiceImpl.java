@@ -1,8 +1,8 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResponseDTO;
 import com.arjunakankipati.racingstatanalysis.exceptions.ReportURLNotValidException;
 import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +65,12 @@ public class ImportServiceImpl implements ImportService {
     private final Cache<String, CarModel> carModelCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Event> eventCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Session> sessionCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+
+    // Try different formats in order of likelihood
+    private final static List<DateTimeFormatter> formatters = Arrays.asList(
+            DateTimeFormatter.ofPattern("HH:mm:ss.SSS"),
+            DateTimeFormatter.ofPattern("mm:ss.SSS"),
+            DateTimeFormatter.ofPattern("m:ss.SSS"));
 
     /**
      * Constructor with repository dependency injection.
@@ -543,8 +550,8 @@ public class ImportServiceImpl implements ImportService {
         String sessionElapsedStr = lapJson.get("session_elapsed").getAsString();
         newLap.setSessionElapsedSeconds(parseLapTime(sessionElapsedStr));
         String timestampStr = lapJson.get("hour").getAsString();
-        LocalDateTime timestamp = parseTimestamp(timestampStr, sessionDurationSeconds, sessionStartDateTime);
-        newLap.setTimestamp(timestamp);
+        //LocalDateTime timestamp = parseTimestamp(timestampStr, sessionDurationSeconds, sessionStartDateTime);
+        //newLap.setTimestamp(timestamp);
         if (lapJson.has("average_speed_kph") && !lapJson.get("average_speed_kph").isJsonNull()) {
             newLap.setAverageSpeedKph(new BigDecimal(lapJson.get("average_speed_kph").getAsString()));
         }
@@ -592,55 +599,68 @@ public class ImportServiceImpl implements ImportService {
         return BigDecimal.valueOf(minutes * 60 + seconds);
     }
 
-    /**
-     * Parses a timestamp string, handling both 24-hour and shorter races.
-     * For 24-hour races (session duration >= 24 hours), expects full date-time format.
-     * For shorter races, expects 24-hour time format without AM/PM.
-     *
-     * @param timestampStr           the timestamp string to parse
-     * @param sessionDurationSeconds the duration of the session in seconds
-     * @param sessionStartDateTime   the start date and time of the session
-     * @return the parsed LocalDateTime
-     */
-    private LocalDateTime parseTimestamp(String timestampStr, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
-        // Check if this is a 24-hour race (24 hours = 86400 seconds)
-        boolean is24HourRace = sessionDurationSeconds >= 86400;
+    private BigDecimal parseTimestamp(String timestampStr) {
+        // Split the timestamp by colons to determine format
+        String[] parts = timestampStr.split(":");
 
-        if (is24HourRace) {
-            // For 24-hour races, expect full date-time format: "M/d/yyyy h:mm:ss a"
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
-            return LocalDateTime.parse(timestampStr, formatter);
-        } else {
-            // For shorter races, expect 24-hour time format: "HH:mm:ss"
+        try {
+            if (parts.length == 2) {
+                // Format: m:ss.SSS or mm:ss.SSS (e.g., 6:57.136 or 15:24.428)
+                int minutes = Integer.parseInt(parts[0]);
+
+                // Parse seconds and milliseconds
+                String[] secondParts = parts[1].split("\\.");
+                int seconds = Integer.parseInt(secondParts[0]);
+                int milliseconds = Integer.parseInt(secondParts[1]);
+
+                // Calculate total seconds as BigDecimal
+                BigDecimal totalSeconds = BigDecimal.valueOf(minutes * 60 + seconds);
+                BigDecimal fraction = BigDecimal.valueOf(milliseconds).divide(BigDecimal.valueOf(1000), 6, BigDecimal.ROUND_HALF_UP);
+
+                return totalSeconds.add(fraction);
+            } else if (parts.length == 3) {
+                // Format: h:mm:ss.SSS or hh:mm:ss.SSS (e.g., 4:30:00.623 or 11:14:52.128)
+                int hours = Integer.parseInt(parts[0]);
+                int minutes = Integer.parseInt(parts[1]);
+
+                // Parse seconds and milliseconds
+                String[] secondParts = parts[2].split("\\.");
+                int seconds = Integer.parseInt(secondParts[0]);
+                int milliseconds = Integer.parseInt(secondParts[1]);
+
+                // Calculate total seconds as BigDecimal
+                BigDecimal totalSeconds = BigDecimal.valueOf(hours * 3600 + minutes * 60 + seconds);
+                BigDecimal fraction = BigDecimal.valueOf(milliseconds).divide(BigDecimal.valueOf(1000), 6, BigDecimal.ROUND_HALF_UP);
+
+                return totalSeconds.add(fraction);
+            } else {
+                throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("Failed to parse timestamp: " + timestampStr, ex);
+            throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
+        }
+    }
+
+
+    private LocalDateTime parseTimestamp(String timestampStr, BigDecimal elapsedTime, LocalDateTime sessionStartDateTime) {
+        for (DateTimeFormatter formatter : formatters) {
             try {
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-                LocalTime time = LocalTime.parse(timestampStr, timeFormatter);
-                // Use the actual session start date
-                return LocalDateTime.of(sessionStartDateTime.toLocalDate(), time);
+                LocalTime time = LocalTime.parse(timestampStr, formatter);
+
+                var lapSetAt = sessionStartDateTime.plusSeconds(elapsedTime.longValueExact());
+                return LocalDateTime.of(lapSetAt.toLocalDate(), time);
             } catch (Exception e) {
-                // If 24-hour time parsing fails, try the original full date-time format as fallback
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
-                    return LocalDateTime.parse(timestampStr, formatter);
-                } catch (Exception e2) {
-                    // If all parsing fails, use session start time as fallback
-                    LOGGER.warn("Failed to parse timestamp '{}' for session duration {} seconds, using session start time",
-                            timestampStr, sessionDurationSeconds);
-                    return sessionStartDateTime;
-                }
+                LOGGER.warn("Failed to parse timestamp '{}'", timestampStr);
             }
         }
+        throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
     }
 
     BigDecimal parseSectorTime(String sectorTimeStr) {
         try {
             if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
                 return null;  // Return null for blank values
-            }
-
-            // Check for unreasonably large values (e.g., starting with numbers like 48274)
-            if (sectorTimeStr.matches("^[0-9]{5,}.*")) {
-                return null;  // Return null for unreasonably large values
             }
 
             if (sectorTimeStr.contains(":")) {
@@ -650,22 +670,19 @@ public class ImportServiceImpl implements ImportService {
                     int minutes = Integer.parseInt(parts[0]);
                     double seconds = Double.parseDouble(parts[1]);
                     double totalSeconds = minutes * 60 + seconds;
-                    // Check if the time is reasonable (less than 1 hour)
-                    return totalSeconds < 3600 ? BigDecimal.valueOf(totalSeconds) : null;
+                    return BigDecimal.valueOf(totalSeconds);
                 } else if (parts.length == 3) {
                     // Format: HH:MM:SS.SSS
                     int hours = Integer.parseInt(parts[0]);
                     int minutes = Integer.parseInt(parts[1]);
                     double seconds = Double.parseDouble(parts[2]);
                     double totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
-                    // Check if the time is reasonable (less than 1 hour)
-                    return totalSeconds < 3600 ? BigDecimal.valueOf(totalSeconds) : null;
+                    return BigDecimal.valueOf(totalSeconds);
                 }
             } else {
                 // Format: SS.SSS
                 double seconds = Double.parseDouble(sectorTimeStr);
-                // Check if the time is reasonable (less than 1 hour)
-                return seconds < 3600 ? BigDecimal.valueOf(seconds) : null;
+                return BigDecimal.valueOf(seconds);
             }
             return null;
         } catch (Exception e) {
@@ -740,23 +757,23 @@ public class ImportServiceImpl implements ImportService {
     }
 
     @Override
-    public ProcessResultsResponseDTO processResultsCsv(ProcessResultsRequestDTO request) {
+    public ProcessResponseDTO processResultsCsv(ProcessRequestDTO request) {
         var importType = request.getImportType();
         try {
             // 1. Download the CSV file using OkHttp
             Request httpRequest = new Request.Builder()
-                    .url(request.getResultsUrl())
+                    .url(request.getUrl())
                     .build();
             try (Response response = httpClient.newCall(httpRequest).execute()) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    return new ProcessResultsResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
+                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
                 }
                 BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
 
                 // 2. Parse the CSV header
                 String headerLine = reader.readLine();
                 if (headerLine == null) {
-                    return new ProcessResultsResponseDTO(null, "FAILED", "CSV is empty");
+                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
                 }
                 String[] headers = headerLine.split(";");
 
@@ -784,7 +801,7 @@ public class ImportServiceImpl implements ImportService {
                     String carModelName = getValueByHeader(headers, values, "VEHICLE");
                     String carNumber = getValueByHeader(headers, values, "NUMBER");
                     String tireSupplier = getValueByHeader(headers, values,
-                            importType.equals(ProcessResultsRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
+                            importType.equals(ProcessRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
 
                     // --- Find or create team, class, car model ---
                     Team team = findOrCreateTeam(teamName);
@@ -797,12 +814,12 @@ public class ImportServiceImpl implements ImportService {
                     // --- Parse and create drivers ---
                     for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
                         String[] names;
-                        if (importType == ProcessResultsRequestDTO.ImportType.WEC) {
+                        if (importType == ProcessRequestDTO.ImportType.WEC) {
                             String driverCol = "DRIVER_" + i;
                             String driverName = getValueByHeader(headers, values, driverCol);
                             if (driverName == null || driverName.isBlank()) continue;
                             names = parseWECName(driverName);
-                        } else if (importType == ProcessResultsRequestDTO.ImportType.IMSA) { // IMSA splits up names into two columns
+                        } else if (importType == ProcessRequestDTO.ImportType.IMSA) { // IMSA splits up names into two columns
                             String driverFirstNameCol = String.format("DRIVER%d_FIRSTNAME", i);
                             String driverSecondNameCol = String.format("DRIVER%d_SECONDNAME", i);
                             String driverFirstName = getValueByHeader(headers, values, driverFirstNameCol);
@@ -842,11 +859,11 @@ public class ImportServiceImpl implements ImportService {
                 // Save all results (batch)
                 resultRepository.batchSave(resultsToSave);
                 reader.close();
-                return new ProcessResultsResponseDTO(session.getId(), "SUCCESS", null);
+                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
             }
         } catch (Exception e) {
             LOGGER.error("Failed to process results CSV", e);
-            return new ProcessResultsResponseDTO(null, "FAILED", e.getMessage());
+            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
         }
     }
 
@@ -996,5 +1013,126 @@ public class ImportServiceImpl implements ImportService {
         Class saved = classRepository.save(newClass);
         classCache.put(key, saved);
         return saved;
+    }
+
+    @Override
+    public ProcessResponseDTO processTimecardCsv(ProcessRequestDTO request) {
+        try {
+            // 1. Download the CSV file using OkHttp
+            Request httpRequest = new Request.Builder()
+                    .url(request.getUrl())
+                    .build();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
+                }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
+
+                // 2. Parse the CSV header
+                String headerLine = reader.readLine();
+                if (headerLine == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
+                }
+                String[] headers = headerLine.split(";");
+
+                // 3. Ensure session exists
+                Session session;
+                if (request.getSessionId() != null) {
+                    session = sessionRepository.findById(request.getSessionId())
+                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
+                } else {
+                    throw new IllegalArgumentException("sessionId is required in the request");
+                }
+
+                // 4. Process each row
+                String row;
+                var carEntries = carEntryRepository.findBySessionId(session.getId());
+
+                var sectors = new ArrayList<Sector>();
+                while ((row = reader.readLine()) != null) {
+                    if (row.trim().isEmpty()) continue;
+                    String[] values = row.split(";");
+
+                    // --- Parse car number and driver name/number ---
+                    // csv files are prone to having BOM and java decided NOPE LETS NOT FIX
+                    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4508058
+                    // Number is guaranteed to be position 0 in csvs, so we hardcode.
+                    String carNumber = values[0];
+                    Integer driverNumber = parseInteger(getValueByHeader(headers, values, "DRIVER_NUMBER"));
+                    String driverName = getValueByHeader(headers, values, "DRIVER_NAME");
+
+                    // --- Look up car entry ---
+                    CarEntry carEntry = carEntries.stream().filter(e -> e.getNumber().equals(carNumber)).findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("Car entry not found for session " + session.getId() + " and car number " + carNumber));
+
+                    // --- Look up car-driver association ---
+                    CarDriver carDriver = null;
+                    if (driverNumber != null) {
+                        carDriver = carDriverRepository.findByCarIdAndDriverNumber(carEntry.getId(), driverNumber)
+                                .orElseThrow(() -> new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver number " + driverNumber));
+                    } else if (driverName != null && !driverName.isBlank()) {
+                        var driver = driverRepository.findByName(driverName);
+                        if (driver.isPresent()) {
+                            var optCD = carDriverRepository.findByCarIdAndDriverId(carEntry.getId(), driver.get().getId());
+                            if (optCD.isPresent()) {
+                                carDriver = optCD.get();
+                            }
+                        }
+                        if (carDriver == null) {
+                            throw new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver name " + driverName);
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Driver number or name must be present in timecard row");
+                    }
+
+                    // --- Parse lap data ---
+                    Lap lap = new Lap();
+                    lap.setCarId(carEntry.getId());
+                    lap.setDriverId(carDriver.getDriverId());
+                    lap.setLapNumber(parseInteger(getValueByHeader(headers, values, "LAP_NUMBER")));
+                    lap.setLapTimeSeconds(parseBigDecimal(getValueByHeader(headers, values, "LAP_TIME")));
+
+                    var seconds = parseTimestamp(getValueByHeader(headers, values, "ELAPSED"));
+                    lap.setSessionElapsedSeconds(seconds);
+                    lap.setTimestamp(parseTimestamp(getValueByHeader(headers, values, "HOUR"), seconds, session.getStartDatetime()));
+                    lap.setAverageSpeedKph(parseBigDecimal(getValueByHeader(headers, values, "KPH")));
+                    // TODO: Parse PIT_TIME (not currently in Lap model)
+                    // TODO: Parse FLAG_AT_FL (not currently in Lap model)
+                    var savedLap = lapRepository.save(lap);
+
+                    // --- Parse sector data ---
+                    for (int i = 1; i <= 3; i++) {
+                        String sectorTime = getValueByHeader(headers, values, String.format("S%d_LARGE", i));
+                        if (sectorTime != null && !sectorTime.isBlank()) {
+                            Sector sector = new Sector();
+                            sector.setLapId(savedLap.getId());
+                            sector.setSectorNumber(i);
+                            sector.setSectorTimeSeconds(parseLargeSectorTime(sectorTime));
+                            if (sector.getSectorTimeSeconds() == null) {
+                                throw new IllegalArgumentException("Invalid sector time: " + sectorTime);
+                            }
+                            // TODO: Parse S{i}_IMPROVEMENT, S{i}_LARGE (not currently in Sector model)
+                            sectors.add(sector);
+                        }
+                    }
+                }
+                // Save all sectors (batch)
+                sectorRepository.saveAll(sectors);
+                reader.close();
+                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to process timecard CSV", e);
+            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
+        }
+    }
+
+    private BigDecimal parseLargeSectorTime(String sectorTime) {
+        // Format: MM:SS.SSS
+        String[] parts = sectorTime.split(":");
+        int minutes = Integer.parseInt(parts[0]);
+        double seconds = Double.parseDouble(parts[1]);
+        double totalSeconds = minutes * 60 + seconds;
+        return BigDecimal.valueOf(totalSeconds);
     }
 }

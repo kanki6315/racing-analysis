@@ -18,4 +18,12 @@ public interface DriverRepository extends BaseRepository<Driver, Long> {
      * @return an Optional containing the found driver, or empty if not found
      */
     Optional<Driver> findByFirstNameAndLastName(String firstName, String lastName);
+
+    /**
+     * Find a driver by first name and last name.
+     *
+     * @param name the full name
+     * @return an Optional containing the found driver, or empty if not found
+     */
+    Optional<Driver> findByName(String name);
 }

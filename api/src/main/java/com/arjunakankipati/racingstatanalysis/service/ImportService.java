@@ -1,8 +1,8 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
 import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsRequestDTO;
-import com.arjunakankipati.racingstatanalysis.dto.ProcessResultsResponseDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
+import com.arjunakankipati.racingstatanalysis.dto.ProcessResponseDTO;
 import org.springframework.scheduling.annotation.Async;
 
 /**
@@ -24,5 +24,7 @@ public interface ImportService {
      * @param request the process results request
      * @return the process results response
      */
-    ProcessResultsResponseDTO processResultsCsv(ProcessResultsRequestDTO request);
+    ProcessResponseDTO processResultsCsv(ProcessRequestDTO request);
+
+    ProcessResponseDTO processTimecardCsv(ProcessRequestDTO request);
 }

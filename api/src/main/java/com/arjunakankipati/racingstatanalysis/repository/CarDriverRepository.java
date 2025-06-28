@@ -27,4 +27,13 @@ public interface CarDriverRepository extends BaseRepository<CarDriver, Long> {
      * @return an Optional containing the found car driver, or empty if not found
      */
     Optional<CarDriver> findByCarIdAndDriverId(Long carId, Long driverId);
+
+    /**
+     * Find a car driver by car ID and driver number.
+     *
+     * @param carId        the ID of the car
+     * @param driverNumber the driver number
+     * @return an Optional containing the found car driver, or empty if not found
+     */
+    Optional<CarDriver> findByCarIdAndDriverNumber(Long carId, Integer driverNumber);
 }

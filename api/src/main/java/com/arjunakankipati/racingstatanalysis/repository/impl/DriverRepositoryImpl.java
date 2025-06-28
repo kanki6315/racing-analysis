@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import static org.jooq.impl.DSL.val;
+
 /**
  * Implementation of the DriverRepository interface using JOOQ.
  * Extends BaseRepositoryImpl to inherit common CRUD operations.
@@ -89,6 +91,17 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
                 .from(table)
                 .where(Tables.DRIVERS.FIRST_NAME.eq(firstName))
                 .and(Tables.DRIVERS.LAST_NAME.eq(lastName))
+                .fetchOne();
+
+        return Optional.ofNullable(record)
+                .map(this::mapToEntity);
+    }
+
+    @Override
+    public Optional<Driver> findByName(String name) {
+        Record record = dsl.select()
+                .from(table)
+                .where(Tables.DRIVERS.FIRST_NAME.add(val(" ")).add(Tables.DRIVERS.LAST_NAME).eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)

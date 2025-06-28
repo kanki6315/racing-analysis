@@ -1,7 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-public class ProcessResultsRequestDTO {
-    private String resultsUrl;
+public class ProcessRequestDTO {
+    private String url;
     private Long sessionId;
 
     public enum ImportType {
@@ -10,21 +10,21 @@ public class ProcessResultsRequestDTO {
 
     private ImportType importType;
 
-    public ProcessResultsRequestDTO() {
+    public ProcessRequestDTO() {
     }
 
-    public ProcessResultsRequestDTO(String resultsUrl, Long sessionId, ImportType importType) {
-        this.resultsUrl = resultsUrl;
+    public ProcessRequestDTO(String url, Long sessionId, ImportType importType) {
+        this.url = url;
         this.sessionId = sessionId;
         this.importType = importType;
     }
 
-    public String getResultsUrl() {
-        return resultsUrl;
+    public String getUrl() {
+        return url;
     }
 
-    public void setResultsUrl(String resultsUrl) {
-        this.resultsUrl = resultsUrl;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Long getSessionId() {

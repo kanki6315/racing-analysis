@@ -1,14 +1,14 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-public class ProcessResultsResponseDTO {
+public class ProcessResponseDTO {
     private Long sessionId;
     private String status;
     private String error;
 
-    public ProcessResultsResponseDTO() {
+    public ProcessResponseDTO() {
     }
 
-    public ProcessResultsResponseDTO(Long sessionId, String status, String error) {
+    public ProcessResponseDTO(Long sessionId, String status, String error) {
         this.sessionId = sessionId;
         this.status = status;
         this.error = error;

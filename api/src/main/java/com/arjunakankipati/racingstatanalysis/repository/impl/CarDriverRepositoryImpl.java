@@ -92,4 +92,15 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
         return Optional.ofNullable(record)
                 .map(this::mapToEntity);
     }
+
+    @Override
+    public Optional<CarDriver> findByCarIdAndDriverNumber(Long carId, Integer driverNumber) {
+        Record record = dsl.select()
+                .from(table)
+                .where(Tables.CAR_DRIVERS.CAR_ID.eq(carId))
+                .and(Tables.CAR_DRIVERS.DRIVER_NUMBER.eq(driverNumber))
+                .fetchOne();
+        return Optional.ofNullable(record)
+                .map(this::mapToEntity);
+    }
 }
