@@ -1,6 +1,5 @@
 package com.arjunakankipati.racingstatanalysis.controller;
 
-import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ImportResponseDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessResponseDTO;
@@ -42,15 +41,15 @@ public class ImportController {
      */
     @PostMapping
     public ResponseEntity<ImportResponseDTO> importData(
-            @RequestBody ImportRequestDTO request,
+            @RequestBody ProcessRequestDTO request,
             @RequestHeader(value = "X-API-Key", required = false) String apiKey) {
         if (apiKey == null || !apiKey.equals(expectedApiKey)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Integer jobId = importJobService.createJob(request.getUrl()).getId();
+        Integer jobId = importJobService.createJob(request).getId();
         importService.processImport(jobId, request); // This runs asynchronously!
         ImportResponseDTO response = new ImportResponseDTO(
-                jobId != null ? jobId.toString() : null,
+                jobId.toString(),
                 "PENDING",
                 null
         );

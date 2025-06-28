@@ -32,7 +32,10 @@ public class ImportJobRepositoryImpl implements ImportJobRepository {
                 r.getStartedAt(),
                 r.getEndedAt(),
                 r.getError(),
-                r.getSourceUrl()
+                r.getUrl(),
+                r.getImportType(),
+                r.getProcessType(),
+                r.getSessionId()
         );
     }
 
@@ -56,7 +59,10 @@ public class ImportJobRepositoryImpl implements ImportJobRepository {
                     .set(Tables.IMPORT_JOBS.STARTED_AT, job.getStartedAt())
                     .set(Tables.IMPORT_JOBS.ENDED_AT, job.getEndedAt())
                     .set(Tables.IMPORT_JOBS.ERROR, job.getError())
-                    .set(Tables.IMPORT_JOBS.SOURCE_URL, job.getSourceUrl())
+                    .set(Tables.IMPORT_JOBS.URL, job.getUrl())
+                    .set(Tables.IMPORT_JOBS.PROCESS_TYPE, job.getProcessType())
+                    .set(Tables.IMPORT_JOBS.IMPORT_TYPE, job.getImportType())
+                    .set(Tables.IMPORT_JOBS.SESSION_ID, job.getSessionId())
                     .returning()
                     .fetchOne();
             return mapToEntity(record);
@@ -68,7 +74,10 @@ public class ImportJobRepositoryImpl implements ImportJobRepository {
                     .set(Tables.IMPORT_JOBS.STARTED_AT, job.getStartedAt())
                     .set(Tables.IMPORT_JOBS.ENDED_AT, job.getEndedAt())
                     .set(Tables.IMPORT_JOBS.ERROR, job.getError())
-                    .set(Tables.IMPORT_JOBS.SOURCE_URL, job.getSourceUrl())
+                    .set(Tables.IMPORT_JOBS.URL, job.getUrl())
+                    .set(Tables.IMPORT_JOBS.PROCESS_TYPE, job.getProcessType())
+                    .set(Tables.IMPORT_JOBS.IMPORT_TYPE, job.getImportType())
+                    .set(Tables.IMPORT_JOBS.SESSION_ID, job.getSessionId())
                     .where(Tables.IMPORT_JOBS.ID.eq(job.getId()))
                     .execute();
             return findById(job.getId()).orElse(null);
@@ -123,6 +132,4 @@ public class ImportJobRepositoryImpl implements ImportJobRepository {
     public long count() {
         return dsl.fetchCount(Tables.IMPORT_JOBS);
     }
-
-    // Implement other BaseRepository methods as needed (findAll, deleteById, count, etc.)
-} 
+}

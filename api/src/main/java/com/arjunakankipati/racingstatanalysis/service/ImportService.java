@@ -1,6 +1,5 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
-import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessResponseDTO;
 import org.springframework.scheduling.annotation.Async;
@@ -16,7 +15,7 @@ public interface ImportService {
      * @param request the import request
      */
     @Async
-    void processImport(Integer jobId, ImportRequestDTO request);
+    void processImport(Integer jobId, ProcessRequestDTO request);
 
     /**
      * Processes a results CSV to ensure all required records exist before timecard import.

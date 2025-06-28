@@ -9,6 +9,7 @@ import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Events.EventsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs.ImportJobsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
 import org.jooq.*;
@@ -184,6 +185,19 @@ public class Sessions extends TableImpl<SessionsRecord> {
             _carEntries = new CarEntriesPath(this, null, Keys.CAR_ENTRIES__CAR_ENTRIES_SESSION_ID_FKEY.getInverseKey());
 
         return _carEntries;
+    }
+
+    private transient ImportJobsPath _importJobs;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.import_jobs</code>
+     * table
+     */
+    public ImportJobsPath importJobs() {
+        if (_importJobs == null)
+            _importJobs = new ImportJobsPath(this, null, Keys.IMPORT_JOBS__IMPORT_JOBS_SESSION_ID_FKEY.getInverseKey());
+
+        return _importJobs;
     }
 
     private transient ResultsPath _results;

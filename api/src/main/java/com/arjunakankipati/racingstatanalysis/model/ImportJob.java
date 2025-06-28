@@ -11,13 +11,16 @@ public class ImportJob implements BaseEntity<Integer> {
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
     private String error;
-    private String sourceUrl;
+    private String url;
+    private String importType;
+    private String processType;
+    private Long sessionId;
 
     public ImportJob() {
     }
 
     public ImportJob(Integer id, String status, LocalDateTime createdAt, LocalDateTime updatedAt,
-                     LocalDateTime startedAt, LocalDateTime endedAt, String error, String sourceUrl) {
+                     LocalDateTime startedAt, LocalDateTime endedAt, String error, String url, String importType, String processType, Long sessionId) {
         this.id = id;
         this.status = status;
         this.createdAt = createdAt;
@@ -25,7 +28,10 @@ public class ImportJob implements BaseEntity<Integer> {
         this.startedAt = startedAt;
         this.endedAt = endedAt;
         this.error = error;
-        this.sourceUrl = sourceUrl;
+        this.url = url;
+        this.importType = importType;
+        this.processType = processType;
+        this.sessionId = sessionId;
     }
 
     public Integer getId() {
@@ -84,12 +90,36 @@ public class ImportJob implements BaseEntity<Integer> {
         this.error = error;
     }
 
-    public String getSourceUrl() {
-        return sourceUrl;
+    public String getUrl() {
+        return url;
     }
 
-    public void setSourceUrl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getImportType() {
+        return importType;
+    }
+
+    public void setImportType(String importType) {
+        this.importType = importType;
+    }
+
+    public String getProcessType() {
+        return processType;
+    }
+
+    public void setProcessType(String processType) {
+        this.processType = processType;
+    }
+
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
     }
 
     @Override
@@ -102,7 +132,10 @@ public class ImportJob implements BaseEntity<Integer> {
                 ", startedAt=" + startedAt +
                 ", endedAt=" + endedAt +
                 ", error='" + error + '\'' +
-                ", sourceUrl='" + sourceUrl + '\'' +
+                ", url='" + url + '\'' +
+                ", importType='" + importType + '\'' +
+                ", processType='" + processType + '\'' +
+                ", sessionId=" + sessionId +
                 '}';
     }
 
@@ -118,11 +151,14 @@ public class ImportJob implements BaseEntity<Integer> {
                 Objects.equals(startedAt, importJob.startedAt) &&
                 Objects.equals(endedAt, importJob.endedAt) &&
                 Objects.equals(error, importJob.error) &&
-                Objects.equals(sourceUrl, importJob.sourceUrl);
+                Objects.equals(url, importJob.url) &&
+                Objects.equals(importType, importJob.importType) &&
+                Objects.equals(processType, importJob.processType) &&
+                Objects.equals(sessionId, importJob.sessionId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, status, createdAt, updatedAt, startedAt, endedAt, error, sourceUrl);
+        return Objects.hash(id, status, createdAt, updatedAt, startedAt, endedAt, error, url, importType, processType, sessionId);
     }
 } 

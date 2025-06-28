@@ -1,9 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.service.impl;
 
-import com.arjunakankipati.racingstatanalysis.dto.ImportRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
 import com.arjunakankipati.racingstatanalysis.dto.ProcessResponseDTO;
-import com.arjunakankipati.racingstatanalysis.exceptions.ReportURLNotValidException;
 import com.arjunakankipati.racingstatanalysis.model.*;
 import com.arjunakankipati.racingstatanalysis.model.Class;
 import com.arjunakankipati.racingstatanalysis.repository.*;
@@ -11,7 +9,6 @@ import com.arjunakankipati.racingstatanalysis.service.ImportJobService;
 import com.arjunakankipati.racingstatanalysis.service.ImportService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.gson.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -21,14 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,9 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class ImportServiceImpl implements ImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportServiceImpl.class);
-    private final SeriesRepository seriesRepository;
     private final EventRepository eventRepository;
-    private final CircuitRepository circuitRepository;
     private final SessionRepository sessionRepository;
     private final TeamRepository teamRepository;
     private final ClassRepository classRepository;
@@ -55,28 +52,15 @@ public class ImportServiceImpl implements ImportService {
 
     private final OkHttpClient httpClient;
 
-    private final Cache<String, Series> seriesCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
-    private final Cache<String, Circuit> circuitCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Team> teamCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, Class> classCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
     private final Cache<String, CarModel> carModelCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
-    private final Cache<String, Event> eventCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
-    private final Cache<String, Session> sessionCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
-
-    // Try different formats in order of likelihood
-    private final static List<DateTimeFormatter> formatters = Arrays.asList(
-            DateTimeFormatter.ofPattern("hh:mm:ss.SSS"),
-            DateTimeFormatter.ofPattern("h:mm:ss.SSS"),
-            DateTimeFormatter.ofPattern("mm:ss.SSS"),
-            DateTimeFormatter.ofPattern("m:ss.SSS"));
 
     /**
      * Constructor with repository dependency injection.
      */
     @Autowired
-    public ImportServiceImpl(SeriesRepository seriesRepository,
-                             EventRepository eventRepository,
-                             CircuitRepository circuitRepository,
+    public ImportServiceImpl(EventRepository eventRepository,
                              SessionRepository sessionRepository,
                              TeamRepository teamRepository,
                              ClassRepository classRepository,
@@ -88,9 +72,7 @@ public class ImportServiceImpl implements ImportService {
                              SectorRepository sectorRepository,
                              ImportJobService importJobService,
                              ResultRepository resultRepository) {
-        this.seriesRepository = seriesRepository;
         this.eventRepository = eventRepository;
-        this.circuitRepository = circuitRepository;
         this.sessionRepository = sessionRepository;
         this.teamRepository = teamRepository;
         this.classRepository = classRepository;
@@ -112,13 +94,14 @@ public class ImportServiceImpl implements ImportService {
 
     @Async
     @Override
-    public void processImport(Integer jobId, ImportRequestDTO request) {
+    public void processImport(Integer jobId, ProcessRequestDTO request) {
         importJobService.markStarted(jobId);
         try {
-            // Fetch JSON data from URL
-            JsonObject jsonData = fetchJsonData(request.getUrl());
-            // Process and store the data
-            processJSONData(jsonData, request.getUrl());
+            if (request.getProcessType() == ProcessRequestDTO.ProcessType.RESULTS) {
+                processResultsCsv(request);
+            } else {
+                processTimecardCsv(request);
+            }
             importJobService.markCompleted(jobId);
         } catch (Exception e) {
             LOGGER.error("Failed to process import for URL: " + request.getUrl(), e);
@@ -126,347 +109,250 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
-    /**
-     * Fetches JSON data from a URL.
-     * For development purposes, it reads from the temp.json file if the URL is "temp".
-     *
-     * @param url the URL to fetch data from
-     * @return the JSON data as a JsonObject
-     * @throws IOException                if an I/O error occurs
-     * @throws ReportURLNotValidException if the URL is not valid or the data is not valid JSON
-     */
-    private JsonObject fetchJsonData(String url) throws IOException {
-        // For development purposes, read from temp.json if URL is "temp"
-        if ("temp".equals(url)) {
-            try (FileReader reader = new FileReader(new File("src/main/resources/temp.json"))) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (JsonParseException e) {
-                throw new ReportURLNotValidException("Invalid JSON format in temp.json", e);
+    @Override
+    public ProcessResponseDTO processResultsCsv(ProcessRequestDTO request) {
+        var importType = request.getImportType();
+        try {
+            // 1. Download the CSV file using OkHttp
+            Request httpRequest = new Request.Builder()
+                    .url(request.getUrl())
+                    .build();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
+                }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
+
+                // 2. Parse the CSV header
+                String headerLine = reader.readLine();
+                if (headerLine == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
+                }
+                String[] headers = headerLine.split(";");
+
+                // 3. Ensure session exist (using provided metadata)
+                Session session;
+                if (request.getSessionId() != null) {
+                    session = sessionRepository.findById(request.getSessionId())
+                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
+                } else {
+                    throw new IllegalArgumentException("sessionId is required in the request");
+                }
+
+                var event = eventRepository.findById(session.getEventId()).get();
+
+                // 4. For each row, ensure car model, car entry, team, drivers exist
+                String row;
+                List<Result> resultsToSave = new ArrayList<>();
+                while ((row = reader.readLine()) != null) {
+                    if (row.trim().isEmpty()) continue;
+                    String[] values = row.split(";");
+
+                    // --- Parse team, class, car model, car number, tire supplier ---
+                    String teamName = getValueByHeader(headers, values, "TEAM");
+                    String className = getValueByHeader(headers, values, "CLASS");
+                    String carModelName = getValueByHeader(headers, values, "VEHICLE");
+                    String carNumber = getValueByHeader(headers, values, "NUMBER");
+                    String tireSupplier = getValueByHeader(headers, values,
+                            importType.equals(ProcessRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
+
+                    // --- Find or create team, class, car model ---
+                    Team team = findOrCreateTeam(teamName);
+                    Class carClass = findOrCreateClass(event.getSeriesId(), className);
+                    CarModel carModel = findOrCreateCarModel(carModelName);
+
+                    // --- Create car entry ---
+                    CarEntry carEntry = findOrCreateCarEntry(session.getId(), team.getId(), carClass.getId(), carModel.getId(), carNumber, tireSupplier);
+
+                    // --- Parse and create drivers ---
+                    for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
+                        String[] names;
+                        if (importType == ProcessRequestDTO.ImportType.WEC) {
+                            String driverCol = "DRIVER_" + i;
+                            String driverName = getValueByHeader(headers, values, driverCol);
+                            if (driverName == null || driverName.isBlank()) continue;
+                            names = parseWECName(driverName);
+                        } else if (importType == ProcessRequestDTO.ImportType.IMSA) { // IMSA splits up names into two columns
+                            String driverFirstNameCol = String.format("DRIVER%d_FIRSTNAME", i);
+                            String driverSecondNameCol = String.format("DRIVER%d_SECONDNAME", i);
+                            String driverFirstName = getValueByHeader(headers, values, driverFirstNameCol);
+                            String driverSecondName = getValueByHeader(headers, values, driverSecondNameCol);
+
+                            if (driverFirstName == null || driverFirstName.isBlank()
+                                    || driverSecondName == null || driverSecondName.isBlank()) continue;
+                            names = new String[]{driverFirstName, driverSecondName};
+                        } else {
+                            throw new IllegalArgumentException("Unsupported importer type: " + importType);
+                        }
+                        Driver driver = findOrCreateDriverFromCsvName(names[0], names[1]);
+                        // Create car-driver association
+                        createCarDriver(carEntry.getId(), driver.getId(), i);
+                    }
+
+                    // --- Parse and save result row ---
+                    Result result = new Result();
+                    result.setSessionId(session.getId());
+                    result.setCarEntryId(carEntry.getId());
+                    result.setCarNumber(carNumber);
+                    result.setTires(tireSupplier);
+                    result.setStatus(getValueByHeader(headers, values, "STATUS"));
+                    result.setLaps(parseInteger(getValueByHeader(headers, values, "LAPS")));
+                    result.setTotalTime(getValueByHeader(headers, values, "TOTAL_TIME"));
+                    result.setGapFirst(getValueByHeader(headers, values, "GAP_FIRST"));
+                    result.setGapPrevious(getValueByHeader(headers, values, "GAP_PREVIOUS"));
+                    result.setFlLapnum(parseInteger(getValueByHeader(headers, values, "FL_LAPNUM")));
+                    result.setFlTime(getValueByHeader(headers, values, "FL_TIME"));
+                    result.setFlKph(parseBigDecimal(getValueByHeader(headers, values, "FL_KPH")));
+                    // csv files are prone to having BOM and java decided NOPE LETS NOT FIX
+                    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4508058
+                    // Position is guaranteed to be position 0 in csvs, so we hardcode.
+                    result.setPosition(parseInteger(values[0]));
+                    resultsToSave.add(result);
+                }
+                // Save all results (batch)
+                resultRepository.batchSave(resultsToSave);
+                reader.close();
+                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to process results CSV", e);
+            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
         }
-        // Fetch data from URL
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
+    }
 
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new ReportURLNotValidException("Failed to fetch data from URL: " + response.code());
+    @Override
+    public ProcessResponseDTO processTimecardCsv(ProcessRequestDTO request) {
+        try {
+            // 1. Download the CSV file using OkHttp
+            Request httpRequest = new Request.Builder()
+                    .url(request.getUrl())
+                    .build();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
+                }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
+
+                // 2. Parse the CSV header
+                String headerLine = reader.readLine();
+                if (headerLine == null) {
+                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
+                }
+                String[] headers = headerLine.split(";");
+
+                // 3. Ensure session exists
+                Session session;
+                if (request.getSessionId() != null) {
+                    session = sessionRepository.findById(request.getSessionId())
+                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
+                } else {
+                    throw new IllegalArgumentException("sessionId is required in the request");
+                }
+
+                // 4. Process each row, collect laps and sector data using a map
+                String row;
+                var carEntries = carEntryRepository.findBySessionId(session.getId());
+
+                // Use a map for laps and their sectors
+                var lapMap = new java.util.LinkedHashMap<LapKey, Lap>();
+                var sectorMap = new java.util.HashMap<LapKey, java.util.List<Sector>>();
+
+                while ((row = reader.readLine()) != null) {
+                    if (row.trim().isEmpty()) continue;
+                    String[] values = row.split(";");
+
+                    // --- Parse car number and driver name/number ---
+                    String carNumber = values[0];
+                    Integer driverNumber = parseInteger(getValueByHeader(headers, values, "DRIVER_NUMBER"));
+                    String driverName = getValueByHeader(headers, values, "DRIVER_NAME");
+
+                    // --- Look up car entry ---
+                    CarEntry carEntry = carEntries.stream().filter(e -> e.getNumber().equals(carNumber)).findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("Car entry not found for session " + session.getId() + " and car number " + carNumber));
+
+                    // --- Look up car-driver association ---
+                    CarDriver carDriver = null;
+                    if (driverNumber != null) {
+                        carDriver = carDriverRepository.findByCarIdAndDriverNumber(carEntry.getId(), driverNumber)
+                                .orElseThrow(() -> new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver number " + driverNumber));
+                    } else if (driverName != null && !driverName.isBlank()) {
+                        var driver = driverRepository.findByName(driverName);
+                        if (driver.isPresent()) {
+                            var optCD = carDriverRepository.findByCarIdAndDriverId(carEntry.getId(), driver.get().getId());
+                            if (optCD.isPresent()) {
+                                carDriver = optCD.get();
+                            }
+                        }
+                        if (carDriver == null) {
+                            throw new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver name " + driverName);
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Driver number or name must be present in timecard row");
+                    }
+
+                    Integer lapNumber = parseInteger(getValueByHeader(headers, values, "LAP_NUMBER"));
+                    LapKey lapKey = new LapKey(carEntry.getId(), carDriver.getDriverId(), lapNumber);
+
+                    // --- Parse lap data ---
+                    Lap lap = new Lap();
+                    lap.setCarId(carEntry.getId());
+                    lap.setDriverId(carDriver.getDriverId());
+                    lap.setLapNumber(lapNumber);
+                    lap.setLapTimeSeconds(parseLapTime(getValueByHeader(headers, values, "LAP_TIME")));
+
+                    var seconds = parseTimestampIntoSeconds(getValueByHeader(headers, values, "ELAPSED"));
+                    lap.setSessionElapsedSeconds(seconds);
+                    lap.setTimestamp(parseTimestamp(getValueByHeader(headers, values, "HOUR"), seconds, session.getStartDatetime()));
+                    lap.setAverageSpeedKph(parseBigDecimal(getValueByHeader(headers, values, "KPH")));
+                    // TODO: Parse PIT_TIME (not currently in Lap model)
+                    // TODO: Parse FLAG_AT_FL (not currently in Lap model)
+                    lapMap.put(lapKey, lap);
+
+                    // --- Parse sector data ---
+                    List<Sector> sectorsForLap = new java.util.ArrayList<>();
+                    for (int i = 1; i <= 3; i++) {
+                        String sectorTime = getValueByHeader(headers, values, String.format("S%d_LARGE", i));
+                        if (sectorTime != null && !sectorTime.isBlank()) {
+                            Sector sector = new Sector();
+                            // lapId will be set after batch save
+                            sector.setSectorNumber(i);
+                            sector.setSectorTimeSeconds(parseLapTime(sectorTime));
+                            if (sector.getSectorTimeSeconds() == null) {
+                                throw new IllegalArgumentException("Invalid sector time: " + sectorTime);
+                            }
+                            // TODO: Parse S{i}_IMPROVEMENT, S{i}_LARGE (not currently in Sector model)
+                            sectorsForLap.add(sector);
+                        }
+                    }
+                    sectorMap.put(lapKey, sectorsForLap);
+                }
+                // Batch save all laps
+                List<Lap> savedLaps = lapRepository.saveAll(new ArrayList<>(lapMap.values()));
+                // Build a map from LapKey to saved Lap (with ID)
+                var savedLapMap = new java.util.HashMap<LapKey, Lap>();
+                int idx = 0;
+                for (LapKey key : lapMap.keySet()) {
+                    savedLapMap.put(key, savedLaps.get(idx++));
+                }
+                // Now assign lapIds to sectors and collect all sectors
+                var allSectors = new java.util.ArrayList<Sector>();
+                for (var entry : sectorMap.entrySet()) {
+                    LapKey key = entry.getKey();
+                    Lap savedLap = savedLapMap.get(key);
+                    for (Sector sector : entry.getValue()) {
+                        sector.setLapId(savedLap.getId());
+                        allSectors.add(sector);
+                    }
+                }
+                // Batch save all sectors
+                sectorRepository.saveAll(allSectors);
+                reader.close();
+                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
             }
-            String jsonString = response.body().string();
-            try {
-                return JsonParser.parseString(jsonString).getAsJsonObject();
-            } catch (JsonParseException e) {
-                LOGGER.error("Failed to parse JSON data from URL: " + url, e);
-                throw new ReportURLNotValidException("Invalid JSON format in response", e);
-            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to process timecard CSV", e);
+            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
         }
-    }
-
-    /**
-     * Processes and stores the data from the JSON.
-     *
-     * @param jsonData the JSON data to process
-     * @param url      the URL of the imported data
-     */
-    private void processJSONData(JsonObject jsonData, String url) {
-        // Extract session data
-        JsonObject sessionJson = jsonData.getAsJsonObject("session");
-        JsonObject circuitJson = sessionJson.getAsJsonObject("circuit");
-
-        // Extract series name, event name, and year from the JSON data
-        String seriesName = sessionJson.get("championship_name").getAsString();
-        String eventName = sessionJson.get("event_name").getAsString();
-
-        // Extract year from session_date (format: "25/01/2025 01:40")
-        String sessionDateStr = sessionJson.get("session_date").getAsString();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        LocalDateTime sessionStartDateTime = LocalDateTime.parse(sessionDateStr, formatter);
-        int year = sessionStartDateTime.getYear();
-        LocalDate eventStartDate = sessionStartDateTime.toLocalDate();
-        int durationSeconds = 0;
-        if (sessionJson.has("finalize_type") && sessionJson.get("finalize_type").isJsonObject()) {
-            JsonObject finalizeType = sessionJson.getAsJsonObject("finalize_type");
-            if (finalizeType.has("time_in_seconds")) {
-                durationSeconds = finalizeType.get("time_in_seconds").getAsInt();
-            }
-        }
-        LocalDate eventEndDate = eventStartDate;
-        if (durationSeconds > 0) {
-            LocalDateTime sessionEndDateTime = sessionStartDateTime.plusSeconds(durationSeconds);
-            eventEndDate = sessionEndDateTime.toLocalDate();
-        }
-        // Find or create series
-        Series series = findOrCreateSeries(seriesName);
-        LOGGER.info(series.toString());
-
-        // Find or create circuit
-        Circuit circuit = findOrCreateCircuit(circuitJson);
-        LOGGER.info(circuit.toString());
-
-        // Find or create event
-        Event event = findOrCreateEvent(eventName, year, series.getId(), eventStartDate, eventEndDate);
-        LOGGER.info(event.toString());
-
-        // Create session
-        Session session = createSession(sessionJson, event.getId());
-        LOGGER.info(session.toString());
-
-        // Process participants
-        JsonArray participantsJson = jsonData.getAsJsonArray("participants");
-        processParticipants(participantsJson, series.getId(), session.getId());
-    }
-
-    /**
-     * Finds or creates a series with the given name.
-     *
-     * @param seriesName the name of the series
-     * @return the series entity
-     */
-    private Series findOrCreateSeries(String seriesName) {
-        Series cached = seriesCache.getIfPresent(seriesName);
-        if (cached != null) return cached;
-        Optional<Series> existingSeries = seriesRepository.findByName(seriesName);
-        if (existingSeries.isPresent()) {
-            seriesCache.put(seriesName, existingSeries.get());
-            return existingSeries.get();
-        }
-        Series newSeries = new Series();
-        newSeries.setName(seriesName);
-        Series saved = seriesRepository.save(newSeries);
-        seriesCache.put(seriesName, saved);
-        return saved;
-    }
-
-    /**
-     * Finds or creates a circuit with the given data.
-     *
-     * @param circuitJson the JSON data for the circuit
-     * @return the circuit entity
-     */
-    private Circuit findOrCreateCircuit(JsonObject circuitJson) {
-        String name = circuitJson.get("name").getAsString();
-        Circuit cached = circuitCache.getIfPresent(name);
-        if (cached != null) return cached;
-        Optional<Circuit> existingCircuit = circuitRepository.findByName(name);
-        if (existingCircuit.isPresent()) {
-            circuitCache.put(name, existingCircuit.get());
-            return existingCircuit.get();
-        }
-        Circuit newCircuit = new Circuit();
-        newCircuit.setName(name);
-        newCircuit.setLengthMeters(new BigDecimal(circuitJson.get("length").getAsString()));
-        newCircuit.setCountry(circuitJson.get("country").getAsString());
-        Circuit saved = circuitRepository.save(newCircuit);
-        circuitCache.put(name, saved);
-        return saved;
-    }
-
-    /**
-     * Finds or creates an event with the given data.
-     *
-     * @param eventName the name of the event
-     * @param year      the year of the event
-     * @param seriesId  the ID of the series
-     * @param startDate the start date of the event
-     * @param endDate   the end date of the event
-     * @return the event entity
-     */
-    private Event findOrCreateEvent(String eventName, Integer year, Long seriesId, LocalDate startDate, LocalDate endDate) {
-        String key = eventName + ":" + year + ":" + seriesId;
-        Event cached = eventCache.getIfPresent(key);
-        if (cached != null) return cached;
-        Optional<Event> existingEvent = eventRepository.findByNameAndYear(eventName, year);
-        if (existingEvent.isPresent()) {
-            eventCache.put(key, existingEvent.get());
-            return existingEvent.get();
-        }
-        Event newEvent = new Event();
-        newEvent.setName(eventName);
-        newEvent.setYear(year);
-        newEvent.setSeriesId(seriesId);
-        newEvent.setStartDate(startDate);
-        newEvent.setEndDate(endDate);
-        Event saved = eventRepository.save(newEvent);
-        eventCache.put(key, saved);
-        return saved;
-    }
-
-    /**
-     * Creates a session with the given data.
-     *
-     * @param sessionJson the JSON data for the session
-     * @param eventId     the ID of the event
-     * @return the session entity
-     */
-    private Session createSession(JsonObject sessionJson, Long eventId) {
-        Session newSession = new Session();
-        newSession.setEventId(eventId);
-        newSession.setName(sessionJson.get("session_name").getAsString());
-        newSession.setType(sessionJson.get("session_type").getAsString());
-        String sessionDateStr = sessionJson.get("session_date").getAsString();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        LocalDateTime startDateTime = LocalDateTime.parse(sessionDateStr, formatter);
-        newSession.setStartDatetime(startDateTime);
-        int durationSeconds;
-        if (sessionJson.has("finalize_type") && sessionJson.get("finalize_type").isJsonObject()) {
-            JsonObject finalizeType = sessionJson.getAsJsonObject("finalize_type");
-            if (finalizeType.has("time_in_seconds")) {
-                durationSeconds = finalizeType.get("time_in_seconds").getAsInt();
-                LOGGER.info("Parsed session duration: {} seconds ({} hours)", durationSeconds, durationSeconds / 3600.0);
-            } else {
-                throw new IllegalArgumentException("finalize_type object found but time_in_seconds field is missing");
-            }
-        } else {
-            throw new IllegalArgumentException("finalize_type object not found in session JSON");
-        }
-        newSession.setDurationSeconds(durationSeconds);
-        LOGGER.info("Session parsed: " + newSession);
-        Session saved = sessionRepository.save(newSession);
-        return saved;
-    }
-
-    /**
-     * Processes the participants data.
-     *
-     * @param participantsJson the JSON data for the participants
-     * @param seriesId         the ID of the series
-     * @param sessionId        the ID of the session
-     */
-    private void processParticipants(JsonArray participantsJson, Long seriesId, Long sessionId) {
-        // Get session to access duration and start date
-        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
-        if (!sessionOpt.isPresent()) {
-            throw new IllegalArgumentException("Session not found with ID: " + sessionId);
-        }
-        Session session = sessionOpt.get();
-        
-        for (JsonElement participantElement : participantsJson) {
-            JsonObject participantJson = participantElement.getAsJsonObject();
-
-            // Find or create team
-            Team team = findOrCreateTeam(participantJson.get("team").getAsString());
-            LOGGER.info(team.toString());
-
-            // Find or create class
-            Class carClass = findOrCreateClass(seriesId, participantJson.get("class").getAsString());
-            LOGGER.info(carClass.toString());
-
-            // Create car entry
-            CarEntry carEntry = createCarEntry(participantJson, sessionId, team.getId(),
-                    carClass.getId());
-            LOGGER.info(carEntry.toString());
-
-            // Process drivers
-            List<CarDriver> carDrivers = new ArrayList<>();
-            if (participantJson.has("drivers") && participantJson.get("drivers").isJsonArray()) {
-                JsonArray driversJson = participantJson.getAsJsonArray("drivers");
-                carDrivers.addAll(processDrivers(driversJson, carEntry.getId()));
-            }
-
-            // Process laps
-            if (participantJson.has("laps") && participantJson.get("laps").isJsonArray()) {
-                JsonArray lapsJson = participantJson.getAsJsonArray("laps");
-                processLaps(lapsJson, carEntry.getId(), carDrivers, session.getDurationSeconds(), session.getStartDatetime());
-            }
-        }
-    }
-
-    /**
-     * Creates a car entry with the given data.
-     *
-     * @param participantJson the JSON data for the participant
-     * @param sessionId       the ID of the session
-     * @param teamId          the ID of the team
-     * @param classId         the ID of the class
-     * @return the car entry entity
-     */
-    private CarEntry createCarEntry(JsonObject participantJson, Long sessionId, Long teamId,
-                                    Long classId) {
-        // Parse car number safely, handling both string and integer formats
-        String carNumber = parseJsonNumberAsString(participantJson.get("number"), "car number");
-        // Check if car entry already exists for this session and car number
-        Optional<CarEntry> existingCarEntry = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
-        if (existingCarEntry.isPresent()) {
-            return existingCarEntry.get();
-        }
-
-        String vehicleModel = participantJson.get("vehicle").getAsString();
-        // Find or create car model
-        CarModel carModel = findOrCreateCarModel(vehicleModel);
-
-        // Create car entry
-        CarEntry newCarEntry = new CarEntry();
-        newCarEntry.setSessionId(sessionId);
-        newCarEntry.setTeamId(teamId);
-        newCarEntry.setClassId(classId);
-        newCarEntry.setCarModelId(carModel.getId());
-        newCarEntry.setNumber(carNumber);
-
-        if (participantJson.has("tires") && !participantJson.get("tires").isJsonNull()) {
-            newCarEntry.setTireSupplier(participantJson.get("tires").getAsString());
-        }
-
-        LOGGER.info("Created car entry: {} - {}", carNumber, vehicleModel);
-        return carEntryRepository.save(newCarEntry);
-    }
-
-    /**
-     * Processes the drivers data.
-     *
-     * @param driversJson the JSON data for the drivers
-     * @param carEntryId       the ID of the car
-     */
-    private List<CarDriver> processDrivers(JsonArray driversJson, Long carEntryId) {
-        List<CarDriver> carDriverList = new ArrayList<>();
-        for (JsonElement driverElement : driversJson) {
-            JsonObject driverJson = driverElement.getAsJsonObject();
-
-            // Find or create driver
-            Driver driver = findOrCreateDriver(driverJson);
-            LOGGER.info(driver.toString());
-
-            // Parse driver number safely, handling both string and integer formats
-            int driverNumber = parseJsonNumberAsInt(driverJson.get("number"), "driver number");
-
-            // Create car-driver association
-            carDriverList.add(createCarDriver(carEntryId, driver.getId(), driverNumber));
-        }
-        return carDriverList;
-    }
-
-    /**
-     * Finds or creates a driver with the given data.
-     *
-     * @param driverJson the JSON data for the driver
-     * @return the driver entity
-     */
-    private Driver findOrCreateDriver(JsonObject driverJson) {
-        String firstName = driverJson.get("firstname").getAsString();
-        String lastName = driverJson.get("surname").getAsString();
-
-        Optional<Driver> existingDriver = driverRepository.findByFirstNameAndLastName(firstName, lastName);
-        if (existingDriver.isPresent()) {
-            return existingDriver.get();
-        }
-
-        Driver newDriver = new Driver();
-        newDriver.setFirstName(firstName);
-        newDriver.setLastName(lastName);
-
-        if (driverJson.has("country") && !driverJson.get("country").isJsonNull()) {
-            newDriver.setNationality(driverJson.get("country").getAsString());
-        }
-
-        if (driverJson.has("hometown") && !driverJson.get("hometown").isJsonNull()) {
-            newDriver.setHometown(driverJson.get("hometown").getAsString());
-        }
-
-        if (driverJson.has("license") && !driverJson.get("license").isJsonNull()) {
-            newDriver.setLicenseType(driverJson.get("license").getAsString());
-        }
-
-        return driverRepository.save(newDriver);
     }
 
     /**
@@ -492,90 +378,100 @@ public class ImportServiceImpl implements ImportService {
         return carDriverRepository.save(newCarDriver);
     }
 
+    // Helper to find or create a car entry (by session, team, class, car model, number, tire supplier)
+    private CarEntry findOrCreateCarEntry(Long sessionId, Long teamId, Long classId, Long carModelId, String carNumber, String tireSupplier) {
+        Optional<CarEntry> existing = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
+        if (existing.isPresent()) return existing.get();
+        CarEntry entry = new CarEntry();
+        entry.setSessionId(sessionId);
+        entry.setTeamId(teamId);
+        entry.setClassId(classId);
+        entry.setCarModelId(carModelId);
+        entry.setNumber(carNumber);
+        entry.setTireSupplier(tireSupplier);
+        return carEntryRepository.save(entry);
+    }
+
+    // Helper to find or create a driver from a CSV name ("Firstname Lastname")
+    private Driver findOrCreateDriverFromCsvName(String firstName, String lastName) {
+        Optional<Driver> existing = driverRepository.findByFirstNameAndLastName(firstName, lastName);
+        if (existing.isPresent()) return existing.get();
+        Driver driver = new Driver();
+        driver.setFirstName(firstName);
+        driver.setLastName(lastName);
+        // Leave other fields blank as per requirements
+        return driverRepository.save(driver);
+    }
+
     /**
-     * Processes the laps data.
+     * Finds or creates a car model with the given data.
      *
-     * @param lapsJson the JSON data for the laps
-     * @param carId    the ID of the car
-     * @param sessionDurationSeconds the duration of the session in seconds
-     * @param sessionStartDateTime the start date and time of the session
+     * @param vehicleModel the vehicle model name
+     * @return the car model entity
      */
-    private void processLaps(JsonArray lapsJson, Long carId, List<CarDriver> carDrivers, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
-        List<Lap> lapsToInsert = new ArrayList<>();
-        List<JsonObject> lapJsons = new ArrayList<>();
-
-        // First, parse all laps and collect unsaved Lap entities
-        for (JsonElement lapElement : lapsJson) {
-            JsonObject lapJson = lapElement.getAsJsonObject();
-            int driverNumber = parseJsonNumberAsInt(lapJson.get("driver_number"), "driver_number");
-            Optional<CarDriver> carDriver = carDrivers.stream().filter(cd -> cd.getDriverNumber() == driverNumber).findFirst();
-            if (!carDriver.isPresent()) {
-                LOGGER.warn("No car-driver association found for driver number {} in lap {}", driverNumber, lapJson);
-                continue;
-            }
-            Lap lap = createLapUnsaved(lapJson, carId, carDriver.get().getDriverId(), sessionDurationSeconds, sessionStartDateTime);
-            lapsToInsert.add(lap);
-            lapJsons.add(lapJson);
+    private CarModel findOrCreateCarModel(String vehicleModel) {
+        String key = vehicleModel;
+        CarModel cached = carModelCache.getIfPresent(key);
+        if (cached != null) return cached;
+        Optional<CarModel> existingCarModel = carModelRepository.findByName(vehicleModel);
+        if (existingCarModel.isPresent()) {
+            carModelCache.put(key, existingCarModel.get());
+            return existingCarModel.get();
         }
-        // Batch insert all laps
-        List<Lap> savedLaps = lapRepository.saveAll(lapsToInsert);
-        // Now process sectors for each lap
-        List<Sector> sectorsToInsert = new ArrayList<>();
-        for (int i = 0; i < savedLaps.size(); i++) {
-            Lap lap = savedLaps.get(i);
-            JsonObject lapJson = lapJsons.get(i);
-            if (lapJson.has("sector_times") && lapJson.get("sector_times").isJsonArray()) {
-                JsonArray sectorTimesJson = lapJson.getAsJsonArray("sector_times");
-                List<Sector> sectors = processSectorTimesUnsaved(sectorTimesJson, lap.getId());
-                sectorsToInsert.addAll(sectors);
-            }
-        }
-        // Batch insert all sectors
-        sectorRepository.saveAll(sectorsToInsert);
+        CarModel newCarModel = new CarModel();
+        newCarModel.setName(vehicleModel);
+        newCarModel.setFullName(vehicleModel);
+        newCarModel.setYearModel(null);
+        newCarModel.setDescription(null);
+        CarModel saved = carModelRepository.save(newCarModel);
+        carModelCache.put(key, saved);
+        return saved;
     }
 
-    // Utility method to create an unsaved Lap entity
-    private Lap createLapUnsaved(JsonObject lapJson, Long carId, Long driverId, Integer sessionDurationSeconds, LocalDateTime sessionStartDateTime) {
-        int lapNumber = parseJsonNumberAsInt(lapJson.get("number"), "lap number");
-        Lap newLap = new Lap();
-        newLap.setCarId(carId);
-        newLap.setDriverId(driverId);
-        newLap.setLapNumber(lapNumber);
-        String lapTimeStr = lapJson.get("time").getAsString();
-        newLap.setLapTimeSeconds(parseLapTime(lapTimeStr));
-        String sessionElapsedStr = lapJson.get("session_elapsed").getAsString();
-        newLap.setSessionElapsedSeconds(parseLapTime(sessionElapsedStr));
-        String timestampStr = lapJson.get("hour").getAsString();
-        //LocalDateTime timestamp = parseTimestamp(timestampStr, sessionDurationSeconds, sessionStartDateTime);
-        //newLap.setTimestamp(timestamp);
-        if (lapJson.has("average_speed_kph") && !lapJson.get("average_speed_kph").isJsonNull()) {
-            newLap.setAverageSpeedKph(new BigDecimal(lapJson.get("average_speed_kph").getAsString()));
+    /**
+     * Finds or creates a team with the given name.
+     *
+     * @param teamName the name of the team
+     * @return the team entity
+     */
+    private Team findOrCreateTeam(String teamName) {
+        Team cached = teamCache.getIfPresent(teamName);
+        if (cached != null) return cached;
+        Optional<Team> existingTeam = teamRepository.findByName(teamName);
+        if (existingTeam.isPresent()) {
+            teamCache.put(teamName, existingTeam.get());
+            return existingTeam.get();
         }
-        return newLap;
+        Team newTeam = new Team();
+        newTeam.setName(teamName);
+        Team saved = teamRepository.save(newTeam);
+        teamCache.put(teamName, saved);
+        return saved;
     }
 
-    // Utility method to process sector times and return unsaved entities
-    private List<Sector> processSectorTimesUnsaved(JsonArray sectorTimesJson, Long lapId) {
-        List<Sector> sectors = new ArrayList<>();
-        for (JsonElement sectorElement : sectorTimesJson) {
-            JsonObject sectorJson = sectorElement.getAsJsonObject();
-            Sector sector = createSectorUnsaved(sectorJson, lapId);
-            sectors.add(sector);
+    /**
+     * Finds or creates a class with the given name.
+     *
+     * @param className the name of the class
+     * @return the class entity
+     */
+    private Class findOrCreateClass(Long seriesId, String className) {
+        String key = seriesId + ":" + className;
+        Class cached = classCache.getIfPresent(key);
+        if (cached != null) return cached;
+        Optional<Class> existingClass = classRepository.findBySeriesIdAndName(seriesId, className);
+        if (existingClass.isPresent()) {
+            classCache.put(key, existingClass.get());
+            return existingClass.get();
         }
-        return sectors;
+        Class newClass = new Class();
+        newClass.setSeriesId(seriesId);
+        newClass.setName(className);
+        Class saved = classRepository.save(newClass);
+        classCache.put(key, saved);
+        return saved;
     }
 
-    // Utility method to create an unsaved Sector entity
-    private Sector createSectorUnsaved(JsonObject sectorJson, Long lapId) {
-        int sectorNumber = parseJsonNumberAsInt(sectorJson.get("index"), "sector index");
-        Sector newSector = new Sector();
-        newSector.setLapId(lapId);
-        newSector.setSectorNumber(sectorNumber);
-        String sectorTimeStr = sectorJson.get("time").getAsString();
-        BigDecimal sectorTime = parseSectorTime(sectorTimeStr);
-        newSector.setSectorTimeSeconds(sectorTime);
-        return newSector;
-    }
 
     /**
      * Parses a lap time string (e.g., "1:48.656") to seconds.
@@ -694,216 +590,6 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
-    BigDecimal parseSectorTime(String sectorTimeStr) {
-        try {
-            if (sectorTimeStr == null || sectorTimeStr.trim().isEmpty()) {
-                return null;  // Return null for blank values
-            }
-
-            if (sectorTimeStr.contains(":")) {
-                String[] parts = sectorTimeStr.split(":");
-                if (parts.length == 2) {
-                    // Format: MM:SS.SSS
-                    int minutes = Integer.parseInt(parts[0]);
-                    double seconds = Double.parseDouble(parts[1]);
-                    double totalSeconds = minutes * 60 + seconds;
-                    return BigDecimal.valueOf(totalSeconds);
-                } else if (parts.length == 3) {
-                    // Format: HH:MM:SS.SSS
-                    int hours = Integer.parseInt(parts[0]);
-                    int minutes = Integer.parseInt(parts[1]);
-                    double seconds = Double.parseDouble(parts[2]);
-                    double totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
-                    return BigDecimal.valueOf(totalSeconds);
-                }
-            } else {
-                // Format: SS.SSS
-                double seconds = Double.parseDouble(sectorTimeStr);
-                return BigDecimal.valueOf(seconds);
-            }
-            return null;
-        } catch (Exception e) {
-            return null;  // Return null for any parsing errors
-        }
-    }
-
-    /**
-     * Safely converts a JSON element to a string, handling both string and number types.
-     *
-     * @param element   the JSON element to convert
-     * @param fieldName the name of the field for error messages
-     * @return the string representation of the element
-     * @throws IllegalArgumentException if the element cannot be converted to a string
-     */
-    private String parseJsonNumberAsString(JsonElement element, String fieldName) {
-        if (element == null || element.isJsonNull()) {
-            throw new IllegalArgumentException(fieldName + " field cannot be null or empty");
-        }
-
-        if (element.isJsonPrimitive()) {
-            JsonPrimitive primitive = element.getAsJsonPrimitive();
-            if (primitive.isString()) {
-                String value = primitive.getAsString();
-                if (value.trim().isEmpty()) {
-                    throw new IllegalArgumentException(fieldName + " field cannot be empty");
-                }
-                return value;
-            } else if (primitive.isNumber()) {
-                return String.valueOf(primitive.getAsInt());
-            }
-        }
-
-        throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
-    }
-
-    /**
-     * Safely converts a JSON element to an integer, handling both string and number types.
-     *
-     * @param element   the JSON element to convert
-     * @param fieldName the name of the field for error messages
-     * @return the integer value
-     * @throws IllegalArgumentException if the element cannot be converted to an integer
-     */
-    private int parseJsonNumberAsInt(JsonElement element, String fieldName) {
-        if (element == null || element.isJsonNull()) {
-            throw new IllegalArgumentException(fieldName + " field cannot be null or empty");
-        }
-
-        if (element.isJsonPrimitive()) {
-            JsonPrimitive primitive = element.getAsJsonPrimitive();
-            if (primitive.isNumber()) {
-                int value = primitive.getAsInt();
-                if (value < 0) {
-                    throw new IllegalArgumentException(fieldName + " field cannot be negative: " + value);
-                }
-                return value;
-            } else if (primitive.isString()) {
-                try {
-                    int value = Integer.parseInt(primitive.getAsString().trim());
-                    if (value < 0) {
-                        throw new IllegalArgumentException(fieldName + " field cannot be negative: " + value);
-                    }
-                    return value;
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException(fieldName + " field must be a valid integer, got: " + primitive.getAsString());
-                }
-            }
-        }
-
-        throw new IllegalArgumentException(fieldName + " field must be a string or number, got: " + element.getClass().getSimpleName());
-    }
-
-    @Override
-    public ProcessResponseDTO processResultsCsv(ProcessRequestDTO request) {
-        var importType = request.getImportType();
-        try {
-            // 1. Download the CSV file using OkHttp
-            Request httpRequest = new Request.Builder()
-                    .url(request.getUrl())
-                    .build();
-            try (Response response = httpClient.newCall(httpRequest).execute()) {
-                if (!response.isSuccessful() || response.body() == null) {
-                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
-                }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
-
-                // 2. Parse the CSV header
-                String headerLine = reader.readLine();
-                if (headerLine == null) {
-                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
-                }
-                String[] headers = headerLine.split(";");
-
-                // 3. Ensure session exist (using provided metadata)
-                Session session;
-                if (request.getSessionId() != null) {
-                    session = sessionRepository.findById(request.getSessionId())
-                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
-                } else {
-                    throw new IllegalArgumentException("sessionId is required in the request");
-                }
-
-                var event = eventRepository.findById(session.getEventId()).get();
-
-                // 4. For each row, ensure car model, car entry, team, drivers exist
-                String row;
-                List<Result> resultsToSave = new ArrayList<>();
-                while ((row = reader.readLine()) != null) {
-                    if (row.trim().isEmpty()) continue;
-                    String[] values = row.split(";");
-
-                    // --- Parse team, class, car model, car number, tire supplier ---
-                    String teamName = getValueByHeader(headers, values, "TEAM");
-                    String className = getValueByHeader(headers, values, "CLASS");
-                    String carModelName = getValueByHeader(headers, values, "VEHICLE");
-                    String carNumber = getValueByHeader(headers, values, "NUMBER");
-                    String tireSupplier = getValueByHeader(headers, values,
-                            importType.equals(ProcessRequestDTO.ImportType.WEC) ? "TYRES" : "TIRES");
-
-                    // --- Find or create team, class, car model ---
-                    Team team = findOrCreateTeam(teamName);
-                    Class carClass = findOrCreateClass(event.getSeriesId(), className);
-                    CarModel carModel = findOrCreateCarModel(carModelName);
-
-                    // --- Create car entry ---
-                    CarEntry carEntry = findOrCreateCarEntry(session.getId(), team.getId(), carClass.getId(), carModel.getId(), carNumber, tireSupplier);
-
-                    // --- Parse and create drivers ---
-                    for (int i = 1; i <= 6; i++) { // Support up to 6 drivers (IMSA)
-                        String[] names;
-                        if (importType == ProcessRequestDTO.ImportType.WEC) {
-                            String driverCol = "DRIVER_" + i;
-                            String driverName = getValueByHeader(headers, values, driverCol);
-                            if (driverName == null || driverName.isBlank()) continue;
-                            names = parseWECName(driverName);
-                        } else if (importType == ProcessRequestDTO.ImportType.IMSA) { // IMSA splits up names into two columns
-                            String driverFirstNameCol = String.format("DRIVER%d_FIRSTNAME", i);
-                            String driverSecondNameCol = String.format("DRIVER%d_SECONDNAME", i);
-                            String driverFirstName = getValueByHeader(headers, values, driverFirstNameCol);
-                            String driverSecondName = getValueByHeader(headers, values, driverSecondNameCol);
-
-                            if (driverFirstName == null || driverFirstName.isBlank()
-                                    || driverSecondName == null || driverSecondName.isBlank()) continue;
-                            names = new String[]{driverFirstName, driverSecondName};
-                        } else {
-                            throw new IllegalArgumentException("Unsupported importer type: " + importType);
-                        }
-                        Driver driver = findOrCreateDriverFromCsvName(names[0], names[1]);
-                        // Create car-driver association
-                        createCarDriver(carEntry.getId(), driver.getId(), i);
-                    }
-
-                    // --- Parse and save result row ---
-                    Result result = new Result();
-                    result.setSessionId(session.getId());
-                    result.setCarEntryId(carEntry.getId());
-                    result.setCarNumber(carNumber);
-                    result.setTires(tireSupplier);
-                    result.setStatus(getValueByHeader(headers, values, "STATUS"));
-                    result.setLaps(parseInteger(getValueByHeader(headers, values, "LAPS")));
-                    result.setTotalTime(getValueByHeader(headers, values, "TOTAL_TIME"));
-                    result.setGapFirst(getValueByHeader(headers, values, "GAP_FIRST"));
-                    result.setGapPrevious(getValueByHeader(headers, values, "GAP_PREVIOUS"));
-                    result.setFlLapnum(parseInteger(getValueByHeader(headers, values, "FL_LAPNUM")));
-                    result.setFlTime(getValueByHeader(headers, values, "FL_TIME"));
-                    result.setFlKph(parseBigDecimal(getValueByHeader(headers, values, "FL_KPH")));
-                    // csv files are prone to having BOM and java decided NOPE LETS NOT FIX
-                    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4508058
-                    // Position is guaranteed to be position 0 in csvs, so we hardcode.
-                    result.setPosition(parseInteger(values[0]));
-                    resultsToSave.add(result);
-                }
-                // Save all results (batch)
-                resultRepository.batchSave(resultsToSave);
-                reader.close();
-                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to process results CSV", e);
-            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
-        }
-    }
-
     public static String[] parseWECName(String fullName) {
         String[] parts = fullName.split(" ");
         StringBuilder firstName = new StringBuilder();
@@ -929,7 +615,6 @@ public class ImportServiceImpl implements ImportService {
         return new String[]{firstName.toString(), lastName.toString()};
     }
 
-
     // Helper to robustly get a value by header name
     private String getValueByHeader(String[] headers, String[] values, String key) {
         for (int i = 0; i < headers.length; i++) {
@@ -938,31 +623,6 @@ public class ImportServiceImpl implements ImportService {
             }
         }
         return null;
-    }
-
-    // Helper to find or create a car entry (by session, team, class, car model, number, tire supplier)
-    private CarEntry findOrCreateCarEntry(Long sessionId, Long teamId, Long classId, Long carModelId, String carNumber, String tireSupplier) {
-        Optional<CarEntry> existing = carEntryRepository.findBySessionIdAndNumber(sessionId, carNumber);
-        if (existing.isPresent()) return existing.get();
-        CarEntry entry = new CarEntry();
-        entry.setSessionId(sessionId);
-        entry.setTeamId(teamId);
-        entry.setClassId(classId);
-        entry.setCarModelId(carModelId);
-        entry.setNumber(carNumber);
-        entry.setTireSupplier(tireSupplier);
-        return carEntryRepository.save(entry);
-    }
-
-    // Helper to find or create a driver from a CSV name ("Firstname Lastname")
-    private Driver findOrCreateDriverFromCsvName(String firstName, String lastName) {
-        Optional<Driver> existing = driverRepository.findByFirstNameAndLastName(firstName, lastName);
-        if (existing.isPresent()) return existing.get();
-        Driver driver = new Driver();
-        driver.setFirstName(firstName);
-        driver.setLastName(lastName);
-        // Leave other fields blank as per requirements
-        return driverRepository.save(driver);
     }
 
     private Integer parseInteger(String value) {
@@ -981,75 +641,6 @@ public class ImportServiceImpl implements ImportService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    /**
-     * Finds or creates a car model with the given data.
-     *
-     * @param vehicleModel the vehicle model name
-     * @return the car model entity
-     */
-    private CarModel findOrCreateCarModel(String vehicleModel) {
-        String key = vehicleModel;
-        CarModel cached = carModelCache.getIfPresent(key);
-        if (cached != null) return cached;
-        Optional<CarModel> existingCarModel = carModelRepository.findByName(vehicleModel);
-        if (existingCarModel.isPresent()) {
-            carModelCache.put(key, existingCarModel.get());
-            return existingCarModel.get();
-        }
-        CarModel newCarModel = new CarModel();
-        newCarModel.setName(vehicleModel);
-        newCarModel.setFullName(vehicleModel);
-        newCarModel.setYearModel(null);
-        newCarModel.setDescription(null);
-        CarModel saved = carModelRepository.save(newCarModel);
-        carModelCache.put(key, saved);
-        return saved;
-    }
-
-    /**
-     * Finds or creates a team with the given name.
-     *
-     * @param teamName the name of the team
-     * @return the team entity
-     */
-    private Team findOrCreateTeam(String teamName) {
-        Team cached = teamCache.getIfPresent(teamName);
-        if (cached != null) return cached;
-        Optional<Team> existingTeam = teamRepository.findByName(teamName);
-        if (existingTeam.isPresent()) {
-            teamCache.put(teamName, existingTeam.get());
-            return existingTeam.get();
-        }
-        Team newTeam = new Team();
-        newTeam.setName(teamName);
-        Team saved = teamRepository.save(newTeam);
-        teamCache.put(teamName, saved);
-        return saved;
-    }
-
-    /**
-     * Finds or creates a class with the given name.
-     *
-     * @param className the name of the class
-     * @return the class entity
-     */
-    private Class findOrCreateClass(Long seriesId, String className) {
-        String key = seriesId + ":" + className;
-        Class cached = classCache.getIfPresent(key);
-        if (cached != null) return cached;
-        Optional<Class> existingClass = classRepository.findBySeriesIdAndName(seriesId, className);
-        if (existingClass.isPresent()) {
-            classCache.put(key, existingClass.get());
-            return existingClass.get();
-        }
-        Class newClass = new Class();
-        newClass.setSeriesId(seriesId);
-        newClass.setName(className);
-        Class saved = classRepository.save(newClass);
-        classCache.put(key, saved);
-        return saved;
     }
 
     // Helper class for robust lap mapping
@@ -1078,149 +669,5 @@ public class ImportServiceImpl implements ImportService {
         public int hashCode() {
             return Objects.hash(carId, driverId, lapNumber);
         }
-    }
-
-    @Override
-    public ProcessResponseDTO processTimecardCsv(ProcessRequestDTO request) {
-        try {
-            // 1. Download the CSV file using OkHttp
-            Request httpRequest = new Request.Builder()
-                    .url(request.getUrl())
-                    .build();
-            try (Response response = httpClient.newCall(httpRequest).execute()) {
-                if (!response.isSuccessful() || response.body() == null) {
-                    return new ProcessResponseDTO(null, "FAILED", "Failed to fetch CSV: HTTP " + (response != null ? response.code() : "null response"));
-                }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
-
-                // 2. Parse the CSV header
-                String headerLine = reader.readLine();
-                if (headerLine == null) {
-                    return new ProcessResponseDTO(null, "FAILED", "CSV is empty");
-                }
-                String[] headers = headerLine.split(";");
-
-                // 3. Ensure session exists
-                Session session;
-                if (request.getSessionId() != null) {
-                    session = sessionRepository.findById(request.getSessionId())
-                            .orElseThrow(() -> new IllegalArgumentException("Session not found: " + request.getSessionId()));
-                } else {
-                    throw new IllegalArgumentException("sessionId is required in the request");
-                }
-
-                // 4. Process each row, collect laps and sector data using a map
-                String row;
-                var carEntries = carEntryRepository.findBySessionId(session.getId());
-
-                // Use a map for laps and their sectors
-                var lapMap = new java.util.LinkedHashMap<LapKey, Lap>();
-                var sectorMap = new java.util.HashMap<LapKey, java.util.List<Sector>>();
-
-                while ((row = reader.readLine()) != null) {
-                    if (row.trim().isEmpty()) continue;
-                    String[] values = row.split(";");
-
-                    // --- Parse car number and driver name/number ---
-                    String carNumber = values[0];
-                    Integer driverNumber = parseInteger(getValueByHeader(headers, values, "DRIVER_NUMBER"));
-                    String driverName = getValueByHeader(headers, values, "DRIVER_NAME");
-
-                    // --- Look up car entry ---
-                    CarEntry carEntry = carEntries.stream().filter(e -> e.getNumber().equals(carNumber)).findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("Car entry not found for session " + session.getId() + " and car number " + carNumber));
-
-                    // --- Look up car-driver association ---
-                    CarDriver carDriver = null;
-                    if (driverNumber != null) {
-                        carDriver = carDriverRepository.findByCarIdAndDriverNumber(carEntry.getId(), driverNumber)
-                                .orElseThrow(() -> new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver number " + driverNumber));
-                    } else if (driverName != null && !driverName.isBlank()) {
-                        var driver = driverRepository.findByName(driverName);
-                        if (driver.isPresent()) {
-                            var optCD = carDriverRepository.findByCarIdAndDriverId(carEntry.getId(), driver.get().getId());
-                            if (optCD.isPresent()) {
-                                carDriver = optCD.get();
-                            }
-                        }
-                        if (carDriver == null) {
-                            throw new IllegalArgumentException("Car-driver association not found for car entry " + carEntry.getId() + " and driver name " + driverName);
-                        }
-                    } else {
-                        throw new IllegalArgumentException("Driver number or name must be present in timecard row");
-                    }
-
-                    Integer lapNumber = parseInteger(getValueByHeader(headers, values, "LAP_NUMBER"));
-                    LapKey lapKey = new LapKey(carEntry.getId(), carDriver.getDriverId(), lapNumber);
-
-                    // --- Parse lap data ---
-                    Lap lap = new Lap();
-                    lap.setCarId(carEntry.getId());
-                    lap.setDriverId(carDriver.getDriverId());
-                    lap.setLapNumber(lapNumber);
-                    lap.setLapTimeSeconds(parseLapTime(getValueByHeader(headers, values, "LAP_TIME")));
-
-                    var seconds = parseTimestampIntoSeconds(getValueByHeader(headers, values, "ELAPSED"));
-                    lap.setSessionElapsedSeconds(seconds);
-                    lap.setTimestamp(parseTimestamp(getValueByHeader(headers, values, "HOUR"), seconds, session.getStartDatetime()));
-                    lap.setAverageSpeedKph(parseBigDecimal(getValueByHeader(headers, values, "KPH")));
-                    // TODO: Parse PIT_TIME (not currently in Lap model)
-                    // TODO: Parse FLAG_AT_FL (not currently in Lap model)
-                    lapMap.put(lapKey, lap);
-
-                    // --- Parse sector data ---
-                    List<Sector> sectorsForLap = new java.util.ArrayList<>();
-                    for (int i = 1; i <= 3; i++) {
-                        String sectorTime = getValueByHeader(headers, values, String.format("S%d_LARGE", i));
-                        if (sectorTime != null && !sectorTime.isBlank()) {
-                            Sector sector = new Sector();
-                            // lapId will be set after batch save
-                            sector.setSectorNumber(i);
-                            sector.setSectorTimeSeconds(parseLargeSectorTime(sectorTime));
-                            if (sector.getSectorTimeSeconds() == null) {
-                                throw new IllegalArgumentException("Invalid sector time: " + sectorTime);
-                            }
-                            // TODO: Parse S{i}_IMPROVEMENT, S{i}_LARGE (not currently in Sector model)
-                            sectorsForLap.add(sector);
-                        }
-                    }
-                    sectorMap.put(lapKey, sectorsForLap);
-                }
-                // Batch save all laps
-                List<Lap> savedLaps = lapRepository.saveAll(new ArrayList<>(lapMap.values()));
-                // Build a map from LapKey to saved Lap (with ID)
-                var savedLapMap = new java.util.HashMap<LapKey, Lap>();
-                int idx = 0;
-                for (LapKey key : lapMap.keySet()) {
-                    savedLapMap.put(key, savedLaps.get(idx++));
-                }
-                // Now assign lapIds to sectors and collect all sectors
-                var allSectors = new java.util.ArrayList<Sector>();
-                for (var entry : sectorMap.entrySet()) {
-                    LapKey key = entry.getKey();
-                    Lap savedLap = savedLapMap.get(key);
-                    for (Sector sector : entry.getValue()) {
-                        sector.setLapId(savedLap.getId());
-                        allSectors.add(sector);
-                    }
-                }
-                // Batch save all sectors
-                sectorRepository.saveAll(allSectors);
-                reader.close();
-                return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to process timecard CSV", e);
-            return new ProcessResponseDTO(null, "FAILED", e.getMessage());
-        }
-    }
-
-    private BigDecimal parseLargeSectorTime(String sectorTime) {
-        // Format: MM:SS.SSS
-        String[] parts = sectorTime.split(":");
-        int minutes = Integer.parseInt(parts[0]);
-        double seconds = Double.parseDouble(parts[1]);
-        double totalSeconds = minutes * 60 + seconds;
-        return BigDecimal.valueOf(totalSeconds);
     }
 }

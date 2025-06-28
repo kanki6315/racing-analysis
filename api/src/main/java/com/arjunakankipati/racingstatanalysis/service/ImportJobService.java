@@ -1,11 +1,12 @@
 package com.arjunakankipati.racingstatanalysis.service;
 
+import com.arjunakankipati.racingstatanalysis.dto.ProcessRequestDTO;
 import com.arjunakankipati.racingstatanalysis.model.ImportJob;
 
 import java.util.Optional;
 
 public interface ImportJobService {
-    ImportJob createJob(String sourceUrl);
+    ImportJob createJob(ProcessRequestDTO request);
 
     void markStarted(Integer jobId);
 

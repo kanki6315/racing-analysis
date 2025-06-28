@@ -5,11 +5,10 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.ImportJobs;
-
-import java.time.LocalDateTime;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.time.LocalDateTime;
 
 
 /**
@@ -119,17 +118,59 @@ public class ImportJobsRecord extends UpdatableRecordImpl<ImportJobsRecord> {
     }
 
     /**
-     * Setter for <code>public.import_jobs.source_url</code>.
+     * Setter for <code>public.import_jobs.url</code>.
      */
-    public void setSourceUrl(String value) {
+    public void setUrl(String value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>public.import_jobs.source_url</code>.
+     * Getter for <code>public.import_jobs.url</code>.
      */
-    public String getSourceUrl() {
+    public String getUrl() {
         return (String) get(7);
+    }
+
+    /**
+     * Setter for <code>public.import_jobs.import_type</code>.
+     */
+    public void setImportType(String value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.import_jobs.import_type</code>.
+     */
+    public String getImportType() {
+        return (String) get(8);
+    }
+
+    /**
+     * Setter for <code>public.import_jobs.process_type</code>.
+     */
+    public void setProcessType(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.import_jobs.process_type</code>.
+     */
+    public String getProcessType() {
+        return (String) get(9);
+    }
+
+    /**
+     * Setter for <code>public.import_jobs.session_id</code>.
+     */
+    public void setSessionId(Long value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.import_jobs.session_id</code>.
+     */
+    public Long getSessionId() {
+        return (Long) get(10);
     }
 
     // -------------------------------------------------------------------------
@@ -155,7 +196,7 @@ public class ImportJobsRecord extends UpdatableRecordImpl<ImportJobsRecord> {
     /**
      * Create a detached, initialised ImportJobsRecord
      */
-    public ImportJobsRecord(Integer id, String status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime startedAt, LocalDateTime endedAt, String error, String sourceUrl) {
+    public ImportJobsRecord(Integer id, String status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime startedAt, LocalDateTime endedAt, String error, String url, String importType, String processType, Long sessionId) {
         super(ImportJobs.IMPORT_JOBS);
 
         setId(id);
@@ -165,7 +206,10 @@ public class ImportJobsRecord extends UpdatableRecordImpl<ImportJobsRecord> {
         setStartedAt(startedAt);
         setEndedAt(endedAt);
         setError(error);
-        setSourceUrl(sourceUrl);
+        setUrl(url);
+        setImportType(importType);
+        setProcessType(processType);
+        setSessionId(sessionId);
         resetChangedOnNotNull();
     }
 }
