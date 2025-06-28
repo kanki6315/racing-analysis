@@ -6,33 +6,16 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions.SessionsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Events.EventsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CircuitsRecord;
-
-import java.math.BigDecimal;
-import java.util.Collection;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import java.math.BigDecimal;
+import java.util.Collection;
 
 
 /**
@@ -163,17 +146,17 @@ public class Circuits extends TableImpl<CircuitsRecord> {
         return Keys.CIRCUITS_PKEY;
     }
 
-    private transient SessionsPath _sessions;
+    private transient EventsPath _events;
 
     /**
-     * Get the implicit to-many join path to the <code>public.sessions</code>
+     * Get the implicit to-many join path to the <code>public.events</code>
      * table
      */
-    public SessionsPath sessions() {
-        if (_sessions == null)
-            _sessions = new SessionsPath(this, null, Keys.SESSIONS__SESSIONS_CIRCUIT_ID_FKEY.getInverseKey());
+    public EventsPath events() {
+        if (_events == null)
+            _events = new EventsPath(this, null, Keys.EVENTS__FK_EVENTS_CIRCUIT.getInverseKey());
 
-        return _sessions;
+        return _events;
     }
 
     @Override

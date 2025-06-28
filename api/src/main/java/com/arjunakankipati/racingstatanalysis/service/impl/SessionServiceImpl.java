@@ -24,7 +24,6 @@ public class SessionServiceImpl implements SessionService {
     public SessionDTO createSession(SessionDTO sessionDTO) {
         Session session = new Session();
         session.setEventId(sessionDTO.getEventId());
-        session.setCircuitId(sessionDTO.getCircuitId());
         session.setName(sessionDTO.getType());
         session.setType(sessionDTO.getType());
         session.setStartDatetime(sessionDTO.getStartDatetime());
@@ -33,7 +32,6 @@ public class SessionServiceImpl implements SessionService {
         return new SessionDTO(
                 saved.getId(),
                 saved.getEventId(),
-                saved.getCircuitId(),
                 saved.getName(),
                 saved.getType(),
                 saved.getStartDatetime(),
@@ -58,7 +56,6 @@ public class SessionServiceImpl implements SessionService {
                 .map(session -> new SessionDTO(
                         session.getId(),
                         session.getEventId(),
-                        session.getCircuitId(),
                         session.getName(),
                         session.getType(),
                         session.getStartDatetime(),

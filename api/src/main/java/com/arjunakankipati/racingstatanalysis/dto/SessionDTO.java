@@ -9,7 +9,6 @@ import java.util.Objects;
 public class SessionDTO {
     private Long id;
     private Long eventId;
-    private Long circuitId;
     private String name;
     private String type;
     private LocalDateTime startDatetime;
@@ -26,17 +25,15 @@ public class SessionDTO {
      *
      * @param id               the ID of the session
      * @param eventId          the ID of the event this session belongs to
-     * @param circuitId        the ID of the circuit where this session takes place
      * @param name             the name of the session
      * @param type             the type of the session (e.g., "Race", "Practice", "Qualifying")
      * @param startDatetime    the start date and time of the session
      * @param durationSeconds  the duration of the session in seconds
      */
-    public SessionDTO(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime,
+    public SessionDTO(Long id, Long eventId, String name, String type, LocalDateTime startDatetime,
                       Integer durationSeconds) {
         this.id = id;
         this.eventId = eventId;
-        this.circuitId = circuitId;
         this.name = name;
         this.type = type;
         this.startDatetime = startDatetime;
@@ -77,24 +74,6 @@ public class SessionDTO {
      */
     public void setEventId(Long eventId) {
         this.eventId = eventId;
-    }
-
-    /**
-     * Gets the ID of the circuit where this session takes place.
-     *
-     * @return the circuit ID
-     */
-    public Long getCircuitId() {
-        return circuitId;
-    }
-
-    /**
-     * Sets the ID of the circuit where this session takes place.
-     *
-     * @param circuitId the circuit ID to set
-     */
-    public void setCircuitId(Long circuitId) {
-        this.circuitId = circuitId;
     }
 
     /**
@@ -176,7 +155,6 @@ public class SessionDTO {
         SessionDTO that = (SessionDTO) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(eventId, that.eventId) &&
-                Objects.equals(circuitId, that.circuitId) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(type, that.type) &&
                 Objects.equals(startDatetime, that.startDatetime) &&
@@ -185,7 +163,7 @@ public class SessionDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, eventId, circuitId, name, type, startDatetime, durationSeconds);
+        return Objects.hash(id, eventId, name, type, startDatetime, durationSeconds);
     }
 
     @Override
@@ -193,7 +171,6 @@ public class SessionDTO {
         return "SessionDTO{" +
                 "id=" + id +
                 ", eventId=" + eventId +
-                ", circuitId=" + circuitId +
                 ", name='" + name + '\'' +
                 ", type='" + type + '\'' +
                 ", startDatetime=" + startDatetime +

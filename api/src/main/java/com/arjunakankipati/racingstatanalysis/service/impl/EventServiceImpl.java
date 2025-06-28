@@ -39,6 +39,7 @@ public class EventServiceImpl implements EventService {
     public EventDTO createEvent(EventDTO eventDTO) {
         Event event = new Event();
         event.setSeriesId(eventDTO.getSeriesId());
+        event.setCircuitId(event.getCircuitId());
         event.setName(eventDTO.getName());
         event.setYear(eventDTO.getStartDate().getYear());
         event.setStartDate(eventDTO.getStartDate());
@@ -71,6 +72,7 @@ public class EventServiceImpl implements EventService {
         return events.stream().map(event -> new EventsResponseDTO(
                         event.getId(),
                         event.getSeriesId(),
+                        event.getCircuitId(),
                         event.getName(),
                         event.getYear(),
                         event.getStartDate(),
@@ -110,7 +112,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(ResourceNotFoundException::new);
 
         // Find all classes that competed in this event
-        List<com.arjunakankipati.racingstatanalysis.model.Class> classes = classRepository.findByEventId(eventId);
+        List<Class> classes = classRepository.findByEventId(eventId);
 
         // Convert to DTOs
         List<ClassDTO> classDTOs = classes.stream()
@@ -136,7 +138,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(ResourceNotFoundException::new);
 
         // Find the class by ID
-        com.arjunakankipati.racingstatanalysis.model.Class clazz = classRepository.findById(classId)
+        Class clazz = classRepository.findById(classId)
                 .orElseThrow(ResourceNotFoundException::new);
 
         // Find all car entries in this class for this event

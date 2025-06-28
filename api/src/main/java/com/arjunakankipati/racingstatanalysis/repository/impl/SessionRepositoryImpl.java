@@ -37,7 +37,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
         return new Session(
                 sessionRec.getId(),
                 sessionRec.getEventId(),
-                sessionRec.getCircuitId(),
                 sessionRec.getName(),
                 sessionRec.getType(),
                 sessionRec.getStartDatetime(),
@@ -50,7 +49,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
         Record record = dsl.insertInto(table)
                 .columns(
                         Tables.SESSIONS.EVENT_ID,
-                        Tables.SESSIONS.CIRCUIT_ID,
                         Tables.SESSIONS.NAME,
                         Tables.SESSIONS.TYPE,
                         Tables.SESSIONS.START_DATETIME,
@@ -58,7 +56,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
                 )
                 .values(
                         session.getEventId(),
-                        session.getCircuitId(),
                         session.getName(),
                         session.getType(),
                         session.getStartDatetime(),
@@ -74,7 +71,6 @@ public class SessionRepositoryImpl extends BaseRepositoryImpl<Session, Long> imp
     protected void update(Session session) {
         dsl.update(table)
                 .set(Tables.SESSIONS.EVENT_ID, session.getEventId())
-                .set(Tables.SESSIONS.CIRCUIT_ID, session.getCircuitId())
                 .set(Tables.SESSIONS.NAME, session.getName())
                 .set(Tables.SESSIONS.TYPE, session.getType())
                 .set(Tables.SESSIONS.START_DATETIME, session.getStartDatetime())

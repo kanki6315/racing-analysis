@@ -7,37 +7,20 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 import com.arjunakankipati.racingstatanalysis.jooq.Indexes;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits.CircuitsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Series.SeriesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions.SessionsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.EventsRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.Index;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -95,6 +78,11 @@ public class Events extends TableImpl<EventsRecord> {
      * The column <code>public.events.description</code>.
      */
     public final TableField<EventsRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.events.circuit_id</code>.
+     */
+    public final TableField<EventsRecord, Long> CIRCUIT_ID = createField(DSL.name("circuit_id"), SQLDataType.BIGINT, this, "");
 
     private Events(Name alias, Table<EventsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -180,7 +168,7 @@ public class Events extends TableImpl<EventsRecord> {
 
     @Override
     public List<ForeignKey<EventsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.EVENTS__EVENTS_SERIES_ID_FKEY);
+        return Arrays.asList(Keys.EVENTS__EVENTS_SERIES_ID_FKEY, Keys.EVENTS__FK_EVENTS_CIRCUIT);
     }
 
     private transient SeriesPath _series;
@@ -193,6 +181,18 @@ public class Events extends TableImpl<EventsRecord> {
             _series = new SeriesPath(this, Keys.EVENTS__EVENTS_SERIES_ID_FKEY, null);
 
         return _series;
+    }
+
+    private transient CircuitsPath _circuits;
+
+    /**
+     * Get the implicit join path to the <code>public.circuits</code> table.
+     */
+    public CircuitsPath circuits() {
+        if (_circuits == null)
+            _circuits = new CircuitsPath(this, Keys.EVENTS__FK_EVENTS_CIRCUIT, null);
+
+        return _circuits;
     }
 
     private transient SessionsPath _sessions;

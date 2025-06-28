@@ -8,7 +8,6 @@ import com.arjunakankipati.racingstatanalysis.jooq.Indexes;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarEntries.CarEntriesPath;
-import com.arjunakankipati.racingstatanalysis.jooq.tables.Circuits.CircuitsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Events.EventsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.SessionsRecord;
@@ -54,11 +53,6 @@ public class Sessions extends TableImpl<SessionsRecord> {
      * The column <code>public.sessions.event_id</code>.
      */
     public final TableField<SessionsRecord, Long> EVENT_ID = createField(DSL.name("event_id"), SQLDataType.BIGINT, this, "");
-
-    /**
-     * The column <code>public.sessions.circuit_id</code>.
-     */
-    public final TableField<SessionsRecord, Long> CIRCUIT_ID = createField(DSL.name("circuit_id"), SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>public.sessions.name</code>.
@@ -164,19 +158,7 @@ public class Sessions extends TableImpl<SessionsRecord> {
 
     @Override
     public List<ForeignKey<SessionsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.SESSIONS__SESSIONS_CIRCUIT_ID_FKEY, Keys.SESSIONS__SESSIONS_EVENT_ID_FKEY);
-    }
-
-    private transient CircuitsPath _circuits;
-
-    /**
-     * Get the implicit join path to the <code>public.circuits</code> table.
-     */
-    public CircuitsPath circuits() {
-        if (_circuits == null)
-            _circuits = new CircuitsPath(this, Keys.SESSIONS__SESSIONS_CIRCUIT_ID_FKEY, null);
-
-        return _circuits;
+        return Arrays.asList(Keys.SESSIONS__SESSIONS_EVENT_ID_FKEY);
     }
 
     private transient EventsPath _events;

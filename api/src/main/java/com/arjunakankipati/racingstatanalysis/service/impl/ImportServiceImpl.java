@@ -209,7 +209,7 @@ public class ImportServiceImpl implements ImportService {
         LOGGER.info(event.toString());
 
         // Create session
-        Session session = createSession(sessionJson, event.getId(), circuit.getId());
+        Session session = createSession(sessionJson, event.getId());
         LOGGER.info(session.toString());
 
         // Process participants
@@ -297,13 +297,11 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param sessionJson the JSON data for the session
      * @param eventId     the ID of the event
-     * @param circuitId   the ID of the circuit
      * @return the session entity
      */
-    private Session createSession(JsonObject sessionJson, Long eventId, Long circuitId) {
+    private Session createSession(JsonObject sessionJson, Long eventId) {
         Session newSession = new Session();
         newSession.setEventId(eventId);
-        newSession.setCircuitId(circuitId);
         newSession.setName(sessionJson.get("session_name").getAsString());
         newSession.setType(sessionJson.get("session_type").getAsString());
         String sessionDateStr = sessionJson.get("session_date").getAsString();

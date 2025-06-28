@@ -48,73 +48,59 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     }
 
     /**
-     * Setter for <code>public.sessions.circuit_id</code>.
-     */
-    public void setCircuitId(Long value) {
-        set(2, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.circuit_id</code>.
-     */
-    public Long getCircuitId() {
-        return (Long) get(2);
-    }
-
-    /**
      * Setter for <code>public.sessions.name</code>.
      */
     public void setName(String value) {
-        set(3, value);
+        set(2, value);
     }
 
     /**
      * Getter for <code>public.sessions.name</code>.
      */
     public String getName() {
-        return (String) get(3);
+        return (String) get(2);
     }
 
     /**
      * Setter for <code>public.sessions.type</code>.
      */
     public void setType(String value) {
-        set(4, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.sessions.type</code>.
      */
     public String getType() {
-        return (String) get(4);
+        return (String) get(3);
     }
 
     /**
      * Setter for <code>public.sessions.start_datetime</code>.
      */
     public void setStartDatetime(LocalDateTime value) {
-        set(5, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.sessions.start_datetime</code>.
      */
     public LocalDateTime getStartDatetime() {
-        return (LocalDateTime) get(5);
+        return (LocalDateTime) get(4);
     }
 
     /**
      * Setter for <code>public.sessions.duration_seconds</code>.
      */
     public void setDurationSeconds(Integer value) {
-        set(6, value);
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.sessions.duration_seconds</code>.
      */
     public Integer getDurationSeconds() {
-        return (Integer) get(6);
+        return (Integer) get(5);
     }
 
     // -------------------------------------------------------------------------
@@ -140,12 +126,11 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     /**
      * Create a detached, initialised SessionsRecord
      */
-    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds) {
+    public SessionsRecord(Long id, Long eventId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds) {
         super(Sessions.SESSIONS);
 
         setId(id);
         setEventId(eventId);
-        setCircuitId(circuitId);
         setName(name);
         setType(type);
         setStartDatetime(startDatetime);
