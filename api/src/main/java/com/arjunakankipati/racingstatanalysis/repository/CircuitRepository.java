@@ -2,6 +2,7 @@ package com.arjunakankipati.racingstatanalysis.repository;
 
 import com.arjunakankipati.racingstatanalysis.model.Circuit;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,4 +18,12 @@ public interface CircuitRepository extends BaseRepository<Circuit, Long> {
      * @return an Optional containing the found circuit, or empty if not found
      */
     Optional<Circuit> findByName(String name);
+
+    /**
+     * Find all circuits whose names contain the given substring (case-insensitive).
+     *
+     * @param namePart the substring to search for in circuit names
+     * @return a list of matching circuits
+     */
+    List<Circuit> findByNameContainingIgnoreCase(String namePart);
 }

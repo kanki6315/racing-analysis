@@ -55,4 +55,13 @@ public class CircuitsController {
         CircuitDTO updated = circuitService.updateCircuit(id, circuitDTO);
         return ResponseEntity.ok(updated);
     }
+
+    @GetMapping("/findAll")
+    public ResponseEntity<List<CircuitDTO>> findAllCircuits(@RequestParam(value = "name", required = false) String name) {
+        if (name != null && !name.isEmpty()) {
+            return ResponseEntity.ok(circuitService.getAllCircuitsByName(name));
+        } else {
+            return ResponseEntity.ok(circuitService.getAllCircuits());
+        }
+    }
 } 

@@ -8,6 +8,7 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -87,6 +88,15 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
                 .fetchOne();
 
         return Optional.ofNullable(record)
+                .map(this::mapToEntity);
+    }
+
+    @Override
+    public List<Circuit> findByNameContainingIgnoreCase(String namePart) {
+        return dsl.select()
+                .from(table)
+                .where(Tables.CIRCUITS.NAME.likeIgnoreCase("%" + namePart + "%"))
+                .fetch()
                 .map(this::mapToEntity);
     }
 }

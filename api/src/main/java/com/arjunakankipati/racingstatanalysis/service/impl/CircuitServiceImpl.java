@@ -55,6 +55,13 @@ public class CircuitServiceImpl implements CircuitService {
         return toDTO(existing);
     }
 
+    @Override
+    public List<CircuitDTO> getAllCircuitsByName(String namePart) {
+        return circuitRepository.findByNameContainingIgnoreCase(namePart).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     private CircuitDTO toDTO(Circuit circuit) {
         return new CircuitDTO(
                 circuit.getId(),

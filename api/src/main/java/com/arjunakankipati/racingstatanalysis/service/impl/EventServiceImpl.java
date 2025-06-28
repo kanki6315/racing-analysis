@@ -40,7 +40,7 @@ public class EventServiceImpl implements EventService {
         Event event = new Event();
         event.setSeriesId(eventDTO.getSeriesId());
         event.setName(eventDTO.getName());
-        event.setYear(eventDTO.getYear());
+        event.setYear(eventDTO.getStartDate().getYear());
         event.setStartDate(eventDTO.getStartDate());
         event.setEndDate(eventDTO.getEndDate());
         event.setDescription(eventDTO.getDescription());

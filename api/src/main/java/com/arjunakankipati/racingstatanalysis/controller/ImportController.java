@@ -88,7 +88,6 @@ public class ImportController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         try {
-            // This should call a new service method to process the results CSV and create/ensure all required records
             ProcessResponseDTO response = importService.processResultsCsv(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -98,15 +97,13 @@ public class ImportController {
     }
 
     @PostMapping("/process-timecard")
-    public ResponseEntity<ProcessResponseDTO> importData(
+    public ResponseEntity<ProcessResponseDTO> processTimecardCsv(
             @RequestBody ProcessRequestDTO request,
             @RequestHeader(value = "X-API-Key", required = false) String apiKey) {
         if (apiKey == null || !apiKey.equals(expectedApiKey)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
         var response = importService.processTimecardCsv(request);
-
         return ResponseEntity.accepted().body(response);
     }
 }

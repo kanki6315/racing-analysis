@@ -12,4 +12,6 @@ public interface CircuitService {
     CircuitDTO createCircuit(CircuitDTO circuitDTO);
 
     CircuitDTO updateCircuit(Long id, CircuitDTO circuitDTO);
+
+    List<CircuitDTO> getAllCircuitsByName(String namePart);
 } 
