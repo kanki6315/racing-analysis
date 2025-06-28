@@ -33,7 +33,7 @@ public class SeriesRepositoryImpl extends BaseRepositoryImpl<Series, Long> imple
     public Optional<Series> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("name").eq(name))
+                .where(field("name").equalIgnoreCase(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
