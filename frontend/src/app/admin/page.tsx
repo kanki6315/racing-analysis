@@ -6,6 +6,8 @@ import Spinner from "../components/Spinner";
 import React from "react";
 import CreateSessionModal from "../components/CreateSessionModal";
 import CreateCircuitModal from '../components/CreateCircuitModal';
+import ImportSessionModal, { SessionDTO } from '../components/ImportSessionModal';
+import Select from "react-select";
 
 interface Series {
   id: number;
@@ -30,6 +32,7 @@ export default function AdminPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [createSessionModal, setCreateSessionModal] = React.useState<{eventId: number, eventName: string} | null>(null);
   const [showNewCircuitModal, setShowNewCircuitModal] = useState(false);
+  const [showNewEventModal, setShowNewEventModal] = useState<{seriesId: number, year: number} | null>(null);
 
   // Check for apiKey in localStorage and validate
   useEffect(() => {
@@ -306,6 +309,17 @@ export default function AdminPage() {
             }}
           />
         )}
+        {showNewEventModal && (
+          <CreateEventModal
+            seriesId={showNewEventModal.seriesId}
+            year={showNewEventModal.year}
+            apiKey={apiKey || ""}
+            onClose={() => setShowNewEventModal(null)}
+            onEventCreated={() => {
+              loadEvents(showNewEventModal.seriesId, showNewEventModal.year, apiKey!);
+            }}
+          />
+        )}
         {loading ? (
           <div className="flex justify-center items-center min-h-[200px]">
             <Spinner />
@@ -322,6 +336,7 @@ export default function AdminPage() {
                   <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Count</th>
                   <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
                   <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events</th>
+                  <th className="px-6 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Add</th>
                 </tr>
               </thead>
               <tbody>
@@ -348,10 +363,20 @@ export default function AdminPage() {
                         <span className="text-gray-400 italic">No events</span>
                       )}
                     </td>
+                    <td className="px-6 py-4 border-b text-center">
+                      <button
+                        className="inline-flex items-center justify-center w-6 h-6 bg-green-500 text-white rounded-full text-base font-bold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+                        title="Add Event"
+                        onClick={() => setShowNewEventModal({ seriesId: s.id, year: selectedYear[s.id] })}
+                        style={{ lineHeight: 1 }}
+                      >
+                        +
+                      </button>
+                    </td>
                   </tr>,
                   eventsBySeries[s.id] && eventsBySeries[s.id].length > 0 && (
                     <tr key={s.id + "-events"} className="">
-                      <td colSpan={5} className="p-0 border-b">
+                      <td colSpan={6} className="p-0 border-b">
                         <div className="overflow-x-auto rounded-b-lg border-t border-gray-200">
                           <table className="min-w-full bg-white text-sm border border-gray-200">
                             <thead>
@@ -381,7 +406,7 @@ export default function AdminPage() {
                                   {/* Sessions sub-table */}
                                   <tr>
                                     <td colSpan={4} className="p-0 border-b bg-gray-50">
-                                      <EventSessionsTable eventId={ev.eventId} apiKey={apiKey || ""} />
+                                      <EventSessionsTable eventId={ev.eventId} eventName={ev.name} apiKey={apiKey || ""} />
                                     </td>
                                   </tr>
                                 </React.Fragment>
@@ -402,10 +427,11 @@ export default function AdminPage() {
   );
 }
 
-function EventSessionsTable({ eventId, apiKey }: { eventId: number, apiKey: string }) {
-  const [sessions, setSessions] = React.useState<import('@/lib/api').SessionDTO[] | null>(null);
+function EventSessionsTable({ eventId, eventName, apiKey }: { eventId: number, eventName: string, apiKey: string }) {
+  const [sessions, setSessions] = React.useState<SessionDTO[] | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [importModal, setImportModal] = React.useState<{ session: SessionDTO, eventName: string } | null>(null);
 
   React.useEffect(() => {
     let mounted = true;
@@ -417,7 +443,7 @@ function EventSessionsTable({ eventId, apiKey }: { eventId: number, apiKey: stri
         headers: { 'X-API-Key': apiKey },
       })
         .then((data) => {
-          const sessionsData = data as import('@/lib/api').SessionsResponseDTO;
+          const sessionsData = data as { sessions: SessionDTO[] };
           if (mounted) setSessions(sessionsData.sessions);
         })
         .catch((err: any) => {
@@ -446,7 +472,18 @@ function EventSessionsTable({ eventId, apiKey }: { eventId: number, apiKey: stri
     );
   }
   return (
-    <div className="overflow-x-auto border-t border-gray-200">
+    <div className="overflow-x-auto border-t border-gray-200 relative">
+      {importModal && (
+        <ImportSessionModal
+          session={importModal.session}
+          eventName={importModal.eventName}
+          apiKey={apiKey}
+          onClose={() => setImportModal(null)}
+        />
+      )}
+      {importModal && (
+        <div className="fixed inset-0 z-40 backdrop-blur-sm" />
+      )}
       <table className="min-w-full bg-white text-xs border border-gray-200">
         <thead>
           <tr>
@@ -454,6 +491,7 @@ function EventSessionsTable({ eventId, apiKey }: { eventId: number, apiKey: stri
             <th className="px-3 py-2 border-b text-gray-700 bg-gray-100 w-28 text-center">Type</th>
             <th className="px-3 py-2 border-b text-gray-700 bg-gray-100 w-44 text-center">Start Datetime</th>
             <th className="px-3 py-2 border-b text-gray-700 bg-gray-100 w-24 text-center">Duration</th>
+            <th className="px-3 py-2 border-b text-gray-700 bg-gray-100 w-24 text-center">Import</th>
           </tr>
         </thead>
         <tbody>
@@ -475,11 +513,174 @@ function EventSessionsTable({ eventId, apiKey }: { eventId: number, apiKey: stri
                 <td className="px-3 py-2 border-b text-gray-900 w-28 text-center">{session.type}</td>
                 <td className="px-3 py-2 border-b text-gray-900 w-44 text-center">{new Date(session.startDatetime).toLocaleString()}</td>
                 <td className="px-3 py-2 border-b text-gray-900 w-24 text-center">{durationStr}</td>
+                <td className="px-3 py-2 border-b text-center w-24">
+                  <button
+                    className="inline-flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-base font-bold hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    title="Import Results/Timecard"
+                    onClick={() => setImportModal({ session, eventName })}
+                    style={{ lineHeight: 1 }}
+                  >
+                    &#8681;
+                  </button>
+                </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function CreateEventModal({ seriesId, year, apiKey, onClose, onEventCreated }: { seriesId: number, year: number, apiKey: string, onClose: () => void, onEventCreated: () => void }) {
+  const [name, setName] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [circuits, setCircuits] = useState<{ id: number; name: string; location: string }[]>([]);
+  const [circuitId, setCircuitId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [circuitsLoading, setCircuitsLoading] = useState(false);
+
+  useEffect(() => {
+    setCircuitsLoading(true);
+    fetch(`${API_BASE_URL}/circuits`, {
+      headers: { "X-API-Key": apiKey }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setCircuits(Array.isArray(data) ? data : []);
+        setCircuitsLoading(false);
+      })
+      .catch(() => setCircuitsLoading(false));
+  }, [apiKey]);
+
+  const circuitOptions = circuits.map(c => ({
+    value: c.id,
+    label: c.location && c.location.trim() ? `${c.name} (${c.location})` : c.name
+  }));
+  const selectedCircuit = circuitOptions.find(opt => opt.value === circuitId) || null;
+
+  const handleCircuitChange = (option: any) => {
+    setCircuitId(option ? option.value : null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!name) return setError("Please enter an event name.");
+    if (!startDate) return setError("Please select a start date.");
+    if (!endDate) return setError("Please select an end date.");
+    if (!circuitId) return setError("Please select a circuit.");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey
+        },
+        body: JSON.stringify({
+          name,
+          startDate,
+          endDate,
+          seriesId,
+          year,
+          circuitId
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to create event");
+      }
+      onEventCreated();
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to create event");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black opacity-30 z-0" onClick={onClose} />
+      <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md z-10">
+        <h2 className="text-xl font-bold mb-4">Create New Event</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Circuit</label>
+            <Select
+              isClearable
+              isSearchable
+              options={circuitOptions}
+              value={selectedCircuit}
+              onChange={handleCircuitChange}
+              isLoading={circuitsLoading}
+              placeholder="Select a circuit..."
+              classNamePrefix="react-select"
+              className="react-select-container"
+              styles={{
+                control: (base) => ({ ...base, minHeight: '38px', borderColor: '#d1d5db', color: '#000' }),
+                menu: (base) => ({ ...base, zIndex: 9999 }),
+                singleValue: (base) => ({ ...base, color: '#000' }),
+                input: (base) => ({ ...base, color: '#000' }),
+                option: (base, state) => ({ ...base, color: '#000', backgroundColor: state.isSelected ? '#e5e7eb' : state.isFocused ? '#f3f4f6' : '#fff' }),
+                placeholder: (base) => ({ ...base, color: '#000' }),
+              }}
+            />
+            {circuitsLoading && <div className="mt-2"><Spinner /></div>}
+          </div>
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              type="button"
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? <Spinner /> : "Create Event"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 } 

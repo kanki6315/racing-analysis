@@ -20,8 +20,6 @@ interface CreateSessionModalProps {
 const SESSION_TYPES = ["Practice", "Qualifying", "Race"];
 
 const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventName, apiKey, onClose, onSessionCreated }) => {
-  const [circuits, setCircuits] = useState<CircuitDTO[]>([]);
-  const [circuitId, setCircuitId] = useState<number | null>(null);
   const [type, setType] = useState<string>(SESSION_TYPES[0]);
   const [hours, setHours] = useState<string>("");
   const [minutes, setMinutes] = useState<string>("");
@@ -29,36 +27,10 @@ const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventN
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [circuitsLoading, setCircuitsLoading] = useState(false);
-
-  useEffect(() => {
-    setCircuitsLoading(true);
-    fetch(`${API_BASE_URL}/circuits`, {
-      headers: { "X-API-Key": apiKey }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setCircuits(Array.isArray(data) ? data : []);
-        setCircuitsLoading(false);
-      })
-      .catch(() => setCircuitsLoading(false));
-  }, [apiKey]);
-
-  const circuitOptions = circuits.map(c => ({
-    value: c.id,
-    label: c.location && c.location.trim() ? `${c.name} (${c.location})` : c.name
-  }));
-
-  const selectedCircuit = circuitOptions.find(opt => opt.value === circuitId) || null;
-
-  const handleCircuitChange = (option: any) => {
-    setCircuitId(option ? option.value : null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!circuitId) return setError("Please select a circuit.");
     if (!type) return setError("Please select a session type.");
     if (!startDatetime) return setError("Please select a start date and time.");
     const h = parseInt(hours) || 0;
@@ -75,7 +47,6 @@ const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventN
         },
         body: JSON.stringify({
           eventId,
-          circuitId,
           type,
           startDatetime,
           durationSeconds
@@ -106,30 +77,6 @@ const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventN
             <select disabled className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-900">
               <option>{eventName}</option>
             </select>
-          </div>
-          {/* Circuit select (searchable) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Circuit</label>
-            <Select
-              isClearable
-              isSearchable
-              options={circuitOptions}
-              value={selectedCircuit}
-              onChange={handleCircuitChange}
-              isLoading={circuitsLoading}
-              placeholder="Select a circuit..."
-              classNamePrefix="react-select"
-              className="react-select-container"
-              styles={{
-                control: (base) => ({ ...base, minHeight: '38px', borderColor: '#d1d5db', color: '#000' }),
-                menu: (base) => ({ ...base, zIndex: 9999 }),
-                singleValue: (base) => ({ ...base, color: '#000' }),
-                input: (base) => ({ ...base, color: '#000' }),
-                option: (base, state) => ({ ...base, color: '#000', backgroundColor: state.isSelected ? '#e5e7eb' : state.isFocused ? '#f3f4f6' : '#fff' }),
-                placeholder: (base) => ({ ...base, color: '#000' }),
-              }}
-            />
-            {circuitsLoading && <div className="mt-2"><Spinner /></div>}
           </div>
           {/* Type select */}
           <div>
