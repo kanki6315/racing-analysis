@@ -62,7 +62,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingClasses(true);
       setClassesError(null);
-      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/series/events/${eventId}/classes`);
+      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/events/${eventId}/classes`);
       setClassesData(data);
       
       // Set the default class to the one with the highest ID
@@ -91,7 +91,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingCarModels(true);
       setCarModelsError(null);
-      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/series/events/${eventId}/classes/${selectedClassId}/cars`);
+      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/events/${eventId}/classes/${selectedClassId}/cars`);
       setCarModelsData(data);
       setCarModelId(''); // Reset car model selection to "none"
     } catch (err) {
@@ -137,7 +137,7 @@ export default function LapTimeVisualizerPage() {
         carModelId: selectedCarModelId || undefined
       });
 
-      const endpoint = `/series/events/${eventId}/drivers${queryParams ? `?${queryParams}` : ''}`;
+      const endpoint = `/events/${eventId}/drivers${queryParams ? `?${queryParams}` : ''}`;
       const data: DriversResponseDTO = await apiRequest<DriversResponseDTO>(endpoint);
       setDriversData(data);
       setSelectedDrivers([]); // Reset selected drivers
@@ -163,7 +163,7 @@ export default function LapTimeVisualizerPage() {
       setLapTimesError(null);
       
       const driverIdsParam = selectedDrivers.join(',');
-      const endpoint = `/series/events/${eventId}/session/${sessionId}/laptimes?driverIds=${driverIdsParam}`;
+      const endpoint = `/events/${eventId}/session/${sessionId}/laptimes?driverIds=${driverIdsParam}`;
       const data: LapTimesResponseDTO = await apiRequest<LapTimesResponseDTO>(endpoint);
       setLapTimesData(data);
     } catch (err) {

@@ -58,7 +58,6 @@ export interface SessionDTO {
   weatherTrackTemp: number;
   weatherCondition: string;
   reportMessage: string;
-  importUrl: string;
   importTimestamp: string;
 }
 
@@ -160,6 +159,28 @@ export interface ResultEntryDTO {
 export interface ResultsResponseDTO {
   sessionId: number;
   results: ResultEntryDTO[];
+}
+
+export interface EventDTO {
+  eventId: number;
+  seriesId: number;
+  name: string;
+  year: number;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export type EventsResponseDTO = EventDTO[];
+
+export async function fetchEventsForSeriesYear(
+  seriesId: number,
+  year: number,
+  apiKey: string
+): Promise<EventsResponseDTO> {
+  return apiRequest<EventsResponseDTO>(`/events?seriesId=${seriesId}&year=${year}`, {
+    headers: { 'X-API-Key': apiKey },
+  });
 }
 
 export async function apiRequest<T>(

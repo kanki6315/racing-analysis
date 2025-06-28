@@ -74,7 +74,7 @@ export default function YearPage() {
     const fetchEvents = async () => {
       try {
         // Fetch events for the series and year
-        const eventsData: Event[] = await apiRequest<Event[]>(`/series/${seriesId}/${year}/events`);
+        const eventsData: Event[] = await apiRequest<Event[]>(`/events?seriesId=${seriesId}&year=${year}`);
         setEvents(eventsData);
         setLoadingEvents(false);
 
@@ -83,8 +83,8 @@ export default function YearPage() {
           setLoadingEventDetails(prev => ({ ...prev, [event.eventId]: true }));
           try {
             const [teamsResult, classesResult] = await Promise.all([
-              apiRequest<TeamsResponse>(`/series/events/${event.eventId}/teams`),
-              apiRequest<ClassesResponseDTO>(`/series/events/${event.eventId}/classes`)
+              apiRequest<TeamsResponse>(`/events/${event.eventId}/teams`),
+              apiRequest<ClassesResponseDTO>(`/events/${event.eventId}/classes`)
             ]);
             setEventTeams(prev => ({ ...prev, [event.eventId]: teamsResult }));
             setEventClasses(prev => ({ ...prev, [event.eventId]: classesResult }));

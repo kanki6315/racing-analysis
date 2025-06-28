@@ -42,7 +42,7 @@ export default function ResultsPage() {
         setLoading(true);
         const [sessionsData, classesData] = await Promise.all([
           apiRequest<SessionsResponseDTO>(`/events/${eventId}/sessions`),
-          apiRequest<ClassesResponseDTO>(`/series/events/${eventId}/classes`),
+          apiRequest<ClassesResponseDTO>(`/events/${eventId}/classes`),
         ]);
         setSessions(sessionsData);
         setClasses(classesData);

@@ -81,7 +81,7 @@ export default function AnalysisPage() {
     try {
       setLoadingClasses(true);
       setClassesError(null);
-      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/series/events/${eventId}/classes`);
+      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/events/${eventId}/classes`);
       setClassesData(data);
       
       // Set the default class to the one with the highest ID
@@ -110,7 +110,7 @@ export default function AnalysisPage() {
     try {
       setLoadingCarModels(true);
       setCarModelsError(null);
-      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/series/events/${eventId}/classes/${selectedClassId}/cars`);
+      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/events/${eventId}/classes/${selectedClassId}/cars`);
       setCarModelsData(data);
       setCarModelId(''); // Reset car model selection to "none"
     } catch (err) {
@@ -150,7 +150,7 @@ export default function AnalysisPage() {
         classId: classId || undefined
       });
 
-      const endpoint = `/series/events/${eventId}/laptimeanalysis${queryParams ? `?${queryParams}` : ''}`;
+      const endpoint = `/events/${eventId}/laptimeanalysis${queryParams ? `?${queryParams}` : ''}`;
       const data: LapTimeAnalysisResponse = await apiRequest<LapTimeAnalysisResponse>(endpoint);
       
       if (resetData) {
