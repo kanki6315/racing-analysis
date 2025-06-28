@@ -68,7 +68,8 @@ public class ImportServiceImpl implements ImportService {
 
     // Try different formats in order of likelihood
     private final static List<DateTimeFormatter> formatters = Arrays.asList(
-            DateTimeFormatter.ofPattern("HH:mm:ss.SSS"),
+            DateTimeFormatter.ofPattern("hh:mm:ss.SSS"),
+            DateTimeFormatter.ofPattern("h:mm:ss.SSS"),
             DateTimeFormatter.ofPattern("mm:ss.SSS"),
             DateTimeFormatter.ofPattern("m:ss.SSS"));
 
@@ -599,11 +600,15 @@ public class ImportServiceImpl implements ImportService {
         return BigDecimal.valueOf(minutes * 60 + seconds);
     }
 
-    private BigDecimal parseTimestamp(String timestampStr) {
-        // Split the timestamp by colons to determine format
-        String[] parts = timestampStr.split(":");
+    private BigDecimal parseTimestampIntoSeconds(String timestampStr) {
+        if (timestampStr == null || timestampStr.isBlank()) {
+            throw new IllegalArgumentException("Timestamp cannot be null or empty");
+        }
 
         try {
+            // Split the timestamp by colons to determine format
+            String[] parts = timestampStr.split(":");
+
             if (parts.length == 2) {
                 // Format: m:ss.SSS or mm:ss.SSS (e.g., 6:57.136 or 15:24.428)
                 int minutes = Integer.parseInt(parts[0]);
@@ -611,7 +616,7 @@ public class ImportServiceImpl implements ImportService {
                 // Parse seconds and milliseconds
                 String[] secondParts = parts[1].split("\\.");
                 int seconds = Integer.parseInt(secondParts[0]);
-                int milliseconds = Integer.parseInt(secondParts[1]);
+                int milliseconds = secondParts.length > 1 ? Integer.parseInt(secondParts[1]) : 0;
 
                 // Calculate total seconds as BigDecimal
                 BigDecimal totalSeconds = BigDecimal.valueOf(minutes * 60 + seconds);
@@ -619,14 +624,14 @@ public class ImportServiceImpl implements ImportService {
 
                 return totalSeconds.add(fraction);
             } else if (parts.length == 3) {
-                // Format: h:mm:ss.SSS or hh:mm:ss.SSS (e.g., 4:30:00.623 or 11:14:52.128)
+                // Format: h:mm:ss.SSS or hh:mm:ss.SSS (e.g., 4:30:00.623 or 11:14:52.128 or 13:42:36.003)
                 int hours = Integer.parseInt(parts[0]);
                 int minutes = Integer.parseInt(parts[1]);
 
                 // Parse seconds and milliseconds
                 String[] secondParts = parts[2].split("\\.");
                 int seconds = Integer.parseInt(secondParts[0]);
-                int milliseconds = Integer.parseInt(secondParts[1]);
+                int milliseconds = secondParts.length > 1 ? Integer.parseInt(secondParts[1]) : 0;
 
                 // Calculate total seconds as BigDecimal
                 BigDecimal totalSeconds = BigDecimal.valueOf(hours * 3600 + minutes * 60 + seconds);
@@ -634,27 +639,64 @@ public class ImportServiceImpl implements ImportService {
 
                 return totalSeconds.add(fraction);
             } else {
+                LOGGER.error("Unrecognized timestamp format: {}", timestampStr);
                 throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
             }
         } catch (Exception ex) {
-            LOGGER.error("Failed to parse timestamp: " + timestampStr, ex);
+            LOGGER.error("Failed to parse timestamp: {} - {}", timestampStr, ex.getMessage());
             throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
         }
     }
 
-
     private LocalDateTime parseTimestamp(String timestampStr, BigDecimal elapsedTime, LocalDateTime sessionStartDateTime) {
-        for (DateTimeFormatter formatter : formatters) {
-            try {
-                LocalTime time = LocalTime.parse(timestampStr, formatter);
-
-                var lapSetAt = sessionStartDateTime.plusSeconds(elapsedTime.longValueExact());
-                return LocalDateTime.of(lapSetAt.toLocalDate(), time);
-            } catch (Exception e) {
-                LOGGER.warn("Failed to parse timestamp '{}'", timestampStr);
-            }
+        if (timestampStr == null || timestampStr.trim().isEmpty()) {
+            throw new IllegalArgumentException("Timestamp cannot be null or empty");
         }
-        throw new IllegalArgumentException("Invalid timestamp format: " + timestampStr);
+
+        // Clean the timestamp string
+        String cleanTimestampStr = timestampStr.trim();
+
+        try {
+            // Split the timestamp by colons and period
+            String[] parts = cleanTimestampStr.split("[:.]");
+
+            if (parts.length != 3 && parts.length != 4) {
+                throw new IllegalArgumentException("Invalid timestamp format: " + cleanTimestampStr);
+            }
+
+            int hours = 0;
+            int minutes = 0;
+            int seconds = 0;
+            int millis = 0;
+
+            if (parts.length == 3) {
+                // Format: mm:ss.SSS
+                minutes = Integer.parseInt(parts[0]);
+                seconds = Integer.parseInt(parts[1]);
+                millis = Integer.parseInt(parts[2]);
+            } else if (parts.length == 4) {
+                // Format: HH:mm:ss.SSS
+                hours = Integer.parseInt(parts[0]);
+                minutes = Integer.parseInt(parts[1]);
+                seconds = Integer.parseInt(parts[2]);
+                millis = Integer.parseInt(parts[3]);
+            }
+
+            // Create LocalTime
+            LocalTime time = LocalTime.of(hours, minutes, seconds, millis * 1_000_000);
+
+            // Calculate the date by adding elapsed time to session start
+            LocalDateTime lapSetAt = sessionStartDateTime.plusSeconds(elapsedTime.longValue());
+
+            // Combine the date from lapSetAt with the parsed time
+            return LocalDateTime.of(lapSetAt.toLocalDate(), time);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse timestamp '{}': Invalid number format", cleanTimestampStr);
+            throw new IllegalArgumentException("Invalid number in timestamp: " + cleanTimestampStr, e);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to parse timestamp '{}': {}", cleanTimestampStr, e.getMessage());
+            throw new IllegalArgumentException("Error parsing timestamp: " + cleanTimestampStr, e);
+        }
     }
 
     BigDecimal parseSectorTime(String sectorTimeStr) {
@@ -1090,9 +1132,9 @@ public class ImportServiceImpl implements ImportService {
                     lap.setCarId(carEntry.getId());
                     lap.setDriverId(carDriver.getDriverId());
                     lap.setLapNumber(parseInteger(getValueByHeader(headers, values, "LAP_NUMBER")));
-                    lap.setLapTimeSeconds(parseBigDecimal(getValueByHeader(headers, values, "LAP_TIME")));
+                    lap.setLapTimeSeconds(parseLapTime(getValueByHeader(headers, values, "LAP_TIME")));
 
-                    var seconds = parseTimestamp(getValueByHeader(headers, values, "ELAPSED"));
+                    var seconds = parseTimestampIntoSeconds(getValueByHeader(headers, values, "ELAPSED"));
                     lap.setSessionElapsedSeconds(seconds);
                     lap.setTimestamp(parseTimestamp(getValueByHeader(headers, values, "HOUR"), seconds, session.getStartDatetime()));
                     lap.setAverageSpeedKph(parseBigDecimal(getValueByHeader(headers, values, "KPH")));
