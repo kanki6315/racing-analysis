@@ -28,10 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -1057,6 +1054,34 @@ public class ImportServiceImpl implements ImportService {
         return saved;
     }
 
+    // Helper class for robust lap mapping
+    private static class LapKey {
+        private final Long carId;
+        private final Long driverId;
+        private final Integer lapNumber;
+
+        public LapKey(Long carId, Long driverId, Integer lapNumber) {
+            this.carId = carId;
+            this.driverId = driverId;
+            this.lapNumber = lapNumber;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            LapKey lapKey = (LapKey) o;
+            return Objects.equals(carId, lapKey.carId) &&
+                    Objects.equals(driverId, lapKey.driverId) &&
+                    Objects.equals(lapNumber, lapKey.lapNumber);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(carId, driverId, lapNumber);
+        }
+    }
+
     @Override
     public ProcessResponseDTO processTimecardCsv(ProcessRequestDTO request) {
         try {
@@ -1086,19 +1111,19 @@ public class ImportServiceImpl implements ImportService {
                     throw new IllegalArgumentException("sessionId is required in the request");
                 }
 
-                // 4. Process each row
+                // 4. Process each row, collect laps and sector data using a map
                 String row;
                 var carEntries = carEntryRepository.findBySessionId(session.getId());
 
-                var sectors = new ArrayList<Sector>();
+                // Use a map for laps and their sectors
+                var lapMap = new java.util.LinkedHashMap<LapKey, Lap>();
+                var sectorMap = new java.util.HashMap<LapKey, java.util.List<Sector>>();
+
                 while ((row = reader.readLine()) != null) {
                     if (row.trim().isEmpty()) continue;
                     String[] values = row.split(";");
 
                     // --- Parse car number and driver name/number ---
-                    // csv files are prone to having BOM and java decided NOPE LETS NOT FIX
-                    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4508058
-                    // Number is guaranteed to be position 0 in csvs, so we hardcode.
                     String carNumber = values[0];
                     Integer driverNumber = parseInteger(getValueByHeader(headers, values, "DRIVER_NUMBER"));
                     String driverName = getValueByHeader(headers, values, "DRIVER_NAME");
@@ -1127,11 +1152,14 @@ public class ImportServiceImpl implements ImportService {
                         throw new IllegalArgumentException("Driver number or name must be present in timecard row");
                     }
 
+                    Integer lapNumber = parseInteger(getValueByHeader(headers, values, "LAP_NUMBER"));
+                    LapKey lapKey = new LapKey(carEntry.getId(), carDriver.getDriverId(), lapNumber);
+
                     // --- Parse lap data ---
                     Lap lap = new Lap();
                     lap.setCarId(carEntry.getId());
                     lap.setDriverId(carDriver.getDriverId());
-                    lap.setLapNumber(parseInteger(getValueByHeader(headers, values, "LAP_NUMBER")));
+                    lap.setLapNumber(lapNumber);
                     lap.setLapTimeSeconds(parseLapTime(getValueByHeader(headers, values, "LAP_TIME")));
 
                     var seconds = parseTimestampIntoSeconds(getValueByHeader(headers, values, "ELAPSED"));
@@ -1140,26 +1168,46 @@ public class ImportServiceImpl implements ImportService {
                     lap.setAverageSpeedKph(parseBigDecimal(getValueByHeader(headers, values, "KPH")));
                     // TODO: Parse PIT_TIME (not currently in Lap model)
                     // TODO: Parse FLAG_AT_FL (not currently in Lap model)
-                    var savedLap = lapRepository.save(lap);
+                    lapMap.put(lapKey, lap);
 
                     // --- Parse sector data ---
+                    List<Sector> sectorsForLap = new java.util.ArrayList<>();
                     for (int i = 1; i <= 3; i++) {
                         String sectorTime = getValueByHeader(headers, values, String.format("S%d_LARGE", i));
                         if (sectorTime != null && !sectorTime.isBlank()) {
                             Sector sector = new Sector();
-                            sector.setLapId(savedLap.getId());
+                            // lapId will be set after batch save
                             sector.setSectorNumber(i);
                             sector.setSectorTimeSeconds(parseLargeSectorTime(sectorTime));
                             if (sector.getSectorTimeSeconds() == null) {
                                 throw new IllegalArgumentException("Invalid sector time: " + sectorTime);
                             }
                             // TODO: Parse S{i}_IMPROVEMENT, S{i}_LARGE (not currently in Sector model)
-                            sectors.add(sector);
+                            sectorsForLap.add(sector);
                         }
                     }
+                    sectorMap.put(lapKey, sectorsForLap);
                 }
-                // Save all sectors (batch)
-                sectorRepository.saveAll(sectors);
+                // Batch save all laps
+                List<Lap> savedLaps = lapRepository.saveAll(new ArrayList<>(lapMap.values()));
+                // Build a map from LapKey to saved Lap (with ID)
+                var savedLapMap = new java.util.HashMap<LapKey, Lap>();
+                int idx = 0;
+                for (LapKey key : lapMap.keySet()) {
+                    savedLapMap.put(key, savedLaps.get(idx++));
+                }
+                // Now assign lapIds to sectors and collect all sectors
+                var allSectors = new java.util.ArrayList<Sector>();
+                for (var entry : sectorMap.entrySet()) {
+                    LapKey key = entry.getKey();
+                    Lap savedLap = savedLapMap.get(key);
+                    for (Sector sector : entry.getValue()) {
+                        sector.setLapId(savedLap.getId());
+                        allSectors.add(sector);
+                    }
+                }
+                // Batch save all sectors
+                sectorRepository.saveAll(allSectors);
                 reader.close();
                 return new ProcessResponseDTO(session.getId(), "SUCCESS", null);
             }
