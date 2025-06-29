@@ -16,7 +16,7 @@ WORKDIR /app
 # Copy the built JAR (any version) and rename to app.jar
 COPY --from=build /app/build/libs/racing-stat-analysis-*.jar app.jar
 # Download OpenTelemetry Java agent
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.51.0/opentelemetry-javaagent.jar /otel/opentelemetry-javaagent.jar
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.17.0/opentelemetry-javaagent.jar /otel/opentelemetry-javaagent.jar
 
 ENV OTEL_RESOURCE_ATTRIBUTES="service.name=racing-analysis-api,service.namespace=com.arjunakankipati,deployment.environment=production" OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 
