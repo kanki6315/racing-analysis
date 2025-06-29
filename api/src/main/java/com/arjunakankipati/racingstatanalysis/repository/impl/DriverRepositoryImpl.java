@@ -8,10 +8,9 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
-import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.val;
 
 /**
  * Implementation of the DriverRepository interface using JOOQ.
@@ -99,50 +98,13 @@ public class DriverRepositoryImpl extends BaseRepositoryImpl<Driver, Long> imple
     }
 
     @Override
-    public List<Driver> findByNationality(String nationality) {
-        return dsl.select()
-                .from(table)
-                .where(field("nationality").eq(nationality))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Driver> findByLicenseType(String licenseType) {
-        return dsl.select()
-                .from(table)
-                .where(field("license_type").eq(licenseType))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public Optional<Driver> findByExternalId(String externalId) {
+    public Optional<Driver> findByName(String name) {
         Record record = dsl.select()
                 .from(table)
-                .where(field("external_id").eq(externalId))
+                .where(Tables.DRIVERS.FIRST_NAME.add(val(" ")).add(Tables.DRIVERS.LAST_NAME).eq(name))
                 .fetchOne();
 
         return Optional.ofNullable(record)
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Driver> findByFirstNameContainingOrLastNameContaining(String nameContains, String nameContains2) {
-        return dsl.select()
-                .from(table)
-                .where(field("first_name").like("%" + nameContains + "%"))
-                .or(field("last_name").like("%" + nameContains2 + "%"))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Driver> findByHometownContaining(String hometownContains) {
-        return dsl.select()
-                .from(table)
-                .where(field("hometown").like("%" + hometownContains + "%"))
-                .fetch()
                 .map(this::mapToEntity);
     }
 }

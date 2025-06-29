@@ -105,15 +105,6 @@ public class ClassRepositoryImpl extends BaseRepositoryImpl<Class, Long> impleme
     }
 
     @Override
-    public List<Class> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CLASSES.NAME.like("%" + nameContains + "%"))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
     public List<Class> findByEventId(Long eventId) {
         return dsl.selectDistinct(Tables.CLASSES.asterisk())
                 .from(Tables.CLASSES)

@@ -82,15 +82,6 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     }
 
     @Override
-    public List<CarDriver> findByDriverId(Long driverId) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_DRIVERS.DRIVER_ID.eq(driverId))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
     public Optional<CarDriver> findByCarIdAndDriverId(Long carId, Long driverId) {
         Record record = dsl.select()
                 .from(table)
@@ -103,22 +94,12 @@ public class CarDriverRepositoryImpl extends BaseRepositoryImpl<CarDriver, Long>
     }
 
     @Override
-    public List<CarDriver> findByDriverNumber(Integer driverNumber) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CAR_DRIVERS.DRIVER_NUMBER.eq(driverNumber))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
     public Optional<CarDriver> findByCarIdAndDriverNumber(Long carId, Integer driverNumber) {
         Record record = dsl.select()
                 .from(table)
                 .where(Tables.CAR_DRIVERS.CAR_ID.eq(carId))
                 .and(Tables.CAR_DRIVERS.DRIVER_NUMBER.eq(driverNumber))
                 .fetchOne();
-
         return Optional.ofNullable(record)
                 .map(this::mapToEntity);
     }

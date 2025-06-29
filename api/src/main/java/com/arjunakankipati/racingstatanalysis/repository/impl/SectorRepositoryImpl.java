@@ -43,9 +43,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 secRec.getSectorNumber(),
                 secRec.getSectorTimeSeconds(),
                 secRec.getIsPersonalBest(),
-                secRec.getIsSessionBest(),
-                secRec.getIsValid(),
-                secRec.getInvalidationReason()
+                secRec.getIsSessionBest()
         );
     }
 
@@ -57,18 +55,14 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                         Tables.SECTORS.SECTOR_NUMBER,
                         Tables.SECTORS.SECTOR_TIME_SECONDS,
                         Tables.SECTORS.IS_PERSONAL_BEST,
-                        Tables.SECTORS.IS_SESSION_BEST,
-                        Tables.SECTORS.IS_VALID,
-                        Tables.SECTORS.INVALIDATION_REASON
+                        Tables.SECTORS.IS_SESSION_BEST
                 )
                 .values(
                         sector.getLapId(),
                         sector.getSectorNumber(),
                         sector.getSectorTimeSeconds(),
                         sector.getIsPersonalBest(),
-                        sector.getIsSessionBest(),
-                        sector.getIsValid(),
-                        sector.getInvalidationReason()
+                        sector.getIsSessionBest()
                 )
                 .returning()
                 .fetchOne();
@@ -84,8 +78,6 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 .set(Tables.SECTORS.SECTOR_TIME_SECONDS, sector.getSectorTimeSeconds())
                 .set(Tables.SECTORS.IS_PERSONAL_BEST, sector.getIsPersonalBest())
                 .set(Tables.SECTORS.IS_SESSION_BEST, sector.getIsSessionBest())
-                .set(Tables.SECTORS.IS_VALID, sector.getIsValid())
-                .set(Tables.SECTORS.INVALIDATION_REASON, sector.getInvalidationReason())
                 .where(idField.eq(sector.getId()))
                 .execute();
     }
@@ -151,9 +143,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 Tables.SECTORS.SECTOR_NUMBER,
                 Tables.SECTORS.SECTOR_TIME_SECONDS,
                 Tables.SECTORS.IS_PERSONAL_BEST,
-                Tables.SECTORS.IS_SESSION_BEST,
-                Tables.SECTORS.IS_VALID,
-                Tables.SECTORS.INVALIDATION_REASON
+                    Tables.SECTORS.IS_SESSION_BEST
             );
         for (Sector sector : sectors) {
             insertStep = insertStep.values(
@@ -161,9 +151,7 @@ public class SectorRepositoryImpl extends BaseRepositoryImpl<Sector, Long> imple
                 sector.getSectorNumber(),
                 sector.getSectorTimeSeconds(),
                 sector.getIsPersonalBest(),
-                sector.getIsSessionBest(),
-                sector.getIsValid(),
-                sector.getInvalidationReason()
+                    sector.getIsSessionBest()
             );
         }
         var result = insertStep.returning().fetch();

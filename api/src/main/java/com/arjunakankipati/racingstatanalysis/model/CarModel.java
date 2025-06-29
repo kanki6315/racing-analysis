@@ -8,7 +8,6 @@ import java.util.Objects;
  */
 public class CarModel implements BaseEntity<Long> {
     private Long id;
-    private Long manufacturerId;
     private String name;
     private String fullName;
     private Integer yearModel;
@@ -24,15 +23,13 @@ public class CarModel implements BaseEntity<Long> {
      * Full constructor.
      *
      * @param id             the ID of the car model
-     * @param manufacturerId the ID of the manufacturer of this car model
      * @param name           the name of the car model (e.g., "911 GT3 R", "M4 GT3 EVO")
      * @param fullName       the full name of the car model (e.g., "Porsche 911 GT3 R")
      * @param yearModel      the year model of the car (e.g., 2023, 2024)
      * @param description    the description of the car model
      */
-    public CarModel(Long id, Long manufacturerId, String name, String fullName, Integer yearModel, String description) {
+    public CarModel(Long id, String name, String fullName, Integer yearModel, String description) {
         this.id = id;
-        this.manufacturerId = manufacturerId;
         this.name = name;
         this.fullName = fullName;
         this.yearModel = yearModel;
@@ -57,24 +54,6 @@ public class CarModel implements BaseEntity<Long> {
     @Override
     public void setId(Long id) {
         this.id = id;
-    }
-
-    /**
-     * Gets the ID of the manufacturer of this car model.
-     *
-     * @return the manufacturer ID
-     */
-    public Long getManufacturerId() {
-        return manufacturerId;
-    }
-
-    /**
-     * Sets the ID of the manufacturer of this car model.
-     *
-     * @param manufacturerId the manufacturer ID to set
-     */
-    public void setManufacturerId(Long manufacturerId) {
-        this.manufacturerId = manufacturerId;
     }
 
     /**
@@ -155,7 +134,6 @@ public class CarModel implements BaseEntity<Long> {
         if (o == null || getClass() != o.getClass()) return false;
         CarModel carModel = (CarModel) o;
         return Objects.equals(id, carModel.id) &&
-                Objects.equals(manufacturerId, carModel.manufacturerId) &&
                 Objects.equals(name, carModel.name) &&
                 Objects.equals(fullName, carModel.fullName) &&
                 Objects.equals(yearModel, carModel.yearModel) &&
@@ -164,14 +142,13 @@ public class CarModel implements BaseEntity<Long> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, manufacturerId, name, fullName, yearModel, description);
+        return Objects.hash(id, name, fullName, yearModel, description);
     }
 
     @Override
     public String toString() {
         return "CarModel{" +
                 "id=" + id +
-                ", manufacturerId=" + manufacturerId +
                 ", name='" + name + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", yearModel=" + yearModel +

@@ -9,6 +9,10 @@ public class ImportResponseDTO {
     private String status;
     private Long completionTime;
     private String error;
+    private String url;
+    private String importType;
+    private String processType;
+    private Long sessionId;
 
     /**
      * Default constructor.
@@ -33,6 +37,17 @@ public class ImportResponseDTO {
 
     public ImportResponseDTO(String importId, String status, Long completionTime) {
         this(importId, status, completionTime, null);
+    }
+
+    public ImportResponseDTO(String importId, String status, Long completionTime, String error, String url, String importType, String processType, Long sessionId) {
+        this.importId = importId;
+        this.status = status;
+        this.completionTime = completionTime;
+        this.error = error;
+        this.url = url;
+        this.importType = importType;
+        this.processType = processType;
+        this.sessionId = sessionId;
     }
 
     /**
@@ -85,5 +100,37 @@ public class ImportResponseDTO {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getImportType() {
+        return importType;
+    }
+
+    public void setImportType(String importType) {
+        this.importType = importType;
+    }
+
+    public String getProcessType() {
+        return processType;
+    }
+
+    public void setProcessType(String processType) {
+        this.processType = processType;
+    }
+
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
     }
 }

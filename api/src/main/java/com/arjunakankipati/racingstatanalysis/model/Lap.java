@@ -10,17 +10,13 @@ import java.util.Objects;
  */
 public class Lap implements BaseEntity<Long> {
     private Long id;
-    private Long carId;
+    private Long carEntryId;
     private Long driverId;
     private Integer lapNumber;
     private BigDecimal lapTimeSeconds;
     private BigDecimal sessionElapsedSeconds;
     private LocalDateTime timestamp;
     private BigDecimal averageSpeedKph;
-    private Boolean isValid;
-    private Boolean isPersonalBest;
-    private Boolean isSessionBest;
-    private String invalidationReason;
 
     /**
      * Default constructor.
@@ -32,33 +28,24 @@ public class Lap implements BaseEntity<Long> {
      * Full constructor.
      *
      * @param id the ID of the lap
-     * @param carId the ID of the car that completed the lap
+     * @param carEntryId the ID of the car that completed the lap
      * @param driverId the ID of the driver who drove the lap
      * @param lapNumber the number of the lap
      * @param lapTimeSeconds the time taken to complete the lap in seconds
      * @param sessionElapsedSeconds the elapsed time of the session when the lap was completed in seconds
      * @param timestamp the timestamp when the lap was completed
      * @param averageSpeedKph the average speed of the lap in kilometers per hour
-     * @param isValid whether the lap is valid
-     * @param isPersonalBest whether the lap is the personal best for the driver
-     * @param isSessionBest whether the lap is the best in the session
-     * @param invalidationReason the reason for invalidation if the lap is invalid
      */
-    public Lap(Long id, Long carId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds,
-              BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph,
-              Boolean isValid, Boolean isPersonalBest, Boolean isSessionBest, String invalidationReason) {
+    public Lap(Long id, Long carEntryId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds,
+               BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph) {
         this.id = id;
-        this.carId = carId;
+        this.carEntryId = carEntryId;
         this.driverId = driverId;
         this.lapNumber = lapNumber;
         this.lapTimeSeconds = lapTimeSeconds;
         this.sessionElapsedSeconds = sessionElapsedSeconds;
         this.timestamp = timestamp;
         this.averageSpeedKph = averageSpeedKph;
-        this.isValid = isValid;
-        this.isPersonalBest = isPersonalBest;
-        this.isSessionBest = isSessionBest;
-        this.invalidationReason = invalidationReason;
     }
 
     /**
@@ -86,17 +73,17 @@ public class Lap implements BaseEntity<Long> {
      *
      * @return the car ID
      */
-    public Long getCarId() {
-        return carId;
+    public Long getCarEntryId() {
+        return carEntryId;
     }
 
     /**
      * Sets the ID of the car that completed the lap.
      *
-     * @param carId the car ID to set
+     * @param carEntryId the car ID to set
      */
-    public void setCarId(Long carId) {
-        this.carId = carId;
+    public void setCarEntryId(Long carEntryId) {
+        this.carEntryId = carEntryId;
     }
 
     /**
@@ -207,118 +194,38 @@ public class Lap implements BaseEntity<Long> {
         this.averageSpeedKph = averageSpeedKph;
     }
 
-    /**
-     * Gets whether the lap is valid.
-     *
-     * @return true if the lap is valid, false otherwise
-     */
-    public Boolean getIsValid() {
-        return isValid;
-    }
-
-    /**
-     * Sets whether the lap is valid.
-     *
-     * @param isValid true if the lap is valid, false otherwise
-     */
-    public void setIsValid(Boolean isValid) {
-        this.isValid = isValid;
-    }
-
-    /**
-     * Gets whether the lap is the personal best for the driver.
-     *
-     * @return true if the lap is the personal best, false otherwise
-     */
-    public Boolean getIsPersonalBest() {
-        return isPersonalBest;
-    }
-
-    /**
-     * Sets whether the lap is the personal best for the driver.
-     *
-     * @param isPersonalBest true if the lap is the personal best, false otherwise
-     */
-    public void setIsPersonalBest(Boolean isPersonalBest) {
-        this.isPersonalBest = isPersonalBest;
-    }
-
-    /**
-     * Gets whether the lap is the best in the session.
-     *
-     * @return true if the lap is the session best, false otherwise
-     */
-    public Boolean getIsSessionBest() {
-        return isSessionBest;
-    }
-
-    /**
-     * Sets whether the lap is the best in the session.
-     *
-     * @param isSessionBest true if the lap is the session best, false otherwise
-     */
-    public void setIsSessionBest(Boolean isSessionBest) {
-        this.isSessionBest = isSessionBest;
-    }
-
-    /**
-     * Gets the reason for invalidation if the lap is invalid.
-     *
-     * @return the invalidation reason
-     */
-    public String getInvalidationReason() {
-        return invalidationReason;
-    }
-
-    /**
-     * Sets the reason for invalidation if the lap is invalid.
-     *
-     * @param invalidationReason the invalidation reason to set
-     */
-    public void setInvalidationReason(String invalidationReason) {
-        this.invalidationReason = invalidationReason;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Lap lap = (Lap) o;
         return Objects.equals(id, lap.id) &&
-                Objects.equals(carId, lap.carId) &&
+                Objects.equals(carEntryId, lap.carEntryId) &&
                 Objects.equals(driverId, lap.driverId) &&
                 Objects.equals(lapNumber, lap.lapNumber) &&
                 Objects.equals(lapTimeSeconds, lap.lapTimeSeconds) &&
                 Objects.equals(sessionElapsedSeconds, lap.sessionElapsedSeconds) &&
                 Objects.equals(timestamp, lap.timestamp) &&
-                Objects.equals(averageSpeedKph, lap.averageSpeedKph) &&
-                Objects.equals(isValid, lap.isValid) &&
-                Objects.equals(isPersonalBest, lap.isPersonalBest) &&
-                Objects.equals(isSessionBest, lap.isSessionBest) &&
-                Objects.equals(invalidationReason, lap.invalidationReason);
+                Objects.equals(averageSpeedKph, lap.averageSpeedKph);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, carId, driverId, lapNumber, lapTimeSeconds, sessionElapsedSeconds,
-                timestamp, averageSpeedKph, isValid, isPersonalBest, isSessionBest, invalidationReason);
+        return Objects.hash(id, carEntryId, driverId, lapNumber, lapTimeSeconds, sessionElapsedSeconds,
+                timestamp, averageSpeedKph);
     }
 
     @Override
     public String toString() {
         return "Lap{" +
                 "id=" + id +
-                ", carId=" + carId +
+                ", carId=" + carEntryId +
                 ", driverId=" + driverId +
                 ", lapNumber=" + lapNumber +
                 ", lapTimeSeconds=" + lapTimeSeconds +
                 ", sessionElapsedSeconds=" + sessionElapsedSeconds +
                 ", timestamp=" + timestamp +
-                ", averageSpeedKph=" + averageSpeedKph +
-                ", isValid=" + isValid +
-                ", isPersonalBest=" + isPersonalBest +
-                ", isSessionBest=" + isSessionBest +
-                ", invalidationReason='" + invalidationReason + '\'' +
+                ", averageSpeedKph=" + averageSpeedKph + '\'' +
                 '}';
     }
 }

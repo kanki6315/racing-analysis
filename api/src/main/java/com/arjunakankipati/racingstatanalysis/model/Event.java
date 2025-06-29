@@ -10,6 +10,7 @@ import java.util.Objects;
 public class Event implements BaseEntity<Long> {
     private Long id;
     private Long seriesId;
+    private Long circuitId;
     private String name;
     private Integer year;
     private LocalDate startDate;
@@ -27,15 +28,17 @@ public class Event implements BaseEntity<Long> {
      *
      * @param id the ID of the event
      * @param seriesId the ID of the series this event belongs to
+     * @param circuitId the ID of the circuit this event is held at
      * @param name the name of the event
      * @param year the year the event takes place
      * @param startDate the start date of the event
      * @param endDate the end date of the event
      * @param description the description of the event
      */
-    public Event(Long id, Long seriesId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description) {
+    public Event(Long id, Long seriesId, Long circuitId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description) {
         this.id = id;
         this.seriesId = seriesId;
+        this.circuitId = circuitId;
         this.name = name;
         this.year = year;
         this.startDate = startDate;
@@ -79,6 +82,14 @@ public class Event implements BaseEntity<Long> {
      */
     public void setSeriesId(Long seriesId) {
         this.seriesId = seriesId;
+    }
+
+    public Long getCircuitId() {
+        return circuitId;
+    }
+
+    public void setCircuitId(Long circuitId) {
+        this.circuitId = circuitId;
     }
 
     /**

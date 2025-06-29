@@ -31,7 +31,7 @@ const COLORS = [
 
 export default function LapTimeVisualizerPage() {
   const params = useParams();
-  const eventId = params.eventId as string;
+  const { seriesId, year, eventId } = params;
   
   const [classesData, setClassesData] = useState<ClassesResponseDTO | null>(null);
   const [carModelsData, setCarModelsData] = useState<CarModelsResponseDTO | null>(null);
@@ -62,7 +62,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingClasses(true);
       setClassesError(null);
-      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/series/events/${eventId}/classes`);
+      const data: ClassesResponseDTO = await apiRequest<ClassesResponseDTO>(`/events/${eventId}/classes`);
       setClassesData(data);
       
       // Set the default class to the one with the highest ID
@@ -91,7 +91,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingCarModels(true);
       setCarModelsError(null);
-      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/series/events/${eventId}/classes/${selectedClassId}/cars`);
+      const data: CarModelsResponseDTO = await apiRequest<CarModelsResponseDTO>(`/events/${eventId}/classes/${selectedClassId}/cars`);
       setCarModelsData(data);
       setCarModelId(''); // Reset car model selection to "none"
     } catch (err) {
@@ -109,7 +109,7 @@ export default function LapTimeVisualizerPage() {
     try {
       setLoadingSessions(true);
       setSessionsError(null);
-      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/series/events/${eventId}/sessions`);
+      const data: SessionsResponseDTO = await apiRequest<SessionsResponseDTO>(`/events/${eventId}/sessions`);
       setSessionsData(data);
       
       // Auto-select the first session
@@ -137,7 +137,7 @@ export default function LapTimeVisualizerPage() {
         carModelId: selectedCarModelId || undefined
       });
 
-      const endpoint = `/series/events/${eventId}/drivers${queryParams ? `?${queryParams}` : ''}`;
+      const endpoint = `/events/${eventId}/drivers${queryParams ? `?${queryParams}` : ''}`;
       const data: DriversResponseDTO = await apiRequest<DriversResponseDTO>(endpoint);
       setDriversData(data);
       setSelectedDrivers([]); // Reset selected drivers
@@ -163,7 +163,7 @@ export default function LapTimeVisualizerPage() {
       setLapTimesError(null);
       
       const driverIdsParam = selectedDrivers.join(',');
-      const endpoint = `/series/events/${eventId}/session/${sessionId}/laptimes?driverIds=${driverIdsParam}`;
+      const endpoint = `/events/${eventId}/session/${sessionId}/laptimes?driverIds=${driverIdsParam}`;
       const data: LapTimesResponseDTO = await apiRequest<LapTimesResponseDTO>(endpoint);
       setLapTimesData(data);
     } catch (err) {
@@ -243,10 +243,8 @@ export default function LapTimeVisualizerPage() {
     
     lapTimesData.driverLapTimes.forEach(driver => {
       driver.lapTimes.forEach(lap => {
-        if (lap.isValid) {
-          allLapNumbers.add(lap.lapNumber);
-          allLapTimes.push(lap.lapTimeSeconds);
-        }
+        allLapNumbers.add(lap.lapNumber);
+        allLapTimes.push(lap.lapTimeSeconds);
       });
     });
 
@@ -264,7 +262,7 @@ export default function LapTimeVisualizerPage() {
       const dataPoint: Record<string, number> = { lapNumber };
       
       lapTimesData.driverLapTimes.forEach((driver) => {
-        const lapTime = driver.lapTimes.find(lap => lap.lapNumber === lapNumber && lap.isValid);
+        const lapTime = driver.lapTimes.find(lap => lap.lapNumber === lapNumber);
         if (lapTime) {
           dataPoint[`driver_${driver.driverId}`] = lapTime.lapTimeSeconds;
         }
@@ -309,10 +307,10 @@ export default function LapTimeVisualizerPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
-            href="/"
+            href={`/series/${seriesId}/${year}`}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
-            ← Back to Series
+            ← Back to Events
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Lap Time Visualizer

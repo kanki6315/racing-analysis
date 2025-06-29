@@ -7,12 +7,10 @@ import java.util.Objects;
  */
 public class CarModelDTO {
     private Long id;
-    private Long manufacturerId;
     private String name;
     private String fullName;
     private Integer yearModel;
     private String description;
-    private ManufacturerDTO manufacturer;
 
     /**
      * Default constructor.
@@ -24,15 +22,13 @@ public class CarModelDTO {
      * Full constructor.
      *
      * @param id             the ID of the car model
-     * @param manufacturerId the ID of the manufacturer of this car model
      * @param name           the name of the car model (e.g., "911 GT3 R", "M4 GT3 EVO")
      * @param fullName       the full name of the car model (e.g., "Porsche 911 GT3 R")
      * @param yearModel      the year model of the car (e.g., 2023, 2024)
      * @param description    the description of the car model
      */
-    public CarModelDTO(Long id, Long manufacturerId, String name, String fullName, Integer yearModel, String description) {
+    public CarModelDTO(Long id, String name, String fullName, Integer yearModel, String description) {
         this.id = id;
-        this.manufacturerId = manufacturerId;
         this.name = name;
         this.fullName = fullName;
         this.yearModel = yearModel;
@@ -55,24 +51,6 @@ public class CarModelDTO {
      */
     public void setId(Long id) {
         this.id = id;
-    }
-
-    /**
-     * Gets the ID of the manufacturer of this car model.
-     *
-     * @return the manufacturer ID
-     */
-    public Long getManufacturerId() {
-        return manufacturerId;
-    }
-
-    /**
-     * Sets the ID of the manufacturer of this car model.
-     *
-     * @param manufacturerId the manufacturer ID to set
-     */
-    public void setManufacturerId(Long manufacturerId) {
-        this.manufacturerId = manufacturerId;
     }
 
     /**
@@ -147,53 +125,31 @@ public class CarModelDTO {
         this.description = description;
     }
 
-    /**
-     * Gets the manufacturer information.
-     *
-     * @return the manufacturer
-     */
-    public ManufacturerDTO getManufacturer() {
-        return manufacturer;
-    }
-
-    /**
-     * Sets the manufacturer information.
-     *
-     * @param manufacturer the manufacturer to set
-     */
-    public void setManufacturer(ManufacturerDTO manufacturer) {
-        this.manufacturer = manufacturer;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CarModelDTO that = (CarModelDTO) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(manufacturerId, that.manufacturerId) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(fullName, that.fullName) &&
                 Objects.equals(yearModel, that.yearModel) &&
-                Objects.equals(description, that.description) &&
-                Objects.equals(manufacturer, that.manufacturer);
+                Objects.equals(description, that.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, manufacturerId, name, fullName, yearModel, description, manufacturer);
+        return Objects.hash(id, name, fullName, yearModel, description);
     }
 
     @Override
     public String toString() {
         return "CarModelDTO{" +
                 "id=" + id +
-                ", manufacturerId=" + manufacturerId +
                 ", name='" + name + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", yearModel=" + yearModel +
                 ", description='" + description + '\'' +
-                ", manufacturer=" + manufacturer +
                 '}';
     }
 } 

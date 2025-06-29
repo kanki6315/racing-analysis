@@ -5,12 +5,10 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.time.LocalDateTime;
 
 
 /**
@@ -50,157 +48,59 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     }
 
     /**
-     * Setter for <code>public.sessions.circuit_id</code>.
-     */
-    public void setCircuitId(Long value) {
-        set(2, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.circuit_id</code>.
-     */
-    public Long getCircuitId() {
-        return (Long) get(2);
-    }
-
-    /**
      * Setter for <code>public.sessions.name</code>.
      */
     public void setName(String value) {
-        set(3, value);
+        set(2, value);
     }
 
     /**
      * Getter for <code>public.sessions.name</code>.
      */
     public String getName() {
-        return (String) get(3);
+        return (String) get(2);
     }
 
     /**
      * Setter for <code>public.sessions.type</code>.
      */
     public void setType(String value) {
-        set(4, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.sessions.type</code>.
      */
     public String getType() {
-        return (String) get(4);
+        return (String) get(3);
     }
 
     /**
      * Setter for <code>public.sessions.start_datetime</code>.
      */
     public void setStartDatetime(LocalDateTime value) {
-        set(5, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.sessions.start_datetime</code>.
      */
     public LocalDateTime getStartDatetime() {
-        return (LocalDateTime) get(5);
+        return (LocalDateTime) get(4);
     }
 
     /**
      * Setter for <code>public.sessions.duration_seconds</code>.
      */
     public void setDurationSeconds(Integer value) {
-        set(6, value);
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.sessions.duration_seconds</code>.
      */
     public Integer getDurationSeconds() {
-        return (Integer) get(6);
-    }
-
-    /**
-     * Setter for <code>public.sessions.weather_air_temp</code>.
-     */
-    public void setWeatherAirTemp(BigDecimal value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_air_temp</code>.
-     */
-    public BigDecimal getWeatherAirTemp() {
-        return (BigDecimal) get(7);
-    }
-
-    /**
-     * Setter for <code>public.sessions.weather_track_temp</code>.
-     */
-    public void setWeatherTrackTemp(BigDecimal value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_track_temp</code>.
-     */
-    public BigDecimal getWeatherTrackTemp() {
-        return (BigDecimal) get(8);
-    }
-
-    /**
-     * Setter for <code>public.sessions.weather_condition</code>.
-     */
-    public void setWeatherCondition(String value) {
-        set(9, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.weather_condition</code>.
-     */
-    public String getWeatherCondition() {
-        return (String) get(9);
-    }
-
-    /**
-     * Setter for <code>public.sessions.report_message</code>.
-     */
-    public void setReportMessage(String value) {
-        set(10, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.report_message</code>.
-     */
-    public String getReportMessage() {
-        return (String) get(10);
-    }
-
-    /**
-     * Setter for <code>public.sessions.import_url</code>.
-     */
-    public void setImportUrl(String value) {
-        set(11, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.import_url</code>.
-     */
-    public String getImportUrl() {
-        return (String) get(11);
-    }
-
-    /**
-     * Setter for <code>public.sessions.import_timestamp</code>.
-     */
-    public void setImportTimestamp(LocalDateTime value) {
-        set(12, value);
-    }
-
-    /**
-     * Getter for <code>public.sessions.import_timestamp</code>.
-     */
-    public LocalDateTime getImportTimestamp() {
-        return (LocalDateTime) get(12);
+        return (Integer) get(5);
     }
 
     // -------------------------------------------------------------------------
@@ -226,22 +126,15 @@ public class SessionsRecord extends UpdatableRecordImpl<SessionsRecord> {
     /**
      * Create a detached, initialised SessionsRecord
      */
-    public SessionsRecord(Long id, Long eventId, Long circuitId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds, BigDecimal weatherAirTemp, BigDecimal weatherTrackTemp, String weatherCondition, String reportMessage, String importUrl, LocalDateTime importTimestamp) {
+    public SessionsRecord(Long id, Long eventId, String name, String type, LocalDateTime startDatetime, Integer durationSeconds) {
         super(Sessions.SESSIONS);
 
         setId(id);
         setEventId(eventId);
-        setCircuitId(circuitId);
         setName(name);
         setType(type);
         setStartDatetime(startDatetime);
         setDurationSeconds(durationSeconds);
-        setWeatherAirTemp(weatherAirTemp);
-        setWeatherTrackTemp(weatherTrackTemp);
-        setWeatherCondition(weatherCondition);
-        setReportMessage(reportMessage);
-        setImportUrl(importUrl);
-        setImportTimestamp(importTimestamp);
         resetChangedOnNotNull();
     }
 }

@@ -20,18 +20,10 @@ public interface CircuitRepository extends BaseRepository<Circuit, Long> {
     Optional<Circuit> findByName(String name);
 
     /**
-     * Find circuits by country.
+     * Find all circuits whose names contain the given substring (case-insensitive).
      *
-     * @param country the country to find circuits for
-     * @return a list of circuits in the given country
+     * @param namePart the substring to search for in circuit names
+     * @return a list of matching circuits
      */
-    List<Circuit> findByCountry(String country);
-
-    /**
-     * Find circuits by name containing the given string.
-     *
-     * @param nameContains the string to search for in circuit names
-     * @return a list of circuits with names containing the given string
-     */
-    List<Circuit> findByNameContaining(String nameContains);
+    List<Circuit> findByNameContainingIgnoreCase(String namePart);
 }

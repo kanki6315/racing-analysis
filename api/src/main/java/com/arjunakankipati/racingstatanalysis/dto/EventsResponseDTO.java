@@ -6,6 +6,7 @@ public class EventsResponseDTO {
 
     private Long eventId;
     private Long seriesId;
+    private Long circuitId;
     private String name;
     private Integer year;
     private LocalDate startDate;
@@ -15,9 +16,10 @@ public class EventsResponseDTO {
     public EventsResponseDTO() {
     }
 
-    public EventsResponseDTO(Long eventId, Long seriesId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description) {
+    public EventsResponseDTO(Long eventId, Long seriesId, Long circuitId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description) {
         this.eventId = eventId;
         this.seriesId = seriesId;
+        this.circuitId = circuitId;
         this.name = name;
         this.year = year;
         this.startDate = startDate;
@@ -39,6 +41,14 @@ public class EventsResponseDTO {
 
     public void setSeriesId(Long seriesId) {
         this.seriesId = seriesId;
+    }
+
+    public Long getCircuitId() {
+        return circuitId;
+    }
+
+    public void setCircuitId(Long circuitId) {
+        this.circuitId = circuitId;
     }
 
     public String getName() {

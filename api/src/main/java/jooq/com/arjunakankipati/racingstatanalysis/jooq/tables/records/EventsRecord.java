@@ -5,11 +5,10 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables.records;
 
 
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Events;
-
-import java.time.LocalDate;
-
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.time.LocalDate;
 
 
 /**
@@ -118,6 +117,20 @@ public class EventsRecord extends UpdatableRecordImpl<EventsRecord> {
         return (String) get(6);
     }
 
+    /**
+     * Setter for <code>public.events.circuit_id</code>.
+     */
+    public void setCircuitId(Long value) {
+        set(7, value);
+    }
+
+    /**
+     * Getter for <code>public.events.circuit_id</code>.
+     */
+    public Long getCircuitId() {
+        return (Long) get(7);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -141,7 +154,7 @@ public class EventsRecord extends UpdatableRecordImpl<EventsRecord> {
     /**
      * Create a detached, initialised EventsRecord
      */
-    public EventsRecord(Long id, Long seriesId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description) {
+    public EventsRecord(Long id, Long seriesId, String name, Integer year, LocalDate startDate, LocalDate endDate, String description, Long circuitId) {
         super(Events.EVENTS);
 
         setId(id);
@@ -151,6 +164,7 @@ public class EventsRecord extends UpdatableRecordImpl<EventsRecord> {
         setStartDate(startDate);
         setEndDate(endDate);
         setDescription(description);
+        setCircuitId(circuitId);
         resetChangedOnNotNull();
     }
 }

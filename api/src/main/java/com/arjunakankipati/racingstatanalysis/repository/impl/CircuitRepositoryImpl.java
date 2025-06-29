@@ -92,19 +92,10 @@ public class CircuitRepositoryImpl extends BaseRepositoryImpl<Circuit, Long> imp
     }
 
     @Override
-    public List<Circuit> findByCountry(String country) {
+    public List<Circuit> findByNameContainingIgnoreCase(String namePart) {
         return dsl.select()
                 .from(table)
-                .where(Tables.CIRCUITS.COUNTRY.eq(country))
-                .fetch()
-                .map(this::mapToEntity);
-    }
-
-    @Override
-    public List<Circuit> findByNameContaining(String nameContains) {
-        return dsl.select()
-                .from(table)
-                .where(Tables.CIRCUITS.NAME.like("%" + nameContains + "%"))
+                .where(Tables.CIRCUITS.NAME.likeIgnoreCase("%" + namePart + "%"))
                 .fetch()
                 .map(this::mapToEntity);
     }

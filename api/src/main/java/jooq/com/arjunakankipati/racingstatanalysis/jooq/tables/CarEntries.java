@@ -11,36 +11,19 @@ import com.arjunakankipati.racingstatanalysis.jooq.tables.CarDrivers.CarDriversP
 import com.arjunakankipati.racingstatanalysis.jooq.tables.CarModels.CarModelsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Classes.ClassesPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Laps.LapsPath;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Results.ResultsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions.SessionsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.Teams.TeamsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.CarEntriesRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.Index;
-import org.jooq.InverseForeignKey;
-import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.Record;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -276,6 +259,19 @@ public class CarEntries extends TableImpl<CarEntriesRecord> {
             _lapsCarIdFkey = new LapsPath(this, null, Keys.LAPS__LAPS_CAR_ID_FKEY.getInverseKey());
 
         return _lapsCarIdFkey;
+    }
+
+    private transient ResultsPath _results;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.results</code>
+     * table
+     */
+    public ResultsPath results() {
+        if (_results == null)
+            _results = new ResultsPath(this, null, Keys.RESULTS__RESULTS_CAR_ENTRY_ID_FKEY.getInverseKey());
+
+        return _results;
     }
 
     @Override

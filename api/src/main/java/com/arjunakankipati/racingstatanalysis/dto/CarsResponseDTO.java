@@ -12,7 +12,7 @@ public class CarsResponseDTO {
     private String eventName;
     private Long classId;
     private String className;
-    private List<CarDTO> cars;
+    private List<CarEntryDTO> cars;
 
     /**
      * Default constructor.
@@ -46,7 +46,7 @@ public class CarsResponseDTO {
      * @param className the name of the class
      * @param cars      the list of cars
      */
-    public CarsResponseDTO(Long eventId, String eventName, Long classId, String className, List<CarDTO> cars) {
+    public CarsResponseDTO(Long eventId, String eventName, Long classId, String className, List<CarEntryDTO> cars) {
         this.eventId = eventId;
         this.eventName = eventName;
         this.classId = classId;
@@ -131,7 +131,7 @@ public class CarsResponseDTO {
      *
      * @return the cars
      */
-    public List<CarDTO> getCars() {
+    public List<CarEntryDTO> getCars() {
         return cars;
     }
 
@@ -140,20 +140,20 @@ public class CarsResponseDTO {
      *
      * @param cars the cars to set
      */
-    public void setCars(List<CarDTO> cars) {
+    public void setCars(List<CarEntryDTO> cars) {
         this.cars = cars != null ? cars : new ArrayList<>();
     }
 
     /**
      * Adds a car to the list.
      *
-     * @param carDTO the car to add
+     * @param carEntryDTO the car to add
      */
-    public void addCar(CarDTO carDTO) {
+    public void addCar(CarEntryDTO carEntryDTO) {
         if (this.cars == null) {
             this.cars = new ArrayList<>();
         }
-        this.cars.add(carDTO);
+        this.cars.add(carEntryDTO);
     }
 
     @Override

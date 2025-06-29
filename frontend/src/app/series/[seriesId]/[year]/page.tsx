@@ -74,7 +74,7 @@ export default function YearPage() {
     const fetchEvents = async () => {
       try {
         // Fetch events for the series and year
-        const eventsData: Event[] = await apiRequest<Event[]>(`/series/${seriesId}/${year}/events`);
+        const eventsData: Event[] = await apiRequest<Event[]>(`/events?seriesId=${seriesId}&year=${year}`);
         setEvents(eventsData);
         setLoadingEvents(false);
 
@@ -83,8 +83,8 @@ export default function YearPage() {
           setLoadingEventDetails(prev => ({ ...prev, [event.eventId]: true }));
           try {
             const [teamsResult, classesResult] = await Promise.all([
-              apiRequest<TeamsResponse>(`/series/events/${event.eventId}/teams`),
-              apiRequest<ClassesResponseDTO>(`/series/events/${event.eventId}/classes`)
+              apiRequest<TeamsResponse>(`/events/${event.eventId}/teams`),
+              apiRequest<ClassesResponseDTO>(`/events/${event.eventId}/classes`)
             ]);
             setEventTeams(prev => ({ ...prev, [event.eventId]: teamsResult }));
             setEventClasses(prev => ({ ...prev, [event.eventId]: classesResult }));
@@ -207,13 +207,19 @@ export default function YearPage() {
                   </div>
                   <div className="flex gap-2">
                     <Link
-                      href={`/analysis/${event.eventId}`}
+                      href={`/series/${seriesId}/${year}/results/${event.eventId}`}
+                      className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors"
+                    >
+                      View Results
+                    </Link>
+                    <Link
+                      href={`/series/${seriesId}/${year}/analysis/${event.eventId}`}
                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                     >
                       View Analysis
                     </Link>
                     <Link
-                      href={`/laptimes/${event.eventId}`}
+                      href={`/series/${seriesId}/${year}/laptimes/${event.eventId}`}
                       className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
                     >
                       Lap Time Visualizer

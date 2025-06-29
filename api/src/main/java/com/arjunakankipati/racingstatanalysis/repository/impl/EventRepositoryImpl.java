@@ -39,6 +39,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
         return new Event(
                 eventRec.getId(),
                 eventRec.getSeriesId(),
+                eventRec.getCircuitId(),
                 eventRec.getName(),
                 eventRec.getYear(),
                 eventRec.getStartDate(),
@@ -51,6 +52,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
         Record record = dsl.insertInto(table)
                 .columns(
                         Tables.EVENTS.SERIES_ID,
+                        Tables.EVENTS.CIRCUIT_ID,
                         Tables.EVENTS.NAME,
                         Tables.EVENTS.YEAR,
                         Tables.EVENTS.START_DATE,
@@ -59,6 +61,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
                 )
                 .values(
                         event.getSeriesId(),
+                        event.getCircuitId(),
                         event.getName(),
                         event.getYear(),
                         event.getStartDate(),
@@ -75,6 +78,7 @@ public class EventRepositoryImpl extends BaseRepositoryImpl<Event, Long> impleme
     protected void update(Event event) {
         dsl.update(table)
                 .set(Tables.EVENTS.SERIES_ID, event.getSeriesId())
+                .set(Tables.EVENTS.CIRCUIT_ID, event.getCircuitId())
                 .set(Tables.EVENTS.NAME, event.getName())
                 .set(Tables.EVENTS.YEAR, event.getYear())
                 .set(Tables.EVENTS.START_DATE, event.getStartDate())

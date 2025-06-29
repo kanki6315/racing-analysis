@@ -1,105 +1,75 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
- * Data Transfer Object for Manufacturer information.
+ * Data Transfer Object for Circuit information.
  */
-public class ManufacturerDTO {
+public class CircuitDTO {
     private Long id;
     private String name;
+    private BigDecimal lengthMeters;
     private String country;
+    private String location;
     private String description;
 
-    /**
-     * Default constructor.
-     */
-    public ManufacturerDTO() {
+    public CircuitDTO() {
     }
 
-    /**
-     * Full constructor.
-     *
-     * @param id          the ID of the manufacturer
-     * @param name        the name of the manufacturer
-     * @param country     the country of the manufacturer
-     * @param description the description of the manufacturer
-     */
-    public ManufacturerDTO(Long id, String name, String country, String description) {
+    public CircuitDTO(Long id, String name, BigDecimal lengthMeters, String country, String location, String description) {
         this.id = id;
         this.name = name;
+        this.lengthMeters = lengthMeters;
         this.country = country;
+        this.location = location;
         this.description = description;
     }
 
-    /**
-     * Gets the ID of the manufacturer.
-     *
-     * @return the ID
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * Sets the ID of the manufacturer.
-     *
-     * @param id the ID to set
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * Gets the name of the manufacturer.
-     *
-     * @return the name
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the name of the manufacturer.
-     *
-     * @param name the name to set
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Gets the country of the manufacturer.
-     *
-     * @return the country
-     */
+    public BigDecimal getLengthMeters() {
+        return lengthMeters;
+    }
+
+    public void setLengthMeters(BigDecimal lengthMeters) {
+        this.lengthMeters = lengthMeters;
+    }
+
     public String getCountry() {
         return country;
     }
 
-    /**
-     * Sets the country of the manufacturer.
-     *
-     * @param country the country to set
-     */
     public void setCountry(String country) {
         this.country = country;
     }
 
-    /**
-     * Gets the description of the manufacturer.
-     *
-     * @return the description
-     */
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    /**
-     * Sets the description of the manufacturer.
-     *
-     * @param description the description to set
-     */
     public void setDescription(String description) {
         this.description = description;
     }
@@ -108,24 +78,28 @@ public class ManufacturerDTO {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ManufacturerDTO that = (ManufacturerDTO) o;
+        CircuitDTO that = (CircuitDTO) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(name, that.name) &&
+                Objects.equals(lengthMeters, that.lengthMeters) &&
                 Objects.equals(country, that.country) &&
+                Objects.equals(location, that.location) &&
                 Objects.equals(description, that.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, country, description);
+        return Objects.hash(id, name, lengthMeters, country, location, description);
     }
 
     @Override
     public String toString() {
-        return "ManufacturerDTO{" +
+        return "CircuitDTO{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", lengthMeters=" + lengthMeters +
                 ", country='" + country + '\'' +
+                ", location='" + location + '\'' +
                 ", description='" + description + '\'' +
                 '}';
     }

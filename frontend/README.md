@@ -1,6 +1,18 @@
-# Performance Analysis
+# Racing Stat Analysis Frontend
 
-A Next.js application for exploring racing series data and lap time analysis. This application provides a comprehensive interface for viewing racing statistics, events, and detailed lap time analysis.
+This is the frontend web application for Racing Stat Analysis, built with Next.js.
+
+## Getting Started
+
+1. Install Node.js 18+ and pnpm (or npm).
+2. From the `frontend` directory, run:
+   
+   ```sh
+   pnpm install
+   pnpm dev
+   ```
+
+The app will start on http://localhost:3000.
 
 ## Features
 
@@ -38,39 +50,6 @@ The application integrates with a racing statistics API with the following endpo
 - `GET /api/v1/series/{seriesId}/{year}/events` - Get events for a series/year
 - `GET /api/v1/series/events/{eventId}/teams` - Get teams for an event
 - `GET /api/v1/series/events/{eventId}/laptimeanalysis` - Get lap time analysis
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd racing-stat-ui
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables (optional):
-```bash
-# Create .env.local file
-NEXT_PUBLIC_API_BASE_URL=http://your-api-server.com/api/v1
-```
-
-4. Run the development server:
-```bash
-npm run dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Development
 

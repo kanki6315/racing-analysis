@@ -1,7 +1,7 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DTO for Team information including its cars and drivers.
@@ -10,7 +10,7 @@ public class TeamDTO {
     private Long teamId;
     private String name;
     private String description;
-    private List<CarDTO> cars;
+    private List<CarEntryDTO> cars;
 
     public TeamDTO() {
         this.cars = new ArrayList<>();
@@ -47,15 +47,15 @@ public class TeamDTO {
         this.description = description;
     }
 
-    public List<CarDTO> getCars() {
+    public List<CarEntryDTO> getCars() {
         return cars;
     }
 
-    public void setCars(List<CarDTO> cars) {
+    public void setCars(List<CarEntryDTO> cars) {
         this.cars = cars;
     }
 
-    public void addCar(CarDTO car) {
+    public void addCar(CarEntryDTO car) {
         if (this.cars == null) {
             this.cars = new ArrayList<>();
         }

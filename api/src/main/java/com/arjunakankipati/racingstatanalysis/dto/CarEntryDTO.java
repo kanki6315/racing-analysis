@@ -1,33 +1,35 @@
 package com.arjunakankipati.racingstatanalysis.dto;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DTO for Car Entry information including its car model and drivers.
  * Represents an individual car entry in a racing session.
  */
-public class CarDTO {
+public class CarEntryDTO {
     private Long carId;
     private String number;
     private CarModelDTO carModel;
     private String tireSupplier;
     private Long classId;
     private Long teamId;
+    private String teamName;
     private List<DriverDTO> drivers;
 
-    public CarDTO() {
+    public CarEntryDTO() {
         this.drivers = new ArrayList<>();
     }
 
-    public CarDTO(Long carId, String number, CarModelDTO carModel, String tireSupplier,
-                  Long classId, Long teamId) {
+    public CarEntryDTO(Long carId, String number, CarModelDTO carModel, String tireSupplier,
+                       Long classId, Long teamId, String teamName) {
         this.carId = carId;
         this.number = number;
         this.carModel = carModel;
         this.tireSupplier = tireSupplier;
         this.classId = classId;
         this.teamId = teamId;
+        this.teamName = teamName;
         this.drivers = new ArrayList<>();
     }
 
@@ -77,6 +79,14 @@ public class CarDTO {
 
     public void setTeamId(Long teamId) {
         this.teamId = teamId;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
     }
 
     public List<DriverDTO> getDrivers() {

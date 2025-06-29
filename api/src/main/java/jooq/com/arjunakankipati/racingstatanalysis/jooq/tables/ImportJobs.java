@@ -7,31 +7,18 @@ package com.arjunakankipati.racingstatanalysis.jooq.tables;
 import com.arjunakankipati.racingstatanalysis.jooq.Indexes;
 import com.arjunakankipati.racingstatanalysis.jooq.Keys;
 import com.arjunakankipati.racingstatanalysis.jooq.Public;
+import com.arjunakankipati.racingstatanalysis.jooq.tables.Sessions.SessionsPath;
 import com.arjunakankipati.racingstatanalysis.jooq.tables.records.ImportJobsRecord;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
+import org.jooq.impl.TableImpl;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.Identity;
-import org.jooq.Index;
-import org.jooq.Name;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.SQL;
-import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -91,9 +78,24 @@ public class ImportJobs extends TableImpl<ImportJobsRecord> {
     public final TableField<ImportJobsRecord, String> ERROR = createField(DSL.name("error"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>public.import_jobs.source_url</code>.
+     * The column <code>public.import_jobs.url</code>.
      */
-    public final TableField<ImportJobsRecord, String> SOURCE_URL = createField(DSL.name("source_url"), SQLDataType.CLOB, this, "");
+    public final TableField<ImportJobsRecord, String> URL = createField(DSL.name("url"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.import_jobs.import_type</code>.
+     */
+    public final TableField<ImportJobsRecord, String> IMPORT_TYPE = createField(DSL.name("import_type"), SQLDataType.VARCHAR(32), this, "");
+
+    /**
+     * The column <code>public.import_jobs.process_type</code>.
+     */
+    public final TableField<ImportJobsRecord, String> PROCESS_TYPE = createField(DSL.name("process_type"), SQLDataType.VARCHAR(32), this, "");
+
+    /**
+     * The column <code>public.import_jobs.session_id</code>.
+     */
+    public final TableField<ImportJobsRecord, Long> SESSION_ID = createField(DSL.name("session_id"), SQLDataType.BIGINT, this, "");
 
     private ImportJobs(Name alias, Table<ImportJobsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -124,6 +126,39 @@ public class ImportJobs extends TableImpl<ImportJobsRecord> {
         this(DSL.name("import_jobs"), null);
     }
 
+    public <O extends Record> ImportJobs(Table<O> path, ForeignKey<O, ImportJobsRecord> childPath, InverseForeignKey<O, ImportJobsRecord> parentPath) {
+        super(path, childPath, parentPath, IMPORT_JOBS);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class ImportJobsPath extends ImportJobs implements Path<ImportJobsRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> ImportJobsPath(Table<O> path, ForeignKey<O, ImportJobsRecord> childPath, InverseForeignKey<O, ImportJobsRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private ImportJobsPath(Name alias, Table<ImportJobsRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public ImportJobsPath as(String alias) {
+            return new ImportJobsPath(DSL.name(alias), this);
+        }
+
+        @Override
+        public ImportJobsPath as(Name alias) {
+            return new ImportJobsPath(alias, this);
+        }
+
+        @Override
+        public ImportJobsPath as(Table<?> alias) {
+            return new ImportJobsPath(alias.getQualifiedName(), this);
+        }
+    }
+
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
@@ -142,6 +177,23 @@ public class ImportJobs extends TableImpl<ImportJobsRecord> {
     @Override
     public UniqueKey<ImportJobsRecord> getPrimaryKey() {
         return Keys.IMPORT_JOBS_PKEY;
+    }
+
+    @Override
+    public List<ForeignKey<ImportJobsRecord, ?>> getReferences() {
+        return Arrays.asList(Keys.IMPORT_JOBS__IMPORT_JOBS_SESSION_ID_FKEY);
+    }
+
+    private transient SessionsPath _sessions;
+
+    /**
+     * Get the implicit join path to the <code>public.sessions</code> table.
+     */
+    public SessionsPath sessions() {
+        if (_sessions == null)
+            _sessions = new SessionsPath(this, Keys.IMPORT_JOBS__IMPORT_JOBS_SESSION_ID_FKEY, null);
+
+        return _sessions;
     }
 
     @Override

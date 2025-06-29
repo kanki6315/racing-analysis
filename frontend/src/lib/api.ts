@@ -58,7 +58,6 @@ export interface SessionDTO {
   weatherTrackTemp: number;
   weatherCondition: string;
   reportMessage: string;
-  importUrl: string;
   importTimestamp: string;
 }
 
@@ -93,10 +92,6 @@ export interface LapTimeDTO {
   sessionElapsedSeconds: number;
   timestamp: string;
   averageSpeedKph: number;
-  isValid: boolean;
-  isPersonalBest: boolean;
-  isSessionBest: boolean;
-  invalidationReason: string | null;
 }
 
 export interface DriverLapTimesDTO {
@@ -113,6 +108,75 @@ export interface LapTimesResponseDTO {
   eventId: number;
   sessionId: number;
   driverLapTimes: DriverLapTimesDTO[];
+}
+
+export interface ResultEntryDTO {
+  id: number;
+  sessionId: number;
+  carEntryId: number;
+  carNumber: string;
+  tires: string;
+  status: string;
+  laps: number;
+  totalTime: string;
+  gapFirst: string;
+  gapPrevious: string;
+  flLapnum: number;
+  flTime: string;
+  flKph: number;
+  position: number;
+  carEntry: {
+    carId: number;
+    number: string;
+    teamName: string;
+    carModel: {
+      id: number;
+      name: string;
+      fullName: string;
+      yearModel: number;
+      description: string;
+    };
+    tireSupplier: string;
+    classId: number;
+    teamId: number;
+    drivers: {
+      driverId: number;
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      nationality: string;
+      hometown: string;
+      licenseType: string;
+      driverNumber: number;
+    }[];
+  };
+}
+
+export interface ResultsResponseDTO {
+  sessionId: number;
+  results: ResultEntryDTO[];
+}
+
+export interface EventDTO {
+  eventId: number;
+  seriesId: number;
+  name: string;
+  year: number;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export type EventsResponseDTO = EventDTO[];
+
+export async function fetchEventsForSeriesYear(
+  seriesId: number,
+  year: number,
+  apiKey: string
+): Promise<EventsResponseDTO> {
+  return apiRequest<EventsResponseDTO>(`/events?seriesId=${seriesId}&year=${year}`, {
+    headers: { 'X-API-Key': apiKey },
+  });
 }
 
 export async function apiRequest<T>(
@@ -152,4 +216,15 @@ export function buildQueryParams(params: Record<string, string | number | undefi
   });
   
   return searchParams.toString();
+}
+
+export interface ImportResponseDTO {
+  importId: string;
+  status: string;
+  completionTime: number | null;
+  error: string | null;
+  url: string;
+  importType: string;
+  processType: string;
+  sessionId: number;
 } 

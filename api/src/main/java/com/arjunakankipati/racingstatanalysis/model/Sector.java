@@ -14,8 +14,6 @@ public class Sector implements BaseEntity<Long> {
     private BigDecimal sectorTimeSeconds;
     private Boolean isPersonalBest;
     private Boolean isSessionBest;
-    private Boolean isValid;
-    private String invalidationReason;
 
     /**
      * Default constructor.
@@ -32,19 +30,15 @@ public class Sector implements BaseEntity<Long> {
      * @param sectorTimeSeconds the time taken to complete the sector in seconds
      * @param isPersonalBest whether the sector time is the personal best for the driver
      * @param isSessionBest whether the sector time is the best in the session
-     * @param isValid whether the sector time is valid
-     * @param invalidationReason the reason for invalidation if the sector time is invalid
      */
     public Sector(Long id, Long lapId, Integer sectorNumber, BigDecimal sectorTimeSeconds,
-                  Boolean isPersonalBest, Boolean isSessionBest, Boolean isValid, String invalidationReason) {
+                  Boolean isPersonalBest, Boolean isSessionBest) {
         this.id = id;
         this.lapId = lapId;
         this.sectorNumber = sectorNumber;
         this.sectorTimeSeconds = sectorTimeSeconds;
         this.isPersonalBest = isPersonalBest;
         this.isSessionBest = isSessionBest;
-        this.isValid = isValid;
-        this.invalidationReason = invalidationReason;
     }
 
     /**
@@ -157,42 +151,6 @@ public class Sector implements BaseEntity<Long> {
         this.isSessionBest = isSessionBest;
     }
 
-    /**
-     * Gets whether the sector time is valid.
-     *
-     * @return true if the sector time is valid, false otherwise
-     */
-    public Boolean getIsValid() {
-        return isValid;
-    }
-
-    /**
-     * Sets whether the sector time is valid.
-     *
-     * @param isValid true if the sector time is valid, false otherwise
-     */
-    public void setIsValid(Boolean isValid) {
-        this.isValid = isValid;
-    }
-
-    /**
-     * Gets the reason for invalidation if the sector time is invalid.
-     *
-     * @return the invalidation reason
-     */
-    public String getInvalidationReason() {
-        return invalidationReason;
-    }
-
-    /**
-     * Sets the reason for invalidation if the sector time is invalid.
-     *
-     * @param invalidationReason the invalidation reason to set
-     */
-    public void setInvalidationReason(String invalidationReason) {
-        this.invalidationReason = invalidationReason;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -203,15 +161,12 @@ public class Sector implements BaseEntity<Long> {
                 Objects.equals(sectorNumber, sector.sectorNumber) &&
                 Objects.equals(sectorTimeSeconds, sector.sectorTimeSeconds) &&
                 Objects.equals(isPersonalBest, sector.isPersonalBest) &&
-                Objects.equals(isSessionBest, sector.isSessionBest) &&
-                Objects.equals(isValid, sector.isValid) &&
-                Objects.equals(invalidationReason, sector.invalidationReason);
+                Objects.equals(isSessionBest, sector.isSessionBest);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, lapId, sectorNumber, sectorTimeSeconds, isPersonalBest, isSessionBest,
-                isValid, invalidationReason);
+        return Objects.hash(id, lapId, sectorNumber, sectorTimeSeconds, isPersonalBest, isSessionBest);
     }
 
     @Override
@@ -222,9 +177,7 @@ public class Sector implements BaseEntity<Long> {
                 ", sectorNumber=" + sectorNumber +
                 ", sectorTimeSeconds=" + sectorTimeSeconds +
                 ", isPersonalBest=" + isPersonalBest +
-                ", isSessionBest=" + isSessionBest +
-                ", isValid=" + isValid +
-                ", invalidationReason='" + invalidationReason + '\'' +
+                ", isSessionBest=" + isSessionBest + '\'' +
                 '}';
     }
 }
