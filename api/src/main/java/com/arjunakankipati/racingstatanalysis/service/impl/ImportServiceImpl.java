@@ -24,10 +24,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -97,10 +94,14 @@ public class ImportServiceImpl implements ImportService {
     public void processImport(Integer jobId, ProcessRequestDTO request) {
         importJobService.markStarted(jobId);
         try {
+            ProcessResponseDTO response;
             if (request.getProcessType() == ProcessRequestDTO.ProcessType.RESULTS) {
-                processResultsCsv(request);
+                response = processResultsCsv(request);
             } else {
-                processTimecardCsv(request);
+                response = processTimecardCsv(request);
+            }
+            if (!response.getStatus().equals("SUCCESS")) {
+                throw new RuntimeException("Failed to process import for URL: " + request.getUrl() + ". Error: " + response.getError());
             }
             importJobService.markCompleted(jobId);
         } catch (Exception e) {
@@ -254,8 +255,8 @@ public class ImportServiceImpl implements ImportService {
                 var carEntries = carEntryRepository.findBySessionId(session.getId());
 
                 // Use a map for laps and their sectors
-                var lapMap = new java.util.LinkedHashMap<LapKey, Lap>();
-                var sectorMap = new java.util.HashMap<LapKey, java.util.List<Sector>>();
+                var lapMap = new HashMap<LapKey, Lap>();
+                var sectorMap = new HashMap<LapKey, List<Sector>>();
 
                 while ((row = reader.readLine()) != null) {
                     if (row.trim().isEmpty()) continue;
@@ -316,7 +317,7 @@ public class ImportServiceImpl implements ImportService {
                             Sector sector = new Sector();
                             // lapId will be set after batch save
                             sector.setSectorNumber(i);
-                            sector.setSectorTimeSeconds(parseLapTime(sectorTime));
+                            sector.setSectorTimeSeconds(parseLargeSectorTime(sectorTime));
                             if (sector.getSectorTimeSeconds() == null) {
                                 throw new IllegalArgumentException("Invalid sector time: " + sectorTime);
                             }
@@ -489,6 +490,15 @@ public class ImportServiceImpl implements ImportService {
         double seconds = Double.parseDouble(parts[1]);
 
         return BigDecimal.valueOf(minutes * 60 + seconds);
+    }
+
+    private BigDecimal parseLargeSectorTime(String sectorTime) {
+        // Format: MM:SS.SSS
+        String[] parts = sectorTime.split(":");
+        int minutes = Integer.parseInt(parts[0]);
+        double seconds = Double.parseDouble(parts[1]);
+        double totalSeconds = minutes * 60 + seconds;
+        return BigDecimal.valueOf(totalSeconds);
     }
 
     private BigDecimal parseTimestampIntoSeconds(String timestampStr) {

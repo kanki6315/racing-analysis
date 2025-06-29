@@ -220,4 +220,15 @@ export function buildQueryParams(params: Record<string, string | number | undefi
   });
   
   return searchParams.toString();
+}
+
+export interface ImportResponseDTO {
+  importId: string;
+  status: string;
+  completionTime: number | null;
+  error: string | null;
+  url: string;
+  importType: string;
+  processType: string;
+  sessionId: number;
 } 

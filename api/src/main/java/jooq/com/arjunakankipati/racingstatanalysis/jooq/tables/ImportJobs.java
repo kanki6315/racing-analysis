@@ -136,11 +136,9 @@ public class ImportJobs extends TableImpl<ImportJobsRecord> {
     public static class ImportJobsPath extends ImportJobs implements Path<ImportJobsRecord> {
 
         private static final long serialVersionUID = 1L;
-
         public <O extends Record> ImportJobsPath(Table<O> path, ForeignKey<O, ImportJobsRecord> childPath, InverseForeignKey<O, ImportJobsRecord> parentPath) {
             super(path, childPath, parentPath);
         }
-
         private ImportJobsPath(Name alias, Table<ImportJobsRecord> aliased) {
             super(alias, aliased);
         }
