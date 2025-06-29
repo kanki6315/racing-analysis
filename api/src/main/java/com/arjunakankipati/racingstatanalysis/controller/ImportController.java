@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -104,5 +105,13 @@ public class ImportController {
         }
         var response = importService.processTimecardCsv(request);
         return ResponseEntity.accepted().body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ImportJob>> listAllImportJobs(@RequestHeader(value = "X-API-Key", required = false) String apiKey) {
+        if (apiKey == null || !apiKey.equals(expectedApiKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(importJobService.getAllJobs());
     }
 }
