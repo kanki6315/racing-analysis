@@ -296,7 +296,7 @@ public class ImportServiceImpl implements ImportService {
 
                     // --- Parse lap data ---
                     Lap lap = new Lap();
-                    lap.setCarId(carEntry.getId());
+                    lap.setCarEntryId(carEntry.getId());
                     lap.setDriverId(carDriver.getDriverId());
                     lap.setLapNumber(lapNumber);
                     lap.setLapTimeSeconds(parseLapTime(getValueByHeader(headers, values, "LAP_TIME")));
@@ -482,14 +482,19 @@ public class ImportServiceImpl implements ImportService {
      */
     private BigDecimal parseLapTime(String lapTimeStr) {
         String[] parts = lapTimeStr.split(":");
-        if (parts.length != 2) {
-            return BigDecimal.ZERO;
+        if (parts.length == 3) {
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            double seconds = Double.parseDouble(parts[2]);
+
+            return BigDecimal.valueOf(hours * 60 * 60 + minutes * 60 + seconds);
+        } else if (parts.length == 2) {
+            int minutes = Integer.parseInt(parts[0]);
+            double seconds = Double.parseDouble(parts[1]);
+
+            return BigDecimal.valueOf(minutes * 60 + seconds);
         }
-
-        int minutes = Integer.parseInt(parts[0]);
-        double seconds = Double.parseDouble(parts[1]);
-
-        return BigDecimal.valueOf(minutes * 60 + seconds);
+        throw new IllegalArgumentException("Invalid lap time format: " + lapTimeStr);
     }
 
     private BigDecimal parseLargeSectorTime(String sectorTime) {

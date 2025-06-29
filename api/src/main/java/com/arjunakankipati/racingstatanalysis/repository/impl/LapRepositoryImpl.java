@@ -64,7 +64,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
                         Tables.LAPS.AVERAGE_SPEED_KPH
                 )
                 .values(
-                        lap.getCarId(),
+                        lap.getCarEntryId(),
                         lap.getDriverId(),
                         lap.getLapNumber(),
                         lap.getLapTimeSeconds(),
@@ -81,7 +81,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
     @Override
     protected void update(Lap lap) {
         dsl.update(table)
-                .set(Tables.LAPS.CAR_ID, lap.getCarId())
+                .set(Tables.LAPS.CAR_ID, lap.getCarEntryId())
                 .set(Tables.LAPS.DRIVER_ID, lap.getDriverId())
                 .set(Tables.LAPS.LAP_NUMBER, lap.getLapNumber())
                 .set(Tables.LAPS.LAP_TIME_SECONDS, lap.getLapTimeSeconds())
@@ -536,7 +536,7 @@ public class LapRepositoryImpl extends BaseRepositoryImpl<Lap, Long> implements 
             );
         for (Lap lap : laps) {
             insertStep = insertStep.values(
-                lap.getCarId(),
+                    lap.getCarEntryId(),
                 lap.getDriverId(),
                 lap.getLapNumber(),
                 lap.getLapTimeSeconds(),

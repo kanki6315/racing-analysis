@@ -10,7 +10,7 @@ import java.util.Objects;
  */
 public class Lap implements BaseEntity<Long> {
     private Long id;
-    private Long carId;
+    private Long carEntryId;
     private Long driverId;
     private Integer lapNumber;
     private BigDecimal lapTimeSeconds;
@@ -28,7 +28,7 @@ public class Lap implements BaseEntity<Long> {
      * Full constructor.
      *
      * @param id the ID of the lap
-     * @param carId the ID of the car that completed the lap
+     * @param carEntryId the ID of the car that completed the lap
      * @param driverId the ID of the driver who drove the lap
      * @param lapNumber the number of the lap
      * @param lapTimeSeconds the time taken to complete the lap in seconds
@@ -36,10 +36,10 @@ public class Lap implements BaseEntity<Long> {
      * @param timestamp the timestamp when the lap was completed
      * @param averageSpeedKph the average speed of the lap in kilometers per hour
      */
-    public Lap(Long id, Long carId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds,
+    public Lap(Long id, Long carEntryId, Long driverId, Integer lapNumber, BigDecimal lapTimeSeconds,
                BigDecimal sessionElapsedSeconds, LocalDateTime timestamp, BigDecimal averageSpeedKph) {
         this.id = id;
-        this.carId = carId;
+        this.carEntryId = carEntryId;
         this.driverId = driverId;
         this.lapNumber = lapNumber;
         this.lapTimeSeconds = lapTimeSeconds;
@@ -73,17 +73,17 @@ public class Lap implements BaseEntity<Long> {
      *
      * @return the car ID
      */
-    public Long getCarId() {
-        return carId;
+    public Long getCarEntryId() {
+        return carEntryId;
     }
 
     /**
      * Sets the ID of the car that completed the lap.
      *
-     * @param carId the car ID to set
+     * @param carEntryId the car ID to set
      */
-    public void setCarId(Long carId) {
-        this.carId = carId;
+    public void setCarEntryId(Long carEntryId) {
+        this.carEntryId = carEntryId;
     }
 
     /**
@@ -200,7 +200,7 @@ public class Lap implements BaseEntity<Long> {
         if (o == null || getClass() != o.getClass()) return false;
         Lap lap = (Lap) o;
         return Objects.equals(id, lap.id) &&
-                Objects.equals(carId, lap.carId) &&
+                Objects.equals(carEntryId, lap.carEntryId) &&
                 Objects.equals(driverId, lap.driverId) &&
                 Objects.equals(lapNumber, lap.lapNumber) &&
                 Objects.equals(lapTimeSeconds, lap.lapTimeSeconds) &&
@@ -211,7 +211,7 @@ public class Lap implements BaseEntity<Long> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, carId, driverId, lapNumber, lapTimeSeconds, sessionElapsedSeconds,
+        return Objects.hash(id, carEntryId, driverId, lapNumber, lapTimeSeconds, sessionElapsedSeconds,
                 timestamp, averageSpeedKph);
     }
 
@@ -219,7 +219,7 @@ public class Lap implements BaseEntity<Long> {
     public String toString() {
         return "Lap{" +
                 "id=" + id +
-                ", carId=" + carId +
+                ", carId=" + carEntryId +
                 ", driverId=" + driverId +
                 ", lapNumber=" + lapNumber +
                 ", lapTimeSeconds=" + lapTimeSeconds +
