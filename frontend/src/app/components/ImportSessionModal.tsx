@@ -139,7 +139,7 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
                 </span>
               </>
             )}
-            {jobStatus === 'COMPLETE' && (
+            {jobStatus === 'COMPLETED' && (
               <>
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 <span className="mt-2 text-green-700 text-sm">Import complete</span>
@@ -154,7 +154,7 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
               </>
             )}
             {/* Fallback for unknown status */}
-            {jobStatus && !['PENDING','IN_PROGRESS','COMPLETE','FAILED','ERROR'].includes(jobStatus) && (
+            {jobStatus && !['PENDING','IN_PROGRESS','COMPLETED','FAILED','ERROR'].includes(jobStatus) && (
               <span className="mt-2 text-gray-700 text-sm">Unknown status: {jobStatus}</span>
             )}
             <button
