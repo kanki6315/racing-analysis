@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { apiRequest, API_BASE_URL, fetchEventsForSeriesYear, EventDTO } from "../../lib/api";
 import Spinner from "../components/Spinner";
 import React from "react";
@@ -28,7 +28,6 @@ export default function AdminPage() {
   const [showNewSeriesModal, setShowNewSeriesModal] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState("");
   const [modalError, setModalError] = useState<string | null>(null);
-  const [modalSuccess, setModalSuccess] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [createSessionModal, setCreateSessionModal] = React.useState<{eventId: number, eventName: string} | null>(null);
   const [showNewCircuitModal, setShowNewCircuitModal] = useState(false);
@@ -37,25 +36,17 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
 
   // Circuits tab state
-  const [circuits, setCircuits] = useState<any[]>([]);
+  const [circuits, setCircuits] = useState<unknown[]>([]);
   const [circuitsLoading, setCircuitsLoading] = useState(false);
   const [circuitsError, setCircuitsError] = useState<string | null>(null);
 
   // Import Jobs tab state
-  const [importJobs, setImportJobs] = useState<any[]>([]);
+  const [importJobs, setImportJobs] = useState<unknown[]>([]);
   const [importJobsLoading, setImportJobsLoading] = useState(false);
   const [importJobsError, setImportJobsError] = useState<string | null>(null);
 
-  // Check for apiKey in localStorage and validate
-  useEffect(() => {
-    const storedKey = localStorage.getItem("apiKey");
-    if (storedKey) {
-      validateKey(storedKey);
-    }
-  }, []);
-
   // Validate the API key
-  const validateKey = async (key: string) => {
+  const validateKey = useCallback(async (key: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -73,14 +64,22 @@ export default function AdminPage() {
         setError("Invalid API key. Please try again.");
         localStorage.removeItem("apiKey");
       }
-    } catch (e) {
+    } catch {
       setError("Failed to validate API key.");
       setIsAuthenticated(false);
       setApiKey(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Check for apiKey in localStorage and validate
+  useEffect(() => {
+    const storedKey = localStorage.getItem("apiKey");
+    if (storedKey) {
+      validateKey(storedKey);
+    }
+  }, [validateKey]);
 
   // Fetch all series
   const fetchSeries = async (key: string) => {
@@ -91,7 +90,7 @@ export default function AdminPage() {
         headers: { "X-API-Key": key },
       });
       setSeries(data);
-    } catch (e) {
+    } catch {
       setError("Failed to fetch series data.");
     } finally {
       setLoading(false);
@@ -103,7 +102,7 @@ export default function AdminPage() {
     try {
       const events = await fetchEventsForSeriesYear(seriesId, year, key);
       setEventsBySeries(prev => ({ ...prev, [seriesId]: events }));
-    } catch (e) {
+    } catch {
       setEventsBySeries(prev => ({ ...prev, [seriesId]: [] }));
     }
   };
@@ -121,7 +120,7 @@ export default function AdminPage() {
       });
       setSelectedYear(newSelectedYear);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [series, apiKey]);
 
   // Handle year change for a series
@@ -131,14 +130,14 @@ export default function AdminPage() {
   };
 
   // Handle API key form submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     validateKey(inputKey);
   };
 
   // Create new series
-  const handleCreateSeries = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateSeries = async (event: React.FormEvent) => {
+    event.preventDefault();
     setModalLoading(true);
     setModalError(null);
     try {
@@ -155,13 +154,13 @@ export default function AdminPage() {
       } else if (!res.ok) {
         setModalError("Something went wrong");
       } else {
-        setModalSuccess(true);
+        setModalLoading(false);
         setShowNewSeriesModal(false);
         setNewSeriesName("");
         // Refresh series list
         fetchSeries(apiKey!);
       }
-    } catch (err) {
+    } catch {
       setModalError("Something went wrong");
     } finally {
       setModalLoading(false);
@@ -194,11 +193,14 @@ export default function AdminPage() {
   const filteredCircuits = useMemo(() => {
     if (!search) return circuits;
     const s = search.toLowerCase();
-    return circuits.filter((c: any) =>
-      (c.name && c.name.toLowerCase().includes(s)) ||
-      (c.location && c.location.toLowerCase().includes(s)) ||
-      (c.country && c.country.toLowerCase().includes(s))
-    );
+    return circuits.filter((c) => {
+      const circuit = c as Record<string, unknown>;
+      return (
+        typeof circuit.name === 'string' && circuit.name.toLowerCase().includes(s)
+        || typeof circuit.location === 'string' && circuit.location.toLowerCase().includes(s)
+        || typeof circuit.country === 'string' && circuit.country.toLowerCase().includes(s)
+      );
+    });
   }, [circuits, search]);
 
   useEffect(() => {
@@ -224,10 +226,13 @@ export default function AdminPage() {
   const filteredImportJobs = useMemo(() => {
     if (!search) return importJobs;
     const s = search.toLowerCase();
-    return importJobs.filter((job: any) =>
-      (job.url && job.url.toLowerCase().includes(s)) ||
-      (job.status && job.status.toLowerCase().includes(s))
-    );
+    return importJobs.filter((job) => {
+      const j = job as Record<string, unknown>;
+      return (
+        typeof j.url === 'string' && j.url.toLowerCase().includes(s)
+        || typeof j.status === 'string' && j.status.toLowerCase().includes(s)
+      );
+    });
   }, [importJobs, search]);
 
   if (!isAuthenticated) {
@@ -476,15 +481,18 @@ export default function AdminPage() {
                           <td colSpan={5} className="text-center text-gray-500 py-8">No circuits found.</td>
                         </tr>
                       ) : (
-                        filteredCircuits.map((c: any) => (
-                          <tr key={c.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 border-b text-gray-900">{c.id}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{c.name}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{c.location}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{c.country}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{c.lengthMeters}</td>
-                          </tr>
-                        ))
+                        filteredCircuits.map((c) => {
+                          const circuit = c as Record<string, unknown>;
+                          return (
+                            <tr key={String(circuit.id)} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 border-b text-gray-900">{String(circuit.id ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(circuit.name ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(circuit.location ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(circuit.country ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(circuit.lengthMeters ?? '')}</td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -519,18 +527,21 @@ export default function AdminPage() {
                           <td colSpan={8} className="text-center text-gray-500 py-8">No import jobs found.</td>
                         </tr>
                       ) : (
-                        filteredImportJobs.map((job: any) => (
-                          <tr key={job.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 border-b text-gray-900">{job.id}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{job.status}</td>
-                            <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{job.url}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{job.importType}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{job.processType}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{job.sessionId}</td>
-                            <td className="px-6 py-4 border-b text-gray-900">{job.completionTime ? new Date(job.completionTime).toLocaleString() : '-'}</td>
-                            <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{job.error}</td>
-                          </tr>
-                        ))
+                        filteredImportJobs.map((job) => {
+                          const j = job as Record<string, unknown>;
+                          return (
+                            <tr key={String(j.id)} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 border-b text-gray-900">{String(j.id ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(j.status ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{String(j.url ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(j.importType ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(j.processType ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{String(j.sessionId ?? '')}</td>
+                              <td className="px-6 py-4 border-b text-gray-900">{j.completionTime ? new Date(String(j.completionTime)).toLocaleString() : '-'}</td>
+                              <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{String(j.error ?? '')}</td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -632,8 +643,8 @@ function EventSessionsTable({ eventId, eventName, apiKey }: { eventId: number, e
           const sessionsData = data as { sessions: SessionDTO[] };
           if (mounted) setSessions(sessionsData.sessions);
         })
-        .catch((err: any) => {
-          if (mounted) setError(err?.message || 'Failed to fetch sessions');
+        .catch((err: unknown) => {
+          if (mounted) setError(err instanceof Error ? err.message : 'Failed to fetch sessions');
         })
         .finally(() => {
           if (mounted) setLoading(false);
@@ -747,8 +758,8 @@ function CreateEventModal({ seriesId, year, apiKey, onClose, onEventCreated }: {
   }));
   const selectedCircuit = circuitOptions.find(opt => opt.value === circuitId) || null;
 
-  const handleCircuitChange = (option: any) => {
-    setCircuitId(option ? option.value : null);
+  const handleCircuitChange = (option: unknown) => {
+    setCircuitId(option ? (option as { value: number }).value : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -781,8 +792,8 @@ function CreateEventModal({ seriesId, year, apiKey, onClose, onEventCreated }: {
       }
       onEventCreated();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to create event");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create event");
     } finally {
       setLoading(false);
     }

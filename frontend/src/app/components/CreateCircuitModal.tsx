@@ -55,7 +55,7 @@ const CreateCircuitModal: React.FC<CreateCircuitModalProps> = ({ apiKey, onClose
                 onClose();
                 setNewCircuit({ name: '', lengthMeters: '', country: '', location: '' });
               }
-            } catch (err) {
+            } catch {
               setCircuitModalError('something went wrong');
             } finally {
               setCircuitModalLoading(false);

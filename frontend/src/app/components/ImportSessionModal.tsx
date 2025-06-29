@@ -30,7 +30,6 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
   const [jobStatus, setJobStatus] = useState<string | null>(null);
   const [jobError, setJobError] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
-  const [jobComplete, setJobComplete] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -57,7 +56,6 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
     setImportJob(null);
     setJobStatus(null);
     setJobError(null);
-    setJobComplete(false);
     try {
       const res = await fetch(`${API_BASE_URL}/imports`, {
         method: 'POST',
@@ -80,7 +78,7 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
         setJobStatus(data.status);
         setPolling(true);
       }
-    } catch (err) {
+    } catch {
       setSubmitError('something went wrong');
     } finally {
       setSubmitting(false);
@@ -103,7 +101,6 @@ const ImportSessionModal: React.FC<ImportSessionModalProps> = ({ session, eventN
             // Stop polling as soon as status is not pending or in_progress
             if (data.status !== 'PENDING' && data.status !== 'IN_PROGRESS') {
               setPolling(false);
-              setJobComplete(true);
             }
           } else {
             setJobError('Failed to fetch import status');

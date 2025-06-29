@@ -1,13 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Spinner from "./Spinner";
 import { API_BASE_URL } from "@/lib/api";
-import Select from "react-select";
-
-interface CircuitDTO {
-  id: number;
-  name: string;
-  location: string;
-}
 
 interface CreateSessionModalProps {
   eventId: number;
@@ -26,7 +19,6 @@ const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventN
   const [startDatetime, setStartDatetime] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +48,9 @@ const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ eventId, eventN
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to create session");
       }
-      setSuccess(true);
       onSessionCreated();
-    } catch (err: any) {
-      setError(err.message || "Failed to create session");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create session");
     } finally {
       setLoading(false);
     }
