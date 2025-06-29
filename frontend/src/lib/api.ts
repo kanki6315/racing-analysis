@@ -92,10 +92,6 @@ export interface LapTimeDTO {
   sessionElapsedSeconds: number;
   timestamp: string;
   averageSpeedKph: number;
-  isValid: boolean;
-  isPersonalBest: boolean;
-  isSessionBest: boolean;
-  invalidationReason: string | null;
 }
 
 export interface DriverLapTimesDTO {

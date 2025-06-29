@@ -33,6 +33,18 @@ export default function AdminPage() {
   const [createSessionModal, setCreateSessionModal] = React.useState<{eventId: number, eventName: string} | null>(null);
   const [showNewCircuitModal, setShowNewCircuitModal] = useState(false);
   const [showNewEventModal, setShowNewEventModal] = useState<{seriesId: number, year: number} | null>(null);
+  const [activeTab, setActiveTab] = useState<'series' | 'circuits' | 'imports'>('series');
+  const [search, setSearch] = useState('');
+
+  // Circuits tab state
+  const [circuits, setCircuits] = useState<any[]>([]);
+  const [circuitsLoading, setCircuitsLoading] = useState(false);
+  const [circuitsError, setCircuitsError] = useState<string | null>(null);
+
+  // Import Jobs tab state
+  const [importJobs, setImportJobs] = useState<any[]>([]);
+  const [importJobsLoading, setImportJobsLoading] = useState(false);
+  const [importJobsError, setImportJobsError] = useState<string | null>(null);
 
   // Check for apiKey in localStorage and validate
   useEffect(() => {
@@ -159,6 +171,65 @@ export default function AdminPage() {
   const handleOpenCreateSession = (eventId: number, eventName: string) => setCreateSessionModal({ eventId, eventName });
   const handleCloseCreateSession = () => setCreateSessionModal(null);
 
+  useEffect(() => {
+    if (activeTab === 'circuits' && apiKey) {
+      setCircuitsLoading(true);
+      setCircuitsError(null);
+      fetch(`${API_BASE_URL}/circuits`, {
+        headers: { 'X-API-Key': apiKey }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch circuits');
+          return res.json();
+        })
+        .then(data => {
+          setCircuits(Array.isArray(data) ? data : []);
+        })
+        .catch(() => setCircuitsError('Failed to fetch circuits'))
+        .finally(() => setCircuitsLoading(false));
+    }
+  }, [activeTab, apiKey, showNewCircuitModal]);
+
+  // Filter circuits by search
+  const filteredCircuits = useMemo(() => {
+    if (!search) return circuits;
+    const s = search.toLowerCase();
+    return circuits.filter((c: any) =>
+      (c.name && c.name.toLowerCase().includes(s)) ||
+      (c.location && c.location.toLowerCase().includes(s)) ||
+      (c.country && c.country.toLowerCase().includes(s))
+    );
+  }, [circuits, search]);
+
+  useEffect(() => {
+    if (activeTab === 'imports' && apiKey) {
+      setImportJobsLoading(true);
+      setImportJobsError(null);
+      fetch(`${API_BASE_URL}/imports`, {
+        headers: { 'X-API-Key': apiKey }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch import jobs');
+          return res.json();
+        })
+        .then(data => {
+          setImportJobs(Array.isArray(data) ? data : []);
+        })
+        .catch(() => setImportJobsError('Failed to fetch import jobs'))
+        .finally(() => setImportJobsLoading(false));
+    }
+  }, [activeTab, apiKey]);
+
+  // Filter import jobs by search
+  const filteredImportJobs = useMemo(() => {
+    if (!search) return importJobs;
+    const s = search.toLowerCase();
+    return importJobs.filter((job: any) =>
+      (job.url && job.url.toLowerCase().includes(s)) ||
+      (job.status && job.status.toLowerCase().includes(s))
+    );
+  }, [importJobs, search]);
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -228,28 +299,245 @@ export default function AdminPage() {
             Log out
           </button>
         </div>
+        {/* Tabs and search bar */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">All Series</h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors"
-              onClick={() => {
-                setShowNewSeriesModal(true);
-                setModalError(null);
-                setNewSeriesName("");
-              }}
+              className={`px-4 py-2 rounded-t-md font-semibold border-b-2 transition-colors ${activeTab === 'series' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
+              onClick={() => setActiveTab('series')}
             >
-              New Series
+              Series
             </button>
             <button
-              className="px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-colors"
-              onClick={() => {
-                setShowNewCircuitModal(true);
-              }}
+              className={`px-4 py-2 rounded-t-md font-semibold border-b-2 transition-colors ${activeTab === 'circuits' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
+              onClick={() => setActiveTab('circuits')}
             >
-              New Circuit
+              Circuits
+            </button>
+            <button
+              className={`px-4 py-2 rounded-t-md font-semibold border-b-2 transition-colors ${activeTab === 'imports' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
+              onClick={() => setActiveTab('imports')}
+            >
+              Import Jobs
             </button>
           </div>
+          <input
+            type="text"
+            className="border px-3 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={activeTab === 'series' ? 'Search series...' : activeTab === 'circuits' ? 'Search circuits...' : 'Search import jobs...'}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {/* Only show New Series or New Circuit button depending on tab */}
+          <div className="flex gap-2">
+            {activeTab === 'series' && (
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                onClick={() => {
+                  setShowNewSeriesModal(true);
+                  setModalError(null);
+                  setNewSeriesName("");
+                }}
+              >
+                New Series
+              </button>
+            )}
+            {activeTab === 'circuits' && (
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-colors"
+                onClick={() => {
+                  setShowNewCircuitModal(true);
+                }}
+              >
+                New Circuit
+              </button>
+            )}
+          </div>
+        </div>
+        {/* Tab panels */}
+        <div>
+          {activeTab === 'series' && (
+            <div className="overflow-x-auto rounded-lg shadow">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Count</th>
+                    <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
+                    <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events</th>
+                    <th className="px-6 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Add</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {series.map(s => [
+                    <tr key={s.id} className="hover:bg-gray-50 align-top">
+                      <td className="px-6 py-4 border-b text-gray-900">{s.id}</td>
+                      <td className="px-6 py-4 border-b text-gray-900">{s.name}</td>
+                      <td className="px-6 py-4 border-b text-gray-900">{s.eventCount}</td>
+                      <td className="px-6 py-4 border-b text-gray-900">
+                        <select
+                          className="border rounded px-2 py-1"
+                          value={selectedYear[s.id] || (s.years && s.years.length > 0 ? Math.max(...s.years) : "")}
+                          onChange={e => handleYearChange(s.id, Number(e.target.value))}
+                        >
+                          {s.years && s.years.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 border-b text-gray-900">
+                        {eventsBySeries[s.id] && eventsBySeries[s.id].length > 0 ? (
+                          <span className="text-blue-600 font-medium">{eventsBySeries[s.id].length} events</span>
+                        ) : (
+                          <span className="text-gray-400 italic">No events</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 border-b text-center">
+                        <button
+                          className="inline-flex items-center justify-center w-6 h-6 bg-green-500 text-white rounded-full text-base font-bold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+                          title="Add Event"
+                          onClick={() => setShowNewEventModal({ seriesId: s.id, year: selectedYear[s.id] })}
+                          style={{ lineHeight: 1 }}
+                        >
+                          +
+                        </button>
+                      </td>
+                    </tr>,
+                    eventsBySeries[s.id] && eventsBySeries[s.id].length > 0 && (
+                      <tr key={s.id + "-events"} className="">
+                        <td colSpan={6} className="p-0 border-b">
+                          <div className="overflow-x-auto rounded-b-lg border-t border-gray-200">
+                            <table className="min-w-full bg-white text-sm border border-gray-200">
+                              <thead>
+                                <tr>
+                                  <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-56">Event Name</th>
+                                  <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-32 text-center">Start Date</th>
+                                  <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-32 text-center">End Date</th>
+                                  <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-40 text-center">Create Session</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {eventsBySeries[s.id].map(ev => (
+                                  <React.Fragment key={ev.eventId}>
+                                    <tr key={ev.eventId}>
+                                      <td className="px-4 py-2 border-b text-gray-900 w-56">{ev.name}</td>
+                                      <td className="px-4 py-2 border-b text-gray-900 w-32 text-center">{ev.startDate}</td>
+                                      <td className="px-4 py-2 border-b text-gray-900 w-32 text-center">{ev.endDate}</td>
+                                      <td className="px-4 py-2 border-b text-center w-40">
+                                        <button
+                                          className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                                          onClick={() => handleOpenCreateSession(ev.eventId, ev.name)}
+                                        >
+                                          + Create Session
+                                        </button>
+                                      </td>
+                                    </tr>
+                                    {/* Sessions sub-table */}
+                                    <tr>
+                                      <td colSpan={4} className="p-0 border-b bg-gray-50">
+                                        <EventSessionsTable eventId={ev.eventId} eventName={ev.name} apiKey={apiKey || ""} />
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  ])}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {activeTab === 'circuits' && (
+            <div className="overflow-x-auto rounded-lg shadow bg-white">
+              {circuitsLoading ? (
+                <div className="flex justify-center items-center min-h-[200px]"><Spinner /></div>
+              ) : circuitsError ? (
+                <div className="text-red-600 text-center py-4">{circuitsError}</div>
+              ) : (
+                <>
+                  <table className="min-w-full bg-white border border-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Length (m)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCircuits.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center text-gray-500 py-8">No circuits found.</td>
+                        </tr>
+                      ) : (
+                        filteredCircuits.map((c: any) => (
+                          <tr key={c.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 border-b text-gray-900">{c.id}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{c.name}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{c.location}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{c.country}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{c.lengthMeters}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
+          )}
+          {activeTab === 'imports' && (
+            <div className="overflow-x-auto rounded-lg shadow bg-white">
+              {importJobsLoading ? (
+                <div className="flex justify-center items-center min-h-[200px]"><Spinner /></div>
+              ) : importJobsError ? (
+                <div className="text-red-600 text-center py-4">{importJobsError}</div>
+              ) : (
+                <>
+                  <table className="min-w-full bg-white border border-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Process</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session ID</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed At</th>
+                        <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredImportJobs.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center text-gray-500 py-8">No import jobs found.</td>
+                        </tr>
+                      ) : (
+                        filteredImportJobs.map((job: any) => (
+                          <tr key={job.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 border-b text-gray-900">{job.id}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{job.status}</td>
+                            <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{job.url}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{job.importType}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{job.processType}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{job.sessionId}</td>
+                            <td className="px-6 py-4 border-b text-gray-900">{job.completionTime ? new Date(job.completionTime).toLocaleString() : '-'}</td>
+                            <td className="px-6 py-4 border-b text-gray-900 text-xs break-all max-w-xs whitespace-pre-line">{job.error}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
+          )}
         </div>
         {/* Modal for new series */}
         {showNewSeriesModal && (
@@ -319,108 +607,6 @@ export default function AdminPage() {
               loadEvents(showNewEventModal.seriesId, showNewEventModal.year, apiKey!);
             }}
           />
-        )}
-        {loading ? (
-          <div className="flex justify-center items-center min-h-[200px]">
-            <Spinner />
-          </div>
-        ) : error ? (
-          <div className="text-red-600 text-center py-4">{error}</div>
-        ) : (
-          <div className="overflow-x-auto rounded-lg shadow">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Count</th>
-                  <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
-                  <th className="px-6 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events</th>
-                  <th className="px-6 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Add</th>
-                </tr>
-              </thead>
-              <tbody>
-                {series.map(s => [
-                  <tr key={s.id} className="hover:bg-gray-50 align-top">
-                    <td className="px-6 py-4 border-b text-gray-900">{s.id}</td>
-                    <td className="px-6 py-4 border-b text-gray-900">{s.name}</td>
-                    <td className="px-6 py-4 border-b text-gray-900">{s.eventCount}</td>
-                    <td className="px-6 py-4 border-b text-gray-900">
-                      <select
-                        className="border rounded px-2 py-1"
-                        value={selectedYear[s.id] || (s.years && s.years.length > 0 ? Math.max(...s.years) : "")}
-                        onChange={e => handleYearChange(s.id, Number(e.target.value))}
-                      >
-                        {s.years && s.years.map(y => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 border-b text-gray-900">
-                      {eventsBySeries[s.id] && eventsBySeries[s.id].length > 0 ? (
-                        <span className="text-blue-600 font-medium">{eventsBySeries[s.id].length} events</span>
-                      ) : (
-                        <span className="text-gray-400 italic">No events</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 border-b text-center">
-                      <button
-                        className="inline-flex items-center justify-center w-6 h-6 bg-green-500 text-white rounded-full text-base font-bold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
-                        title="Add Event"
-                        onClick={() => setShowNewEventModal({ seriesId: s.id, year: selectedYear[s.id] })}
-                        style={{ lineHeight: 1 }}
-                      >
-                        +
-                      </button>
-                    </td>
-                  </tr>,
-                  eventsBySeries[s.id] && eventsBySeries[s.id].length > 0 && (
-                    <tr key={s.id + "-events"} className="">
-                      <td colSpan={6} className="p-0 border-b">
-                        <div className="overflow-x-auto rounded-b-lg border-t border-gray-200">
-                          <table className="min-w-full bg-white text-sm border border-gray-200">
-                            <thead>
-                              <tr>
-                                <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-56">Event Name</th>
-                                <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-32 text-center">Start Date</th>
-                                <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-32 text-center">End Date</th>
-                                <th className="px-4 py-2 border-b text-gray-700 bg-gray-100 w-40 text-center">Create Session</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {eventsBySeries[s.id].map(ev => (
-                                <React.Fragment key={ev.eventId}>
-                                  <tr key={ev.eventId}>
-                                    <td className="px-4 py-2 border-b text-gray-900 w-56">{ev.name}</td>
-                                    <td className="px-4 py-2 border-b text-gray-900 w-32 text-center">{ev.startDate}</td>
-                                    <td className="px-4 py-2 border-b text-gray-900 w-32 text-center">{ev.endDate}</td>
-                                    <td className="px-4 py-2 border-b text-center w-40">
-                                      <button
-                                        className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
-                                        onClick={() => handleOpenCreateSession(ev.eventId, ev.name)}
-                                      >
-                                        + Create Session
-                                      </button>
-                                    </td>
-                                  </tr>
-                                  {/* Sessions sub-table */}
-                                  <tr>
-                                    <td colSpan={4} className="p-0 border-b bg-gray-50">
-                                      <EventSessionsTable eventId={ev.eventId} eventName={ev.name} apiKey={apiKey || ""} />
-                                    </td>
-                                  </tr>
-                                </React.Fragment>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                ])}
-              </tbody>
-            </table>
-          </div>
         )}
       </div>
     </div>

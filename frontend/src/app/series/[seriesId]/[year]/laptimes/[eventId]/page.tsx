@@ -243,10 +243,8 @@ export default function LapTimeVisualizerPage() {
     
     lapTimesData.driverLapTimes.forEach(driver => {
       driver.lapTimes.forEach(lap => {
-        if (lap.isValid) {
-          allLapNumbers.add(lap.lapNumber);
-          allLapTimes.push(lap.lapTimeSeconds);
-        }
+        allLapNumbers.add(lap.lapNumber);
+        allLapTimes.push(lap.lapTimeSeconds);
       });
     });
 
@@ -264,7 +262,7 @@ export default function LapTimeVisualizerPage() {
       const dataPoint: Record<string, number> = { lapNumber };
       
       lapTimesData.driverLapTimes.forEach((driver) => {
-        const lapTime = driver.lapTimes.find(lap => lap.lapNumber === lapNumber && lap.isValid);
+        const lapTime = driver.lapTimes.find(lap => lap.lapNumber === lapNumber);
         if (lapTime) {
           dataPoint[`driver_${driver.driverId}`] = lapTime.lapTimeSeconds;
         }
